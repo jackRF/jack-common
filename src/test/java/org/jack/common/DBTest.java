@@ -9,6 +9,7 @@ import java.sql.Statement;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.jack.common.util.ClassScaner;
 import org.jack.common.util.DBUtils;
 import org.junit.Test;
 
@@ -26,45 +27,60 @@ public class DBTest extends BaseTest{
 		DEV_CREDIT_ZX.setUser("xd_zx");
 		DEV_CREDIT_ZX.setPassword("123456");
 	}
+	
 	@Test
 	public void testColumns(){
-		DBUtils.ConnectionInfo connectionInfo=DEV_CREDIT_ZX;
-		String tableName="bms_loan_base";
-		
-		tableName="T_PBCCRC_REPORT";
+		testColumns(DEV_BMS, "bms_loan_ext");
+//		testColumns(DEV_BMS, "bms_loan_base");
+//		testColumns(DEV_CREDIT_ZX, "T_PBCCRC_REPORT");
+	}
+	private void testColumns(DBUtils.ConnectionInfo connectionInfo,String tableName){
 		try {
 			List<String> columns=getTableColumns(tableName, connectionInfo);
-			log("ColumnCount:"+columns.size());
+			log("column count:"+columns.size());
 			log(columns);
 		} catch (SQLException e) {
 			e.printStackTrace();
 		}
 	}
 	private List<String> getTableColumns(String tableName,DBUtils.ConnectionInfo connectionInfo) throws SQLException{
-		Connection connection=DBUtils.getConnection(connectionInfo);
-		DatabaseMetaData metaData=connection.getMetaData();
-		String dbType=metaData.getDatabaseProductName();
+		ResultSetMetaData rsMetaData=queryResultSetMetaData(tableName, connectionInfo);
+		List<String> columns=new ArrayList<String>();
+		int count=rsMetaData.getColumnCount();
+		for(int i=1;i<=count;i++){
+			columns.add(rsMetaData.getColumnName(i));
+		}
+		return columns;
+	}
+	private  ResultSetMetaData queryResultSetMetaData(String tableName,DBUtils.ConnectionInfo connectionInfo) throws SQLException{
 		StringBuilder sql=new StringBuilder();
 		sql.append("SELECT * FROM  ");
 		sql.append(tableName);
-		if(dbType.toLowerCase().contains("mysql")){
-			sql.append(" limit 0");
-		}else if(dbType.toLowerCase().contains("oracle")){
-			sql.append(" where rownum<1");
-		}else if(dbType.toLowerCase().contains("db2")){
-			sql.append(" fetch   first  1 rows  only");
+		sql.append(" where 0=1");
+		ResultSet rs=query(sql, connectionInfo);
+		log("result count:"+count(rs));
+		return rs.getMetaData();
+	}
+	private int count(ResultSet rs) throws SQLException{
+		int count=0;
+		while(rs.next()){
+			count++;
 		}
-		List<String> columns=new ArrayList<String>();
+		return count;
+	}
+	private ResultSet query(StringBuilder sql,DBUtils.ConnectionInfo connectionInfo) throws SQLException{
+		Connection connection=DBUtils.getConnection(connectionInfo);
+//		DatabaseMetaData databaseMetaData=connection.getMetaData();
+//		String dbType=databaseMetaData.getDatabaseProductName();
+//		if(dbType.toLowerCase().contains("mysql")){
+//			sql.append(" limit 0");
+//		}else if(dbType.toLowerCase().contains("oracle")){
+//			sql.append(" where rownum<1");
+//		}else if(dbType.toLowerCase().contains("db2")){
+//			sql.append(" fetch   first  1 rows  only");
+//		}
 		Statement statement=connection.createStatement();
-		ResultSet rs=statement.executeQuery(sql.toString());
-		ResultSetMetaData rsetaData=rs.getMetaData();
-		int count=rsetaData.getColumnCount();
-		
-		for(int i=1;i<=count;i++){
-			columns.add(rsetaData.getColumnName(i));
-		}
-		return columns;
-		
+		return statement.executeQuery(sql.toString());
 	}
 	@Test
 	public void testMySQL() {

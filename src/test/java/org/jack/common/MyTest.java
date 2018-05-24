@@ -1,6 +1,8 @@
 package org.jack.common;
 
-import java.io.IOException;
+
+
+import java.lang.reflect.Field;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
@@ -10,26 +12,51 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
-import org.apache.http.HttpEntity;
-import org.apache.http.HttpResponse;
-import org.apache.http.client.entity.UrlEncodedFormEntity;
-import org.apache.http.client.methods.HttpPost;
-import org.apache.http.impl.client.CloseableHttpClient;
-import org.apache.http.impl.client.HttpClientBuilder;
 import org.jack.common.util.HttpUtils;
-import org.jack.common.util.IOUtils;
 import org.jack.common.validation.Validator;
 import org.junit.Test;
+
+import sun.misc.Unsafe;
 
 
 
 public class MyTest extends BaseTest {
+	
+	@Test
+	public void test5() {
+		Field f;
+		try {
+			f = Unsafe.class.getDeclaredField("theUnsafe");
+			f.setAccessible(true);
+			Unsafe unsafe = (Unsafe) f.get(null);
+			log(unsafe);
+		} catch (NoSuchFieldException | SecurityException | IllegalArgumentException | IllegalAccessException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		
+	}
+	@Test
+	public void test4() {
+		Object o=new Object();
+		log(o.hashCode());
+		log(System.identityHashCode(o));
+	}
+	@Test
+	public void test3() {
+		int k=2;
+		 int iChild = (k << 1) + 1;
+		 log(iChild);
+
+	}
 	@Test
 	public void test2(){
 		log(Validator.validateBankCardNo("6259650871772098"));
 	}
 	@Test
 	public void test1(){
+		log(System.nanoTime());
+		log(System.nanoTime());
 		log("sfsf".charAt(-1));
 	}
 	@Test
