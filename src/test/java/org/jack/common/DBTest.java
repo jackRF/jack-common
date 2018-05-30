@@ -1,5 +1,7 @@
 package org.jack.common;
 
+import java.beans.PropertyDescriptor;
+import java.lang.reflect.Method;
 import java.sql.Connection;
 import java.sql.DatabaseMetaData;
 import java.sql.ResultSet;
@@ -7,11 +9,23 @@ import java.sql.ResultSetMetaData;
 import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.ArrayList;
+import java.util.Date;
+import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
+import java.util.Set;
+
+import javax.persistence.Column;
+import javax.persistence.Entity;
+import javax.persistence.Table;
 
 import org.jack.common.util.ClassScaner;
 import org.jack.common.util.DBUtils;
+import org.jack.common.util.Utils;
 import org.junit.Test;
+import org.springframework.beans.BeanWrapperImpl;
+import org.springframework.util.StringUtils;
 
 public class DBTest extends BaseTest{
 	private static DBUtils.ConnectionInfo DEV_BMS;
@@ -27,30 +41,207 @@ public class DBTest extends BaseTest{
 		DEV_CREDIT_ZX.setUser("xd_zx");
 		DEV_CREDIT_ZX.setPassword("123456");
 	}
+	@Test
+	public void propertyToColumn(){
+		String propertyName=Utils.propertyToColumn("review_remark", new StringBuilder());
+		log(propertyName);
+	}
+	@Test
+	public void compareScan(){
+		@SuppressWarnings("unchecked")
+		Set<Class<?>> clazz=ClassScaner.scan("com.ymkj.bms.domain", Entity.class);
+		for(Class<?> entityClass:clazz){
+			try {
+				compareEntity(entityClass);
+			} catch (SQLException e) {
+				e.printStackTrace();
+			}
+		}
+	}
+	private void compareEntity(Class<?> entityClass) throws SQLException{
+		
+		Table table=entityClass.getAnnotation(Table.class);
+		Map<String, ColumnInfo> columnInfos=getTableColumnInfos(table.name(), DEV_BMS);
+		BeanWrapperImpl wrapper=new BeanWrapperImpl(entityClass);
+		StringBuilder sb=new StringBuilder();
+		PropertyDescriptor[] propertyDescriptors=wrapper.getPropertyDescriptors();
+		Set<String> prpperties=new HashSet<String>();
+		for(PropertyDescriptor propertyDescriptor:propertyDescriptors){
+			String propertyName=propertyDescriptor.getName();			
+			Method method=propertyDescriptor.getReadMethod();
+			if(method==null){
+				log("miss getter " +entityClass.getSimpleName()+"."+propertyName);
+				continue;
+			}
+			if(Object.class.equals(propertyDescriptor.getReadMethod().getDeclaringClass())){
+				continue;
+			}
+			if(propertyDescriptor.getWriteMethod()==null){
+				log("miss setter " +entityClass.getSimpleName()+"."+propertyName);
+				continue;
+			}
+			Column column=wrapper.getPropertyTypeDescriptor(propertyName).getAnnotation(Column.class);
+			String columnName=null;
+			if(column!=null&&StringUtils.hasText(column.name())){
+				columnName=column.name().toUpperCase();
+			}else{
+				columnName=Utils.propertyToColumn(propertyName, sb);
+			}
+			if(!columnInfos.containsKey(columnName)){
+				log(table.name()+" miss "+columnName+"  "+propertyName);
+				continue;
+			}
+			prpperties.add(columnName);
+			ColumnInfo columnInfo=columnInfos.get(columnName);
+			String columnClassName=columnInfo.columnClassName;
+			Class<?> propertyType=propertyDescriptor.getPropertyType();
+			if(columnInfo.precision>=21845){
+				log(String.format("%s %s %s", table.name(),columnName,columnClassName));
+			}
+			if(!columnClassName.equals(propertyType.getName())){
+				if(("java.sql.Timestamp".equals(columnClassName)||"java.sql.Date".equals(columnClassName))&&Date.class.equals(propertyType)){
+					continue;
+				}
+				if(Character.class.equals(propertyType)&&columnInfo.precision==1&&String.class.getName().equals(columnClassName)){
+					continue;
+				}
+				if(Byte.class.equals(propertyType)&&columnInfo.precision<8&&Integer.class.getName().equals(columnClassName)){
+					continue;
+				}
+				if(Integer.class.equals(propertyType)&&columnInfo.precision<32&&Long.class.getName().equals(columnClassName)){
+					continue;
+				}
+				log(table.name()+" "+propertyDescriptor.getName()+"  "+columnClassName+" not match "+propertyType);
+			}
+		}
+		List<String> columns=new ArrayList<String>(columnInfos.keySet());
+		columns.removeAll(prpperties);
+		if(columns.size()>0){
+			log(entityClass+" miss columns mapping:[");
+			for(String column:columns){
+				log(column+" "+columnInfos.get(column).columnClassName);
+			}
+			log("]");
+			
+		}
+		
+		
+	}
 	
 	@Test
 	public void testColumns(){
-		testColumns(DEV_BMS, "bms_loan_ext");
+		testColumns(DEV_BMS, "bms_loan_change_log");
 //		testColumns(DEV_BMS, "bms_loan_base");
 //		testColumns(DEV_CREDIT_ZX, "T_PBCCRC_REPORT");
 	}
 	private void testColumns(DBUtils.ConnectionInfo connectionInfo,String tableName){
 		try {
-			List<String> columns=getTableColumns(tableName, connectionInfo);
-			log("column count:"+columns.size());
-			log(columns);
+			Map<String, ColumnInfo> columnInfos=getTableColumnInfos(tableName, connectionInfo);
+			log("column count:"+columnInfos.size());
+			log(columnInfos.keySet());
 		} catch (SQLException e) {
 			e.printStackTrace();
 		}
 	}
-	private List<String> getTableColumns(String tableName,DBUtils.ConnectionInfo connectionInfo) throws SQLException{
-		ResultSetMetaData rsMetaData=queryResultSetMetaData(tableName, connectionInfo);
-		List<String> columns=new ArrayList<String>();
-		int count=rsMetaData.getColumnCount();
-		for(int i=1;i<=count;i++){
-			columns.add(rsMetaData.getColumnName(i));
+	public static class ColumnInfo{
+		private String catalogName;
+		private String columnClassName;
+		private int columnDisplaySize;
+		private String columnLabel;
+		private String columnName;
+		private int columnType;
+		private String columnTypeName;
+		private int precision;
+		private int scale;
+		private String schemaName;
+		private String tableName;
+		public String getCatalogName() {
+			return catalogName;
 		}
-		return columns;
+		public void setCatalogName(String catalogName) {
+			this.catalogName = catalogName;
+		}
+		public String getColumnClassName() {
+			return columnClassName;
+		}
+		public void setColumnClassName(String columnClassName) {
+			this.columnClassName = columnClassName;
+		}
+		public int getColumnDisplaySize() {
+			return columnDisplaySize;
+		}
+		public void setColumnDisplaySize(int columnDisplaySize) {
+			this.columnDisplaySize = columnDisplaySize;
+		}
+		public String getColumnLabel() {
+			return columnLabel;
+		}
+		public void setColumnLabel(String columnLabel) {
+			this.columnLabel = columnLabel;
+		}
+		public String getColumnName() {
+			return columnName;
+		}
+		public void setColumnName(String columnName) {
+			this.columnName = columnName;
+		}
+		public int getColumnType() {
+			return columnType;
+		}
+		public void setColumnType(int columnType) {
+			this.columnType = columnType;
+		}
+		public String getColumnTypeName() {
+			return columnTypeName;
+		}
+		public void setColumnTypeName(String columnTypeName) {
+			this.columnTypeName = columnTypeName;
+		}
+		public int getPrecision() {
+			return precision;
+		}
+		public void setPrecision(int precision) {
+			this.precision = precision;
+		}
+		public int getScale() {
+			return scale;
+		}
+		public void setScale(int scale) {
+			this.scale = scale;
+		}
+		public String getSchemaName() {
+			return schemaName;
+		}
+		public void setSchemaName(String schemaName) {
+			this.schemaName = schemaName;
+		}
+		public String getTableName() {
+			return tableName;
+		}
+		public void setTableName(String tableName) {
+			this.tableName = tableName;
+		}
+	}
+	private Map<String, ColumnInfo> getTableColumnInfos(String tableName,DBUtils.ConnectionInfo connectionInfo) throws SQLException{
+		ResultSetMetaData rsMetaData=queryResultSetMetaData(tableName, connectionInfo);
+		int count=rsMetaData.getColumnCount();
+		Map<String,ColumnInfo> columnInfoMap=new HashMap<String,ColumnInfo>();
+		for(int column=1;column<=count;column++){
+			ColumnInfo columnInfo=new ColumnInfo();
+			columnInfo.catalogName=rsMetaData.getCatalogName(column);
+			columnInfo.columnClassName=rsMetaData.getColumnClassName(column);
+			columnInfo.columnDisplaySize=rsMetaData.getColumnDisplaySize(column);
+			columnInfo.columnLabel=rsMetaData.getColumnLabel(column);
+			columnInfo.columnName=rsMetaData.getColumnName(column);
+			columnInfo.columnType=rsMetaData.getColumnType(column);
+			columnInfo.columnTypeName=rsMetaData.getColumnTypeName(column);
+			columnInfo.precision=rsMetaData.getPrecision(column);
+			columnInfo.scale=rsMetaData.getScale(column);
+			columnInfo.schemaName=rsMetaData.getSchemaName(column);
+			columnInfo.tableName=rsMetaData.getTableName(column);
+			columnInfoMap.put(rsMetaData.getColumnName(column).toUpperCase(), columnInfo);
+		}
+		return columnInfoMap;
 	}
 	private  ResultSetMetaData queryResultSetMetaData(String tableName,DBUtils.ConnectionInfo connectionInfo) throws SQLException{
 		StringBuilder sql=new StringBuilder();
