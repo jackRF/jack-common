@@ -13,6 +13,7 @@ import org.apache.http.client.entity.UrlEncodedFormEntity;
 import org.apache.http.client.methods.HttpGet;
 import org.apache.http.client.methods.HttpPost;
 import org.apache.http.client.methods.HttpUriRequest;
+import org.apache.http.entity.StringEntity;
 import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.impl.client.HttpClientBuilder;
 import org.apache.http.message.BasicNameValuePair;
@@ -79,6 +80,15 @@ public class HttpUtils {
 		httpPost.setEntity(entity);
 		return doRequest(httpPost);
 	}
+	public static String post(String url,String json) throws ClientProtocolException, IOException{
+		HttpPost httpPost=new HttpPost(url);
+		StringEntity entity = new StringEntity(json,"UTF-8");   
+		entity.setContentEncoding("UTF-8");
+		entity.setContentType("application/json");
+		httpPost.setEntity(entity);
+		return doRequest(httpPost);
+	}
+	
 	/**
 	 * get 请求
 	 * @param url
