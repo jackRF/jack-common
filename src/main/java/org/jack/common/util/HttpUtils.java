@@ -16,6 +16,7 @@ import org.apache.http.client.methods.HttpUriRequest;
 import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.impl.client.HttpClientBuilder;
 import org.apache.http.message.BasicNameValuePair;
+import org.apache.http.util.EntityUtils;
 
 /**
  * http 工具类
@@ -47,7 +48,7 @@ public class HttpUtils {
 		return sb.toString();
 	}
 	/**
-	 * 将data转为form表单
+	 * data转为form表单
 	 * @param data
 	 * @return
 	 */
@@ -72,11 +73,11 @@ public class HttpUtils {
 	 * @throws ClientProtocolException 
 	 * @throws UnsupportedOperationException 
 	 */
-	public static String post(String url,Map<String,?> data) throws UnsupportedOperationException, ClientProtocolException, IOException{
+	public static String post(String url,Map<String,?> data) throws ClientProtocolException, IOException{
 		HttpPost httpPost=new HttpPost(url);
 		HttpEntity entity=new UrlEncodedFormEntity(dataToNameValuePairs(data),"UTF-8");
 		httpPost.setEntity(entity);
-		return requestText(httpPost);
+		return doRequest(httpPost);
 	}
 	/**
 	 * get 请求
@@ -87,20 +88,8 @@ public class HttpUtils {
 	 * @throws ClientProtocolException 
 	 * @throws UnsupportedOperationException 
 	 */
-	public static String get(String url,Map<String,?> data) throws UnsupportedOperationException, ClientProtocolException, IOException{
-		HttpGet httpGet=new HttpGet(url+dataToParams(data));
-		return requestText(httpGet);
-	}
-	/**
-	 * 执行请求，预期返回text
-	 * @param request
-	 * @return
-	 * @throws IOException 
-	 * @throws ClientProtocolException 
-	 * @throws UnsupportedOperationException 
-	 */
-	public static String requestText(HttpUriRequest request) throws UnsupportedOperationException, ClientProtocolException, IOException{
-		return IOUtils.readText(doRequest(request).getEntity().getContent());
+	public static String get(String url,Map<String,?> data) throws ClientProtocolException, IOException{
+		return doRequest(new HttpGet(url+dataToParams(data)));
 	}
 	/**
 	 * 执行请求
@@ -109,9 +98,15 @@ public class HttpUtils {
 	 * @throws IOException 
 	 * @throws ClientProtocolException 
 	 */
-	public static HttpResponse doRequest(HttpUriRequest request) throws ClientProtocolException, IOException{
-		CloseableHttpClient httpClient=HttpClientBuilder.create().build();
-		HttpResponse httpResponse=httpClient.execute(request);
-		return httpResponse;
+	public static String doRequest(HttpUriRequest request) throws ClientProtocolException, IOException{
+		HttpEntity httpEntity=null;
+		try{
+			CloseableHttpClient httpClient=HttpClientBuilder.create().build();
+			HttpResponse httpResponse=httpClient.execute(request);
+			httpEntity=httpResponse.getEntity();
+			return EntityUtils.toString(httpEntity);
+		}finally{
+			EntityUtils.consume(httpEntity);
+		}
 	}
 }
