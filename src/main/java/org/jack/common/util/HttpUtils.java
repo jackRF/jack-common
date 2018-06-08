@@ -9,12 +9,12 @@ import org.apache.http.HttpEntity;
 import org.apache.http.HttpResponse;
 import org.apache.http.NameValuePair;
 import org.apache.http.client.ClientProtocolException;
+import org.apache.http.client.HttpClient;
 import org.apache.http.client.entity.UrlEncodedFormEntity;
 import org.apache.http.client.methods.HttpGet;
 import org.apache.http.client.methods.HttpPost;
 import org.apache.http.client.methods.HttpUriRequest;
 import org.apache.http.entity.StringEntity;
-import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.impl.client.HttpClientBuilder;
 import org.apache.http.message.BasicNameValuePair;
 import org.apache.http.util.EntityUtils;
@@ -25,6 +25,9 @@ import org.apache.http.util.EntityUtils;
  *
  */
 public class HttpUtils {
+	private static class HttpClientHolder{
+		private static final HttpClient HTTP_CLIENT=HttpClientBuilder.create().build();
+	}
 	/**
 	 * data转为http查询字符串
 	 * @param data
@@ -88,7 +91,18 @@ public class HttpUtils {
 		httpPost.setEntity(entity);
 		return doRequest(httpPost);
 	}
-	
+	/**
+	 * get 请求
+	 * @param url
+	 * @param data
+	 * @return
+	 * @throws IOException 
+	 * @throws ClientProtocolException 
+	 * @throws UnsupportedOperationException 
+	 */
+	public static String get(String url) throws ClientProtocolException, IOException{
+		return doRequest(new HttpGet(url));
+	}
 	/**
 	 * get 请求
 	 * @param url
@@ -111,8 +125,7 @@ public class HttpUtils {
 	public static String doRequest(HttpUriRequest request) throws ClientProtocolException, IOException{
 		HttpEntity httpEntity=null;
 		try{
-			CloseableHttpClient httpClient=HttpClientBuilder.create().build();
-			HttpResponse httpResponse=httpClient.execute(request);
+			HttpResponse httpResponse=HttpClientHolder.HTTP_CLIENT.execute(request);
 			httpEntity=httpResponse.getEntity();
 			return EntityUtils.toString(httpEntity);
 		}finally{
