@@ -1,6 +1,11 @@
 package org.jack.common;
 
 import java.beans.PropertyDescriptor;
+import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.PrintStream;
+import java.io.StringWriter;
 import java.lang.reflect.Method;
 import java.sql.Connection;
 import java.sql.DatabaseMetaData;
@@ -9,6 +14,8 @@ import java.sql.ResultSetMetaData;
 import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Comparator;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -22,6 +29,7 @@ import javax.persistence.Table;
 
 import org.jack.common.util.ClassScaner;
 import org.jack.common.util.DBUtils;
+import org.jack.common.util.IOUtils;
 import org.jack.common.util.Utils;
 import org.junit.Test;
 import org.springframework.beans.BeanWrapperImpl;
@@ -130,20 +138,87 @@ public class DBTest extends BaseTest{
 	
 	@Test
 	public void testColumns(){
-		testColumns(DEV_BMS, "bms_loan_change_log");
+		testColumns(DEV_BMS, "bms_loan_review");
 //		testColumns(DEV_BMS, "bms_loan_base");
 //		testColumns(DEV_CREDIT_ZX, "T_PBCCRC_REPORT");
+	}
+	@Test
+	public void testGenerateEntity() {
+		generateEntity(DEV_BMS, "bms_review_log");
+	}
+	private void generateEntity(DBUtils.ConnectionInfo connectionInfo,String tableName){
+		Map<String, ColumnInfo> columnInfos;
+		try {
+			columnInfos = getTableColumnInfos(tableName, connectionInfo);
+			List<ColumnInfo> list=new ArrayList<ColumnInfo>(columnInfos.values());
+			Collections.sort(list,new Comparator<ColumnInfo>() {
+				@Override
+				public int compare(ColumnInfo o1, ColumnInfo o2) {
+					if(o1.index==o2.index){
+						return 0;
+					}
+					return o1.index<o2.index?-1:1;
+				}
+			});
+			String file="D:\\data\\generate\\entity\\"+tableName+".java";
+			FileOutputStream out=new FileOutputStream(file);
+			PrintStream p = new PrintStream(out);
+			StringBuilder sb=new StringBuilder();
+			for(ColumnInfo columnInfo:list){
+				p.println();
+				p.print('\t');
+				Class<?> clazz=getJavaType(columnInfo);
+				p.print(String.format("private %s %s;", clazz!=null?clazz.getSimpleName():null,Utils.columnToProperty(columnInfo.columnName, sb)));
+			}
+			out.close();
+			p.close();
+		} catch (SQLException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		} catch (FileNotFoundException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}		
+	}
+	private Class<?> getJavaType(ColumnInfo columnInfo){
+		try {
+			Class<?> clazz=Class.forName(columnInfo.getColumnClassName());
+			return clazz;
+		} catch (ClassNotFoundException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		return null;
+		
 	}
 	private void testColumns(DBUtils.ConnectionInfo connectionInfo,String tableName){
 		try {
 			Map<String, ColumnInfo> columnInfos=getTableColumnInfos(tableName, connectionInfo);
-			log("column count:"+columnInfos.size());
-			log(columnInfos.keySet());
+			List<ColumnInfo> list=new ArrayList<ColumnInfo>(columnInfos.values());
+			Collections.sort(list,new Comparator<ColumnInfo>() {
+				@Override
+				public int compare(ColumnInfo o1, ColumnInfo o2) {
+					if(o1.index==o2.index){
+						return 0;
+					}
+					return o1.index<o2.index?-1:1;
+				}
+			});
+			List<String> columns=new ArrayList<String>();
+			for(ColumnInfo columnInfo:list){
+				columns.add(columnInfo.getColumnName());
+			}
+			log(tableName+" column count:"+columns.size());
+			log(columns);
 		} catch (SQLException e) {
 			e.printStackTrace();
 		}
 	}
 	public static class ColumnInfo{
+		private int index;
 		private String catalogName;
 		private String columnClassName;
 		private int columnDisplaySize;
@@ -155,6 +230,12 @@ public class DBTest extends BaseTest{
 		private int scale;
 		private String schemaName;
 		private String tableName;
+		public int getIndex() {
+			return index;
+		}
+		public void setIndex(int index) {
+			this.index = index;
+		}
 		public String getCatalogName() {
 			return catalogName;
 		}
@@ -228,6 +309,7 @@ public class DBTest extends BaseTest{
 		Map<String,ColumnInfo> columnInfoMap=new HashMap<String,ColumnInfo>();
 		for(int column=1;column<=count;column++){
 			ColumnInfo columnInfo=new ColumnInfo();
+			columnInfo.setIndex(column);
 			columnInfo.catalogName=rsMetaData.getCatalogName(column);
 			columnInfo.columnClassName=rsMetaData.getColumnClassName(column);
 			columnInfo.columnDisplaySize=rsMetaData.getColumnDisplaySize(column);

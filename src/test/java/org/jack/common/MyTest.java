@@ -2,6 +2,7 @@ package org.jack.common;
 
 
 
+import java.io.IOException;
 import java.lang.reflect.Field;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
@@ -12,6 +13,7 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
+import org.apache.http.client.ClientProtocolException;
 import org.jack.common.util.HttpUtils;
 import org.jack.common.validation.Validator;
 import org.junit.Test;
@@ -21,7 +23,34 @@ import sun.misc.Unsafe;
 
 
 public class MyTest extends BaseTest {
-	
+	@Test
+	public void test6() {
+		try {
+			for(int i=0;i<1000;i++){
+				new Thread(new Runnable() {
+					
+					@Override
+					public void run() {
+						try {
+							log(HttpUtils.get("http://172.16.230.37:8080/creditzx-web/"));
+						} catch (ClientProtocolException e) {
+							// TODO Auto-generated catch block
+							e.printStackTrace();
+						} catch (IOException e) {
+							// TODO Auto-generated catch block
+							e.printStackTrace();
+						}
+						
+					}
+				}).start();
+			}
+			Thread.sleep(50000);
+		} catch (InterruptedException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+
+	}
 	@Test
 	public void test5() {
 		Field f;
