@@ -68,7 +68,7 @@ public class DBTest extends BaseTest{
 	}
 	@Test
 	public void testColumns(){
-		testColumns(DEV_BMS, "BMS_LOAN_PRODUCT");
+		testColumns(DEV_BMS, "bms_tm_app_car_info");
 //		testColumns(DEV_BMS, "bms_loan_base");
 //		testColumns(DEV_CREDIT_ZX, "T_PBCCRC_REPORT");
 	}
@@ -381,6 +381,7 @@ public class DBTest extends BaseTest{
 		Map<String,ColumnInfo> columnInfoMap=new HashMap<String,ColumnInfo>();
 		for(int column=1;column<=count;column++){
 			ColumnInfo columnInfo=new ColumnInfo();
+			columnInfo.index=column;
 			columnInfo.catalogName=rsMetaData.getCatalogName(column);
 			columnInfo.columnClassName=rsMetaData.getColumnClassName(column);
 			columnInfo.columnDisplaySize=rsMetaData.getColumnDisplaySize(column);
