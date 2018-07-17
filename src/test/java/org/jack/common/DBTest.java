@@ -38,6 +38,7 @@ import org.springframework.util.StringUtils;
 public class DBTest extends BaseTest{
 	private static DBUtils.ConnectionInfo DEV_BMS;
 	private static DBUtils.ConnectionInfo DEV_CREDIT_ZX;
+	private static DBUtils.ConnectionInfo TEST_MYCAT;
 	static{
 		DEV_BMS=new DBUtils.ConnectionInfo();
 		DEV_BMS.setUrl("jdbc:mysql://172.16.230.122:3306/bms_cyb");
@@ -48,6 +49,11 @@ public class DBTest extends BaseTest{
 		DEV_CREDIT_ZX.setUrl("jdbc:oracle:thin:@172.16.230.90:1521:stupor");
 		DEV_CREDIT_ZX.setUser("xd_zx");
 		DEV_CREDIT_ZX.setPassword("123456");
+		
+		TEST_MYCAT=new DBUtils.ConnectionInfo();
+		TEST_MYCAT.setUrl("jdbc:mysql://localhost:8066/TESTDB");
+		TEST_MYCAT.setUser("root");
+		TEST_MYCAT.setPassword("123456");
 	}
 	@Test
 	public void propertyToColumn(){
@@ -71,6 +77,32 @@ public class DBTest extends BaseTest{
 		testColumns(DEV_BMS, "bms_tm_app_car_info");
 //		testColumns(DEV_BMS, "bms_loan_base");
 //		testColumns(DEV_CREDIT_ZX, "T_PBCCRC_REPORT");
+//		testColumns(TEST_MYCAT, "company");
+	}
+	@Test
+	public void testQuery(){
+		StringBuilder sql=new StringBuilder();
+		sql.append("select id,name,QUANTITY,price from test_product");
+		sql.append(" where id>2 and id <7  limit 4");
+		try {
+			ResultSet rs=query(sql, TEST_MYCAT);
+			int columnCount=rs.getMetaData().getColumnCount();
+			StringBuilder sb=new StringBuilder();
+			for(int i=0;i<columnCount;i++){
+				sb.append("\t"+rs.getMetaData().getColumnLabel(i+1));
+			}
+			log(sb);
+			while(rs.next()){
+				sb=new StringBuilder();
+				for(int i=0;i<columnCount;i++){
+					sb.append("\t"+rs.getObject(i+1));
+				}
+				log(sb);
+			}
+		} catch (SQLException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
 	}
 	@Test
 	public void testResultMapping(){
