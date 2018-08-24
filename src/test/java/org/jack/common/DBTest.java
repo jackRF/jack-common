@@ -39,6 +39,7 @@ public class DBTest extends BaseTest{
 	private static DBUtils.ConnectionInfo DEV_BMS;
 	private static DBUtils.ConnectionInfo DEV_CREDIT_ZX;
 	private static DBUtils.ConnectionInfo TEST_MYCAT;
+	private static DBUtils.ConnectionInfo DEV_BDS;
 	static{
 		DEV_BMS=new DBUtils.ConnectionInfo();
 		DEV_BMS.setUrl("jdbc:mysql://172.16.230.122:3306/bms_cyb");
@@ -54,11 +55,74 @@ public class DBTest extends BaseTest{
 		TEST_MYCAT.setUrl("jdbc:mysql://localhost:8066/TESTDB");
 		TEST_MYCAT.setUser("root");
 		TEST_MYCAT.setPassword("123456");
+		
+		DEV_BDS=new DBUtils.ConnectionInfo();
+		DEV_BDS.setUrl("jdbc:mysql://172.16.230.122:3306/bds");
+		DEV_BDS.setUser("bds");
+		DEV_BDS.setPassword("bds");
+	}
+	private static interface MatchFilter{
+		boolean match(String tableName,String tableType,ColumnInfo columnInfo);
+		void accept(String tableName,String tableType,ColumnInfo columnInfo);
 	}
 	@Test
 	public void propertyToColumn(){
 		String propertyName=Utils.propertyToColumn("review_remark", new StringBuilder());
 		log(propertyName);
+	}
+	@Test
+	public void testMatchColumn() {
+		List<ColumnInfo> matched=new ArrayList<ColumnInfo>();
+		matchColumn(DEV_BMS, new MatchFilter() {
+			@Override
+			public boolean match(String tableName, String tableType,
+					ColumnInfo columnInfo) {
+				String columnLabel=columnInfo.getColumnLabel().toUpperCase();
+				return columnLabel.contains("NAME")||columnLabel.contains("ID_NO")
+						||columnLabel.contains("ID_CARD")
+						||columnLabel.contains("IDCARD")
+						||columnLabel.contains("BANK")
+						||columnLabel.contains("PHONE");
+			}
+			
+			@Override
+			public void accept(String tableName, String tableType, ColumnInfo columnInfo) {
+				matched.add(columnInfo);
+			}
+		});
+		
+		for(ColumnInfo columnInfo:matched){
+			log(String.format("%s.%s   %s", columnInfo.getTableName(),columnInfo.getColumnName(),columnInfo.getColumnDetail().getColumnComment()));
+		}
+
+	}
+	private void matchColumn(ConnectionInfo connectionInfo,MatchFilter matchFilter){
+		List<String[]> tableInfos=new ArrayList<String[]>();
+		try {
+			ResultSet rs=query("select table_name,table_type from information_schema.tables where table_schema='bms_cyb'", connectionInfo);
+			while(rs.next()){
+				String tableName=rs.getString(1);
+				String tableType=rs.getString(2);
+				String[] tableInfo={tableName,tableType};
+				tableInfos.add(tableInfo);
+			}
+			rs.close();			
+		} catch (SQLException e) {
+			e.printStackTrace();
+		}
+		for(String[] tableInfo:tableInfos){
+			try {
+				Map<String, ColumnInfo> columnInfoMap = getTableColumnInfos(tableInfo[0], connectionInfo);
+				processComment(columnInfoMap, connectionInfo);
+				for(Map.Entry<String,ColumnInfo> entry:columnInfoMap.entrySet()){
+					if(matchFilter.match(tableInfo[0], tableInfo[1], entry.getValue())){
+						matchFilter.accept(tableInfo[0], tableInfo[1], entry.getValue());
+					}
+				}
+			} catch (SQLException e) {
+				e.printStackTrace();
+			}
+		}
 	}
 	@Test
 	public void compareScan(){
@@ -74,7 +138,8 @@ public class DBTest extends BaseTest{
 	}
 	@Test
 	public void testColumns(){
-		testColumns(DEV_BMS, "bms_tm_app_car_info");
+//		testColumns(DEV_BMS, "bms_social_insurance_info");
+		testColumns(DEV_BDS, "bds_greylist");
 //		testColumns(DEV_BMS, "bms_loan_base");
 //		testColumns(DEV_CREDIT_ZX, "T_PBCCRC_REPORT");
 //		testColumns(TEST_MYCAT, "company");
@@ -85,7 +150,7 @@ public class DBTest extends BaseTest{
 		sql.append("select id,name,QUANTITY,price from test_product");
 		sql.append(" where id>2 and id <7  limit 4");
 		try {
-			ResultSet rs=query(sql, TEST_MYCAT);
+			ResultSet rs=query(sql.toString(), TEST_MYCAT);
 			int columnCount=rs.getMetaData().getColumnCount();
 			StringBuilder sb=new StringBuilder();
 			for(int i=0;i<columnCount;i++){
@@ -322,6 +387,7 @@ public class DBTest extends BaseTest{
 		private int scale;
 		private String schemaName;
 		private String tableName;
+		private ColumnDetail columnDetail;
 		public int getIndex() {
 			return index;
 		}
@@ -394,6 +460,13 @@ public class DBTest extends BaseTest{
 		public void setTableName(String tableName) {
 			this.tableName = tableName;
 		}
+		public ColumnDetail getColumnDetail() {
+			return columnDetail;
+		}
+		public void setColumnDetail(ColumnDetail columnDetail) {
+			this.columnDetail = columnDetail;
+		}
+		
 	}
 	private Map<String, ColumnInfo> getTableColumnInfos(String tableName,DBUtils.ConnectionInfo connectionInfo) throws SQLException{
 		StringBuilder sql=new StringBuilder();
@@ -403,10 +476,70 @@ public class DBTest extends BaseTest{
 		return getSqlColumnInfos(sql,connectionInfo);
 	}
 	private Map<String, ColumnInfo> getSqlColumnInfos(StringBuilder sql,DBUtils.ConnectionInfo connectionInfo) throws SQLException{
-		ResultSet rs=query(sql, connectionInfo);
+		ResultSet rs=query(sql.toString(), connectionInfo);
 		log("result count:"+count(rs));
 		ResultSetMetaData rsMetaData=rs.getMetaData();
-		return convertToColumnInfos(rsMetaData);
+		Map<String, ColumnInfo>  columnInfos=convertToColumnInfos(rsMetaData);
+		return columnInfos;
+	}
+	private static class ColumnDetail{
+		private String columnComment;
+		private String columnName;
+		private String tableName;
+		public String getColumnComment() {
+			return columnComment;
+		}
+		public void setColumnComment(String columnComment) {
+			this.columnComment = columnComment;
+		}
+		public String getColumnName() {
+			return columnName;
+		}
+		public void setColumnName(String columnName) {
+			this.columnName = columnName;
+		}
+		public String getTableName() {
+			return tableName;
+		}
+		public void setTableName(String tableName) {
+			this.tableName = tableName;
+		}
+		
+		
+	}
+	private void processComment(Map<String, ColumnInfo>  columnInfos,ConnectionInfo connectionInfo){
+		Set<String> tableNames=new HashSet<String>();
+		String tableSchema="";
+		for(Map.Entry<String, ColumnInfo> entry:columnInfos.entrySet()){
+			ColumnInfo columnInfo=entry.getValue();
+			tableNames.add(columnInfo.getTableName());
+			tableSchema=columnInfo.getCatalogName();
+		}
+		StringBuilder sb=new StringBuilder();
+		sb.append("select COLUMN_COMMENT,COLUMN_NAME,TABLE_NAME,TABLE_SCHEMA from information_schema.columns ");
+		sb.append(" where table_schema='"+tableSchema+"' and table_name in("+StringUtils.collectionToDelimitedString(tableNames, ",", "'", "'")+")");
+		log(sb);
+		Map<String,ColumnDetail> columnDetails=new HashMap<>();
+		try {
+			ResultSet rs=query(sb.toString(), connectionInfo);
+			while(rs.next()){
+				ColumnDetail columnDetail=new ColumnDetail();
+				columnDetail.setColumnComment(rs.getString(1));
+				columnDetail.setColumnName(rs.getString(2));
+				columnDetail.setTableName(rs.getString(3));
+				columnDetails.put(columnDetail.getTableName()+"."+columnDetail.getColumnName(),columnDetail);
+			}
+			rs.close();
+		} catch (SQLException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		log("columnDetails.size:"+columnDetails.size());
+		for(Map.Entry<String, ColumnInfo> entry:columnInfos.entrySet()){
+			ColumnInfo columnInfo=entry.getValue();
+			ColumnDetail columnDetail=columnDetails.get(columnInfo.getTableName()+"."+columnInfo.getColumnName());
+			columnInfo.setColumnDetail(columnDetail);
+		}
 	}
 	private Map<String, ColumnInfo> convertToColumnInfos(ResultSetMetaData rsMetaData) throws SQLException{
 		int count=rsMetaData.getColumnCount();
@@ -436,7 +569,7 @@ public class DBTest extends BaseTest{
 		}
 		return count;
 	}
-	private ResultSet query(StringBuilder sql,DBUtils.ConnectionInfo connectionInfo) throws SQLException{
+	private ResultSet query(String sql,DBUtils.ConnectionInfo connectionInfo) throws SQLException{
 		Connection connection=DBUtils.getConnection(connectionInfo);
 //		DatabaseMetaData databaseMetaData=connection.getMetaData();
 //		String dbType=databaseMetaData.getDatabaseProductName();
@@ -448,7 +581,7 @@ public class DBTest extends BaseTest{
 //			sql.append(" fetch   first  1 rows  only");
 //		}
 		Statement statement=connection.createStatement();
-		return statement.executeQuery(sql.toString());
+		return statement.executeQuery(sql);
 	}
 	@Test
 	public void testMySQL() {
