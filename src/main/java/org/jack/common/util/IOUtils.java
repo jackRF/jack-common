@@ -8,6 +8,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.OutputStream;
+import java.util.Properties;
 
 /**
  * 流工具类
@@ -17,6 +18,19 @@ import java.io.OutputStream;
  */
 public class IOUtils {
 	private static final int BUFFER_SIZE = 1024 * 8;
+	/**
+	 * 加载配置
+	 * @param file
+	 * @return
+	 * @throws IOException
+	 */
+	public static Properties loadProperties(File file) throws IOException{
+		Properties properties=new Properties();
+		FileInputStream input=new FileInputStream(file);
+		BufferedReader reader=new BufferedReader(new InputStreamReader(input,"UTF-8"));
+		properties.load(reader);
+		return properties;
+	}
 	/**
 	 * 从文件读text  UTF-8
 	 * @param file
