@@ -18,6 +18,33 @@ import java.util.Properties;
  */
 public class IOUtils {
 	private static final int BUFFER_SIZE = 1024 * 8;
+	public static void processText(File file,final Task<String> task) throws IOException{
+		processText(file,"UTF-8", task);
+	}
+	public static void processText(File file,String charsetName,final Task<String> task) throws IOException{
+		processText(new FileInputStream(file), charsetName, task);
+	}
+	public static void processText(InputStream is,String charsetName,final Task<String> task) throws IOException{
+		BufferedReader reader=null;
+		String line = null;
+		try {
+			reader = new BufferedReader(new InputStreamReader(is,charsetName));
+			while ((line = reader.readLine()) != null) {
+				task.toDo(line);
+			}
+		} catch (IOException e) {
+			e.printStackTrace();
+			throw e;
+		} finally {
+			if(reader!=null){
+				try {
+					reader.close();
+				} catch (IOException e) {
+					e.printStackTrace();
+				}
+			}
+		}
+	}
 	/**
 	 * 加载配置
 	 * @param file
