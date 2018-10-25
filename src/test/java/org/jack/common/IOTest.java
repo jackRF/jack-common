@@ -15,7 +15,8 @@ import org.springframework.util.StringUtils;
 public class IOTest extends BaseTest {
 	@Test
 	public void testRepetitive() throws IOException {
-		File file=new File("D:\\data\\conf\\bms-biz\\1D535670-4998-44c4-A3D1-694B2A2BB70A.txt");
+//		File file=new File("D:\\data\\conf\\bms-biz\\1D535670-4998-44c4-A3D1-694B2A2BB70A.txt");
+		File file=new File("D:\\data\\compare\\bms_biz 3.txt");
 		Set<String> keys=new HashSet<String>();
 		IOUtils.processText(file, new Task<String>(){
 
@@ -40,15 +41,17 @@ public class IOTest extends BaseTest {
 	 */
 	@Test
 	public void testPropertiesDiff() throws IOException {
-		Properties properties=IOUtils.loadProperties(new File("D:\\data\\conf\\bms-biz\\bms_biz dev配置.txt"));
-		Properties properties2=IOUtils.loadProperties(new File("D:\\data\\conf\\bms-biz\\6AF5DE18-2127-4ad0-A353-A55337DCAF2F.txt"));
+		File parent=new File("D:\\data\\compare");
+		Properties properties=IOUtils.loadProperties(new File(parent,"12E78C0A-C63C-42fd-A209-E59B1CDDC4F0111.txt"));
+		Properties properties2=IOUtils.loadProperties(new File(parent,"2C1ECD6B-2DFE-4afd-9596-81FA7CE52F3E333.txt"));
 		
 		Enumeration<Object> enumerationKey=properties.keys();
 		while(enumerationKey.hasMoreElements()){
 			Object key=enumerationKey.nextElement();
 			if(!properties2.containsKey(key)){
-				log(key);
+				log(key+"="+properties.getProperty((String)key));
 			}
+			
 		}
 	}
 	
