@@ -26,11 +26,13 @@ public class FileTest extends BaseTest {
 			}else if(file.isFile()){
 				if(filter.accept(file)){
 					log(file);
+//					file.delete();
 					destFiles.add(file);
 				}
 			}
 		}
 	}
+	
 	private static class MavenInvalidFileFilter implements FileFilter{
 		private Set<String> extType=new HashSet<String>();
 		public MavenInvalidFileFilter() {
@@ -41,6 +43,9 @@ public class FileTest extends BaseTest {
 			extType.add("xml");
 			extType.add("zip");
 			extType.add("war");
+			extType.add("dylib");
+			extType.add("dll");
+			extType.add("so");
 			extType.add("repositories");
 			extType.add("properties");
 		}

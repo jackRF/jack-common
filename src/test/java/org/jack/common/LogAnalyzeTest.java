@@ -23,7 +23,7 @@ public class LogAnalyzeTest extends BaseTest {
 		
 		Map<String,LocalInfo> threadMap=new HashMap<String,LocalInfo>();
 		File logPath=new File("D:\\data\\online");
-		File logFile=new File(logPath,"bms-api-info.log_2018-10-24-16.log.txt");
+		File logFile=new File(logPath,"bms-api-info.log_2018-11-07-15.log.txt");
 		
 		IOUtils.processText(logFile, new Task<String>(){
 
@@ -72,7 +72,11 @@ public class LogAnalyzeTest extends BaseTest {
 			if(localInfo.isMethodEnd()){
 				return;
 			}
-			log(String.format("线程%s在%d-%d行耗时%ds",lineInfo.getThreadId(), localInfo.getLastLoglineIndex(),lineInfo.getLineIndex(),duration/1000));
+			log(String.format("%s 线程%s在%d-%d行耗时%ds",DateUtils.formatDate(time1, DateUtils.DATE_FORMAT_DATETIME)
+					,lineInfo.getThreadId()
+					, localInfo.getLastLoglineIndex()
+					,lineInfo.getLineIndex(),duration/1000
+					));
 		}
 	}
 	@Test
@@ -81,6 +85,7 @@ public class LogAnalyzeTest extends BaseTest {
 
 	}
 	private Pattern threadPattern=Pattern.compile(":(\\d+-thread-\\d+)]:$");
+	private Pattern methodPattern=Pattern.compile(":(\\d+-thread-\\d+)]:$");
 	private LineInfo parseLine(String line, int lineIndex, LocalInfo lastlocalInfo){
 		if(!StringUtils.hasText(line)){
 			return null;
