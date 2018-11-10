@@ -17,7 +17,7 @@ public class IOTest extends BaseTest {
 	public void testRepetitive() throws IOException {
 //		File file=new File("D:\\data\\conf\\bms-biz\\1D535670-4998-44c4-A3D1-694B2A2BB70A.txt");
 		File file=new File("D:\\data\\compare\\bms_biz 3.txt");
-		Set<String> keys=new HashSet<String>();
+		final Set<String> keys=new HashSet<String>();
 		IOUtils.processText(file, new Task<String>(){
 
 			@Override

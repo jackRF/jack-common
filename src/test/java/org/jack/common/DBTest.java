@@ -72,7 +72,7 @@ public class DBTest extends BaseTest{
 	}
 	@Test
 	public void testMatchColumn() {
-		List<ColumnInfo> matched=new ArrayList<ColumnInfo>();
+		final List<ColumnInfo> matched=new ArrayList<ColumnInfo>();
 		matchColumn(DEV_BMS, new MatchFilter() {
 			@Override
 			public boolean match(String tableName, String tableType,

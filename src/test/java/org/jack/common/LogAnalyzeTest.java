@@ -28,12 +28,12 @@ public class LogAnalyzeTest extends BaseTest {
 	@Test
 	public void testAnalyze() throws IOException {
 		
-		Map<String,LocalInfo> threadMap=new HashMap<String,LocalInfo>();
+		final Map<String,LocalInfo> threadMap=new HashMap<String,LocalInfo>();
 		File logPath=new File("D:\\data\\online");
 		String fileName="bms-api-info1108_2.log";
 		fileName="bms-api-info.log_2018-11-08-11.log.txt";
 		File logFile=new File(logPath,fileName);
-		List<LocalInfo> dest=new ArrayList<LocalInfo>();
+		final List<LocalInfo> dest=new ArrayList<LocalInfo>();
 		IOUtils.processText(logFile, new Task<String>(){
 
 			@Override

@@ -14,7 +14,7 @@ public class FileTest extends BaseTest {
 	
 	@Test
 	public void testMavenInvalidFile() {
-		File dir=new File("E:\\maven\\repository");
+		File dir=new File("/home/zhangwei/.m2/repository");
 		List<File> destFiles=new ArrayList<File>();
 		processFile(dir, new MavenInvalidFileFilter(), destFiles);
 	}
