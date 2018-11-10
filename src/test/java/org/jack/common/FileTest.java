@@ -26,7 +26,7 @@ public class FileTest extends BaseTest {
 			}else if(file.isFile()){
 				if(filter.accept(file)){
 					log(file);
-//					file.delete();
+					file.delete();
 					destFiles.add(file);
 				}
 			}
