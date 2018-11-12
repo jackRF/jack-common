@@ -32,6 +32,10 @@ public class LogAnalyzeTest extends BaseTest {
 		File logPath=new File("D:\\data\\online");
 		String fileName="bms-api-info1108_2.log";
 		fileName="bms-api-info.log_2018-11-08-11.log.txt";
+		fileName="bms-api-info1109.log";
+		fileName="bms-api-info1112.log";
+		fileName="bms-api-info1112.2.log";
+		fileName="bms-api-info1112-13.2.log";
 		File logFile=new File(logPath,fileName);
 		final List<LocalInfo> dest=new ArrayList<LocalInfo>();
 		IOUtils.processText(logFile, new Task<String>(){
