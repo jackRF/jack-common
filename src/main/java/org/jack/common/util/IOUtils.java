@@ -130,7 +130,7 @@ public class IOUtils {
 		return sb.toString();
 	}
 
-	public void copy(InputStream in, OutputStream out) throws IOException {
+	public static void copy(InputStream in, OutputStream out) throws IOException {
 		try {
 			write(in, out, BUFFER_SIZE);
 		}finally {

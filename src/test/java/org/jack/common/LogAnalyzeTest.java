@@ -1,6 +1,7 @@
 package org.jack.common;
 
 import java.io.File;
+import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.text.ParseException;
@@ -25,6 +26,7 @@ import com.alibaba.fastjson.JSON;
 public class LogAnalyzeTest extends BaseTest {
 	private int i=0;
 	private LocalInfo lastlocalInfo;
+
 	@Test
 	public void testAnalyze() throws IOException {
 		
@@ -36,7 +38,11 @@ public class LogAnalyzeTest extends BaseTest {
 		fileName="bms-api-info1112.log";
 		fileName="bms-api-info1112.2.log";
 		fileName="bms-api-info1112-13.2.log";
-		File logFile=new File(logPath,fileName);
+		fileName="bms-api-info.log_2018-11-13-09.log.txt";
+		File logFile=new File(logPath,"bms-api-info.log2_2018-11-13-09.log");
+		analyzeLogFile(logFile, threadMap);
+	}
+	private void analyzeLogFile(File logFile,final Map<String,LocalInfo> threadMap) throws IOException {
 		final List<LocalInfo> dest=new ArrayList<LocalInfo>();
 		IOUtils.processText(logFile, new Task<String>(){
 
@@ -84,7 +90,7 @@ public class LogAnalyzeTest extends BaseTest {
 				return time1.compareTo(time2);
 			}
 		});
-		File outFile=new File(logPath,fileName+".analyze");
+		File outFile=new File(logFile.getParentFile(),logFile.getName()+".analyze");
 		PrintWriter pw=new PrintWriter(outFile);
 		for(LocalInfo localInfo:dest){
 			pw.println(String.format("%s method:%s 线程%s在%d-%d行耗时%ds ",DateUtils.formatDate(localInfo.getLastLogTime(), DateUtils.DATE_FORMAT_DATETIME)
@@ -95,9 +101,8 @@ public class LogAnalyzeTest extends BaseTest {
 					));
 		}
 		pw.close();
-		
+
 	}
-	
 	private void applyRule(LocalInfo localInfo, LineInfo lineInfo,List<LocalInfo> dest) {
 		Date time1= localInfo.getLastLogTime();
 		Date time2= lineInfo.getTime();

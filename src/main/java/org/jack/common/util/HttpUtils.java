@@ -2,6 +2,7 @@ package org.jack.common.util;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.UnsupportedEncodingException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -72,29 +73,7 @@ public class HttpUtils {
 		}
 		return params;
 	}
-	/**
-	 * post 请求
-	 * @param url
-	 * @param data
-	 * @return
-	 * @throws IOException 
-	 * @throws ClientProtocolException 
-	 * @throws UnsupportedOperationException 
-	 */
-	public static String post(String url,Map<String,?> data) throws ClientProtocolException, IOException{
-		HttpPost httpPost=new HttpPost(url);
-		HttpEntity entity=new UrlEncodedFormEntity(dataToNameValuePairs(data),"UTF-8");
-		httpPost.setEntity(entity);
-		return doRequest(httpPost);
-	}
-	public static String post(String url,String json) throws ClientProtocolException, IOException{
-		HttpPost httpPost=new HttpPost(url);
-		StringEntity entity = new StringEntity(json,"UTF-8");   
-		entity.setContentEncoding("UTF-8");
-		entity.setContentType("application/json");
-		httpPost.setEntity(entity);
-		return doRequest(httpPost);
-	}
+	
 	public static class MultipartInfo{
 		private String fileKey;
 		private String fileName;
@@ -133,7 +112,7 @@ public class HttpUtils {
         }
         HttpEntity entity = builder.build();
         httpPost.setEntity(entity);
-        return doRequest(httpPost);
+        return consumeRequest(httpPost);
 	}
 	public String upload(String url,MultipartInfo multipartInfo,Map<String,Object> paramMap) throws ClientProtocolException, IOException{
 		return upload(url, Collections.singletonList(multipartInfo), paramMap);
@@ -148,7 +127,7 @@ public class HttpUtils {
 	 * @throws UnsupportedOperationException 
 	 */
 	public static String get(String url) throws ClientProtocolException, IOException{
-		return doRequest(new HttpGet(url));
+		return consumeRequest(new HttpGet(url));
 	}
 	/**
 	 * get 请求
@@ -160,7 +139,42 @@ public class HttpUtils {
 	 * @throws UnsupportedOperationException 
 	 */
 	public static String get(String url,Map<String,?> data) throws ClientProtocolException, IOException{
-		return doRequest(new HttpGet(url+dataToParams(data)));
+		return consumeRequest(buildHttpGet(url, data));
+	}
+	/**
+	 * post 请求
+	 * @param url
+	 * @param data
+	 * @return
+	 * @throws IOException 
+	 * @throws ClientProtocolException 
+	 * @throws UnsupportedOperationException 
+	 */
+	public static String post(String url,Map<String,?> data) throws ClientProtocolException, IOException{
+		return consumeRequest(buildHttpPostForm(url, data));
+	}
+	public static String post(String url,String json) throws ClientProtocolException, IOException{
+		return consumeRequest(buildHttpPostJson(url, json));
+	}
+	public static HttpGet buildHttpGet(String url,Map<String,?> data) {
+		return new HttpGet(url+dataToParams(data));
+	}
+	public static HttpPost buildHttpPostForm(String url,Map<String,?> data) throws UnsupportedEncodingException {
+		HttpPost httpPost=new HttpPost(url);
+		HttpEntity entity=new UrlEncodedFormEntity(dataToNameValuePairs(data),"UTF-8");
+		httpPost.setEntity(entity);
+		return httpPost;
+	}
+	public static HttpPost buildHttpPostJson(String url,String json){
+		HttpPost httpPost=new HttpPost(url);
+		StringEntity entity = new StringEntity(json,"UTF-8");   
+		entity.setContentEncoding("UTF-8");
+		entity.setContentType("application/json");
+		httpPost.setEntity(entity);
+		return httpPost;
+	}
+	public static HttpResponse request(String url) throws ClientProtocolException, IOException {
+		return doRequest(new HttpGet(url));
 	}
 	/**
 	 * 执行请求
@@ -169,14 +183,17 @@ public class HttpUtils {
 	 * @throws IOException 
 	 * @throws ClientProtocolException 
 	 */
-	public static String doRequest(HttpUriRequest request) throws ClientProtocolException, IOException{
+	private static String consumeRequest(HttpUriRequest request) throws ClientProtocolException, IOException{
 		HttpEntity httpEntity=null;
 		try{
-			HttpResponse httpResponse=HttpClientHolder.HTTP_CLIENT.execute(request);
+			HttpResponse httpResponse=doRequest(request);
 			httpEntity=httpResponse.getEntity();
 			return EntityUtils.toString(httpEntity);
 		}finally{
 			EntityUtils.consume(httpEntity);
 		}
+	}
+	public static HttpResponse doRequest(HttpUriRequest request) throws ClientProtocolException, IOException {
+		return HttpClientHolder.HTTP_CLIENT.execute(request);
 	}
 }
