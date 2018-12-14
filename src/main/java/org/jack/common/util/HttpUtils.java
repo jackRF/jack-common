@@ -9,20 +9,28 @@ import java.util.List;
 import java.util.Map;
 
 import org.apache.http.Consts;
+import org.apache.http.HeaderElement;
+import org.apache.http.HeaderElementIterator;
 import org.apache.http.HttpEntity;
 import org.apache.http.HttpResponse;
 import org.apache.http.NameValuePair;
 import org.apache.http.client.ClientProtocolException;
 import org.apache.http.client.HttpClient;
+import org.apache.http.client.config.RequestConfig;
 import org.apache.http.client.entity.UrlEncodedFormEntity;
 import org.apache.http.client.methods.HttpGet;
 import org.apache.http.client.methods.HttpPost;
 import org.apache.http.client.methods.HttpUriRequest;
+import org.apache.http.conn.ConnectionKeepAliveStrategy;
 import org.apache.http.entity.ContentType;
 import org.apache.http.entity.StringEntity;
 import org.apache.http.entity.mime.MultipartEntityBuilder;
-import org.apache.http.impl.client.HttpClientBuilder;
+import org.apache.http.impl.client.HttpClients;
+import org.apache.http.impl.conn.PoolingHttpClientConnectionManager;
+import org.apache.http.message.BasicHeaderElementIterator;
 import org.apache.http.message.BasicNameValuePair;
+import org.apache.http.protocol.HTTP;
+import org.apache.http.protocol.HttpContext;
 import org.apache.http.util.EntityUtils;
 /**
  * http 工具类
@@ -31,7 +39,39 @@ import org.apache.http.util.EntityUtils;
  */
 public class HttpUtils {
 	private static class HttpClientHolder{
-		private static final HttpClient HTTP_CLIENT=HttpClientBuilder.create().build();
+		private static final ConnectionKeepAliveStrategy kaStrategy;
+		private static final PoolingHttpClientConnectionManager connectionManager;
+		static{
+			kaStrategy= new ConnectionKeepAliveStrategy() {
+				    @Override
+				    public long getKeepAliveDuration(HttpResponse response, HttpContext context) {
+				        HeaderElementIterator it = new BasicHeaderElementIterator
+				            (response.headerIterator(HTTP.CONN_KEEP_ALIVE));
+				        while (it.hasNext()) {
+				            HeaderElement he = it.nextElement();
+				            String param = he.getName();
+				            String value = he.getValue();
+				            if (value != null && "timeout".equalsIgnoreCase (param)) {
+				                return Long.parseLong(value) * 1000;
+				            }
+				        }
+				        return 60 * 1000;//如果没有约定，则默认定义时长为60s
+				    }
+				};
+			PoolingHttpClientConnectionManager connectionManagerTemp = new PoolingHttpClientConnectionManager();
+			connectionManagerTemp.setMaxTotal(500);
+			connectionManagerTemp.setDefaultMaxPerRoute(50);//例如默认每路由最高50并发，具体依据业务来定
+			connectionManagerTemp.setValidateAfterInactivity(30000);
+			connectionManager=connectionManagerTemp;
+		}
+		private  static HttpClient getHttpClient(){
+			return HttpClients.custom()
+	                .setConnectionManager(connectionManager)
+	                .setKeepAliveStrategy(kaStrategy)
+	                .setDefaultRequestConfig(RequestConfig.custom().build())
+	                .build();
+		}
+		
 	}
 	/**
 	 * data转为http查询字符串
@@ -194,6 +234,6 @@ public class HttpUtils {
 		}
 	}
 	public static HttpResponse doRequest(HttpUriRequest request) throws ClientProtocolException, IOException {
-		return HttpClientHolder.HTTP_CLIENT.execute(request);
+		return HttpClientHolder.getHttpClient().execute(request);
 	}
 }
