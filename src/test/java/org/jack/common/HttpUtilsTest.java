@@ -1,6 +1,8 @@
 package org.jack.common;
 
 import java.io.IOException;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.concurrent.CountDownLatch;
 
 import org.apache.http.client.ClientProtocolException;
@@ -10,12 +12,14 @@ import org.junit.Test;
 public class HttpUtilsTest extends BaseTest{
 	@Test
 	public void testHttp() {
-		testConcurrency(100, new Runnable(){
+		testConcurrency(100, new Task<String>(){
 
 			@Override
-			public void run() {
+			public void toDo(String key) {
 				try {
-					String json=HttpUtils.get("http://localhost:8080/cfs-web-boss/api/rule/test1.do");
+					Map<String,Object> paramMap=new HashMap<>();
+					paramMap.put("key", key);
+					String json=HttpUtils.get("http://localhost:8080/cfs-web-boss/api/rule/test.do?",paramMap);
 					log(json);
 				} catch (ClientProtocolException e) {
 					// TODO Auto-generated catch block
@@ -33,12 +37,16 @@ public class HttpUtilsTest extends BaseTest{
 			e.printStackTrace();
 		}
 	}
+	interface Task<K>{
+		void toDo(K key);
+	}
 	/**
 	 * 测试并发
 	 */
-	private void testConcurrency(int threadCount,Runnable runnable) {
+	private void testConcurrency(int threadCount,Task<String> task) {
 		CountDownLatch latch=new CountDownLatch(1);
 		for(int i=0;i<threadCount;i++){
+			final int ui=i;
 			Thread thread=new Thread(new Runnable() {
 				@Override
 				public void run() {
@@ -47,7 +55,7 @@ public class HttpUtilsTest extends BaseTest{
 					} catch (InterruptedException e) {
 						e.printStackTrace();
 					}
-					runnable.run();
+					task.toDo(ui+"");
 				}
 			});
 			thread.start();
