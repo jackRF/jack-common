@@ -57,8 +57,8 @@ public class Flag {
 	 * @param flag
 	 * @return
 	 */
-	public Flag mark(Flag flag,Flag...markFlags){
-		return mark(flag,merge(markFlags));
+	public Flag mark(Flag...markFlags){
+		return mark(merge(markFlags));
 	}
 	/**
 	 * 添加标记
@@ -66,8 +66,8 @@ public class Flag {
 	 * @param markFlag
 	 * @return
 	 */
-	public synchronized Flag mark(Flag flag,Flag markFlag) {
-		return typeOf(flag.type|markFlag.type);
+	public Flag mark(Flag markFlag) {
+		return typeOf(type|markFlag.type);
 	}
 	/**
 	 * 取消标记
@@ -75,8 +75,8 @@ public class Flag {
 	 * @param flag
 	 * @return
 	 */
-	public Flag unMark(Flag flag,Flag...unFlags){
-		return unMark(flag,merge(unFlags));
+	public Flag unMark(Flag...unFlags){
+		return unMark(merge(unFlags));
 	}
 	/**
 	 * 取消标记
@@ -84,10 +84,10 @@ public class Flag {
 	 * @param unflag
 	 * @return
 	 */
-	public synchronized Flag unMark(Flag flag,Flag unflag){
-		return typeOf(flag.type&(~unflag.type));
+	public Flag unMark(Flag unflag){
+		return typeOf(type&(~unflag.type));
 	}
-	public synchronized long getType() {
+	public long getType() {
 		return type;
 	}
 	private static Flag merge(Flag...flags) {
