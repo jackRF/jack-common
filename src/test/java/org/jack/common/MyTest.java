@@ -14,6 +14,7 @@ import java.util.List;
 import java.util.Map;
 
 import org.apache.http.client.ClientProtocolException;
+import org.jack.common.util.Flag;
 import org.jack.common.util.HttpUtils;
 import org.jack.common.validation.Validator;
 import org.junit.Test;
@@ -23,6 +24,10 @@ import sun.misc.Unsafe;
 
 
 public class MyTest extends BaseTest {
+	@Test
+	public void test7() {
+		log(Flag.unitFlags());
+	}
 	@Test
 	public void test6() {
 		try {
