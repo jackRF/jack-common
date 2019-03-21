@@ -139,7 +139,7 @@ public class DBTest extends BaseTest{
 	@Test
 	public void testColumns(){
 //		testColumns(DEV_BMS, "bms_social_insurance_info");
-		testColumns(DEV_BDS, "bds_greylist");
+		testColumns(DEV_BMS, "bms_loan_review");
 //		testColumns(DEV_BMS, "bms_loan_base");
 //		testColumns(DEV_CREDIT_ZX, "T_PBCCRC_REPORT");
 //		testColumns(TEST_MYCAT, "company");

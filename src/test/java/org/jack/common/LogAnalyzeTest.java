@@ -39,7 +39,9 @@ public class LogAnalyzeTest extends BaseTest {
 		fileName="bms-api-info1112.2.log";
 		fileName="bms-api-info1112-13.2.log";
 		fileName="bms-api-info.log_2018-11-13-09.log.txt";
-		File logFile=new File(logPath,"bms-api-info.log2_2018-11-13-09.log");
+		fileName="bms-api-info.log.txt";
+//		fileName="bms-api-info2.log";
+		File logFile=new File(logPath,fileName);
 		analyzeLogFile(logFile, threadMap);
 	}
 	private void analyzeLogFile(File logFile,final Map<String,LocalInfo> threadMap) throws IOException {
@@ -110,7 +112,7 @@ public class LogAnalyzeTest extends BaseTest {
 			return;
 		}
 		long duration=time2.getTime()-time1.getTime();
-		if(duration>2000){
+		if(duration>1000){
 			if(localInfo.isMethodEnd()||localInfo.getLastLine().contains("response:")){
 				return;
 			}
