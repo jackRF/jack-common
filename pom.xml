@@ -12,9 +12,21 @@
 
   <properties>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+    <ganymed.ssh2>262</ganymed.ssh2>
+    <slf4j.api>1.7.26</slf4j.api>
   </properties>
-
+	
   <dependencies>
+  	<dependency>
+	    <groupId>org.slf4j</groupId>
+	    <artifactId>slf4j-api</artifactId>
+	    <version>${slf4j.api}</version>
+	</dependency>
+  	<dependency>
+        <groupId>ch.ethz.ganymed</groupId>
+        <artifactId>ganymed-ssh2</artifactId>
+        <version>${ganymed.ssh2}</version>
+    </dependency>
   	<dependency>
 	    <groupId>dom4j</groupId>
 	    <artifactId>dom4j</artifactId>

@@ -29,6 +29,11 @@ import javax.persistence.Table;
 import org.jack.common.util.ClassScaner;
 import org.jack.common.util.DBUtils;
 import org.jack.common.util.DBUtils.ConnectionInfo;
+import org.jack.common.util.net.AuthenticatePair;
+import org.jack.common.util.net.ConnectionPair;
+import org.jack.common.util.net.DBConnectionPair;
+import org.jack.common.util.net.DBPair;
+import org.jack.common.util.net.NetAddressPair;
 import org.jack.common.util.Utils;
 import org.junit.Test;
 import org.springframework.beans.BeanWrapperImpl;
@@ -36,34 +41,53 @@ import org.springframework.util.CollectionUtils;
 import org.springframework.util.StringUtils;
 
 public class DBTest extends BaseTest{
-	private static DBUtils.ConnectionInfo DEV_BMS;
-	private static DBUtils.ConnectionInfo DEV_CREDIT_ZX;
-	private static DBUtils.ConnectionInfo TEST_MYCAT;
-	private static DBUtils.ConnectionInfo DEV_BDS;
+	private static DBConnectionPair DEV_BMS;
+	private static DBConnectionPair DEV_CREDIT_ZX;
+	private static DBConnectionPair TEST_MYCAT;
+	private static DBConnectionPair DEV_BDS;
 	static{
-		DEV_BMS=new DBUtils.ConnectionInfo();
-		DEV_BMS.setUrl("jdbc:mysql://172.16.230.122:3306/bms_cyb");
-		DEV_BMS.setUser("bms");
-		DEV_BMS.setPassword("bms");
-		
-		DEV_CREDIT_ZX=new DBUtils.ConnectionInfo();
-		DEV_CREDIT_ZX.setUrl("jdbc:oracle:thin:@172.16.230.90:1521:stupor");
-		DEV_CREDIT_ZX.setUser("xd_zx");
-		DEV_CREDIT_ZX.setPassword("123456");
-		
-		TEST_MYCAT=new DBUtils.ConnectionInfo();
-		TEST_MYCAT.setUrl("jdbc:mysql://localhost:8066/TESTDB");
-		TEST_MYCAT.setUser("root");
-		TEST_MYCAT.setPassword("123456");
-		
-		DEV_BDS=new DBUtils.ConnectionInfo();
-		DEV_BDS.setUrl("jdbc:mysql://172.16.230.122:3306/bds");
-		DEV_BDS.setUser("bds");
-		DEV_BDS.setPassword("bds");
+		{
+			DBConnectionPair dbConnectionPair=new DBConnectionPair();
+			ConnectionPair connection=new ConnectionPair();
+			connection.setAuthenticate(new AuthenticatePair("bms", "bms"));
+			connection.setNetAddress(new NetAddressPair("172.16.230.122", 3306));
+			dbConnectionPair.setConnection(connection);
+			dbConnectionPair.setDb(new DBPair(DBPair.MYSQL, "bms_cyb"));
+			DEV_BMS=dbConnectionPair;
+		}{
+			DBConnectionPair dbConnectionPair=new DBConnectionPair();
+			ConnectionPair connection=new ConnectionPair();
+			connection.setAuthenticate(new AuthenticatePair("xd_zx", "123456"));
+			connection.setNetAddress(new NetAddressPair("172.16.230.90", 1521));
+			dbConnectionPair.setConnection(connection);
+			dbConnectionPair.setDb(new DBPair(DBPair.ORACLE, "stupor"));
+			DEV_CREDIT_ZX=dbConnectionPair;
+		}{
+			DBConnectionPair dbConnectionPair=new DBConnectionPair();
+			ConnectionPair connection=new ConnectionPair();
+			connection.setAuthenticate(new AuthenticatePair("root", "123456"));
+			connection.setNetAddress(new NetAddressPair("localhost", 8066));
+			dbConnectionPair.setConnection(connection);
+			dbConnectionPair.setDb(new DBPair(DBPair.MYSQL, "TESTDB"));
+			TEST_MYCAT=dbConnectionPair;
+		}{
+			DBConnectionPair dbConnectionPair=new DBConnectionPair();
+			ConnectionPair connection=new ConnectionPair();
+			connection.setAuthenticate(new AuthenticatePair("bds", "bds"));
+			connection.setNetAddress(new NetAddressPair("172.16.230.122", 3306));
+			dbConnectionPair.setConnection(connection);
+			dbConnectionPair.setDb(new DBPair(DBPair.MYSQL, "bds"));
+			DEV_BDS=dbConnectionPair;
+		}
 	}
 	private static interface MatchFilter{
 		boolean match(String tableName,String tableType,ColumnInfo columnInfo);
 		void accept(String tableName,String tableType,ColumnInfo columnInfo);
+	}
+	@Test
+	public void testConn() {
+		Connection sqlConnection=getConnection(DEV_BMS);
+		log(sqlConnection.toString());
 	}
 	@Test
 	public void propertyToColumn(){
@@ -73,7 +97,7 @@ public class DBTest extends BaseTest{
 	@Test
 	public void testMatchColumn() {
 		final List<ColumnInfo> matched=new ArrayList<ColumnInfo>();
-		matchColumn(DEV_BMS, new MatchFilter() {
+		matchColumn(getConnection(DEV_BMS), new MatchFilter() {
 			@Override
 			public boolean match(String tableName, String tableType,
 					ColumnInfo columnInfo) {
@@ -94,12 +118,29 @@ public class DBTest extends BaseTest{
 		for(ColumnInfo columnInfo:matched){
 			log(String.format("%s.%s   %s", columnInfo.getTableName(),columnInfo.getColumnName(),columnInfo.getColumnDetail().getColumnComment()));
 		}
-
 	}
-	private void matchColumn(ConnectionInfo connectionInfo,MatchFilter matchFilter){
+	private Connection getConnection(ConnectionInfo connectionInfo){
+		try {
+			return DBUtils.getConnection(connectionInfo);
+		} catch (SQLException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		return null;
+	}
+	private Connection getConnection(DBConnectionPair dbConnectionPair){
+		try {
+			return DBUtils.getConnection(dbConnectionPair);
+		} catch (SQLException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		return null;
+	}
+	private void matchColumn(Connection connection,MatchFilter matchFilter){
 		List<String[]> tableInfos=new ArrayList<String[]>();
 		try {
-			ResultSet rs=query("select table_name,table_type from information_schema.tables where table_schema='bms_cyb'", connectionInfo);
+			ResultSet rs=query("select table_name,table_type from information_schema.tables where table_schema='bms_cyb'", connection);
 			while(rs.next()){
 				String tableName=rs.getString(1);
 				String tableType=rs.getString(2);
@@ -112,8 +153,8 @@ public class DBTest extends BaseTest{
 		}
 		for(String[] tableInfo:tableInfos){
 			try {
-				Map<String, ColumnInfo> columnInfoMap = getTableColumnInfos(tableInfo[0], connectionInfo);
-				processComment(columnInfoMap, connectionInfo);
+				Map<String, ColumnInfo> columnInfoMap = getTableColumnInfos(tableInfo[0], connection);
+				processComment(columnInfoMap, connection);
 				for(Map.Entry<String,ColumnInfo> entry:columnInfoMap.entrySet()){
 					if(matchFilter.match(tableInfo[0], tableInfo[1], entry.getValue())){
 						matchFilter.accept(tableInfo[0], tableInfo[1], entry.getValue());
@@ -139,7 +180,7 @@ public class DBTest extends BaseTest{
 	@Test
 	public void testColumns(){
 //		testColumns(DEV_BMS, "bms_social_insurance_info");
-		testColumns(DEV_BMS, "bms_loan_review");
+		testColumns(getConnection(DEV_BMS), "bms_loan_review");
 //		testColumns(DEV_BMS, "bms_loan_base");
 //		testColumns(DEV_CREDIT_ZX, "T_PBCCRC_REPORT");
 //		testColumns(TEST_MYCAT, "company");
@@ -150,7 +191,7 @@ public class DBTest extends BaseTest{
 		sql.append("select id,name,QUANTITY,price from test_product");
 		sql.append(" where id>2 and id <7  limit 4");
 		try {
-			ResultSet rs=query(sql.toString(), TEST_MYCAT);
+			ResultSet rs=query(sql.toString(), getConnection(TEST_MYCAT));
 			int columnCount=rs.getMetaData().getColumnCount();
 			StringBuilder sb=new StringBuilder();
 			for(int i=0;i<columnCount;i++){
@@ -197,7 +238,7 @@ public class DBTest extends BaseTest{
 		for(String column:columna){
 			columns.add(column);
 		}
-		generateEntity(DEV_BMS, "BMS_LOAN_PRODUCT",columns);
+		generateEntity(getConnection(DEV_BMS), "BMS_LOAN_PRODUCT",columns);
 	}
 	@Test
 	public void testSqlEntity() {
@@ -226,10 +267,10 @@ public class DBTest extends BaseTest{
 //		}
 
 	}
-	private void generateEntity(DBUtils.ConnectionInfo connectionInfo,String tableName,Set<String> columns){
+	private void generateEntity(Connection connection,String tableName,Set<String> columns){
 		Map<String, ColumnInfo> columnInfos;
 		try {
-			columnInfos = getTableColumnInfos(tableName, connectionInfo);
+			columnInfos = getTableColumnInfos(tableName, connection);
 			List<ColumnInfo> list=new ArrayList<ColumnInfo>(columnInfos.values());
 			Collections.sort(list,new Comparator<ColumnInfo>() {
 				@Override
@@ -276,13 +317,13 @@ public class DBTest extends BaseTest{
 		return null;
 		
 	}
-	private void compareSqlEntity(StringBuilder sql,Class<?> entityClass,ConnectionInfo connectionInfo) throws SQLException{
-		compareEntity(getSqlColumnInfos(sql, connectionInfo), entityClass);
+	private void compareSqlEntity(StringBuilder sql,Class<?> entityClass,Connection connection) throws SQLException{
+		compareEntity(getSqlColumnInfos(sql, connection), entityClass);
 	}
 	
 	private void compareEntity(Class<?> entityClass) throws SQLException{
 		Table table=entityClass.getAnnotation(Table.class);
-		Map<String, ColumnInfo> columnInfos=getTableColumnInfos(table.name(), DEV_BMS);
+		Map<String, ColumnInfo> columnInfos=getTableColumnInfos(table.name(), getConnection(DEV_BMS));
 		compareEntity(columnInfos, entityClass);
 	}
 	private void compareEntity(Map<String, ColumnInfo> columnInfos,Class<?> entityClass) {
@@ -351,9 +392,9 @@ public class DBTest extends BaseTest{
 	}
 	
 	
-	private void testColumns(DBUtils.ConnectionInfo connectionInfo,String tableName){
+	private void testColumns(Connection connection,String tableName){
 		try {
-			Map<String, ColumnInfo> columnInfos=getTableColumnInfos(tableName, connectionInfo);
+			Map<String, ColumnInfo> columnInfos=getTableColumnInfos(tableName, connection);
 			List<ColumnInfo> list=new ArrayList<ColumnInfo>(columnInfos.values());
 			Collections.sort(list,new Comparator<ColumnInfo>() {
 				@Override
@@ -468,15 +509,15 @@ public class DBTest extends BaseTest{
 		}
 		
 	}
-	private Map<String, ColumnInfo> getTableColumnInfos(String tableName,DBUtils.ConnectionInfo connectionInfo) throws SQLException{
+	private Map<String, ColumnInfo> getTableColumnInfos(String tableName,Connection connection) throws SQLException{
 		StringBuilder sql=new StringBuilder();
 		sql.append("SELECT * FROM  ");
 		sql.append(tableName);
 		sql.append(" where 0=1");
-		return getSqlColumnInfos(sql,connectionInfo);
+		return getSqlColumnInfos(sql,connection);
 	}
-	private Map<String, ColumnInfo> getSqlColumnInfos(StringBuilder sql,DBUtils.ConnectionInfo connectionInfo) throws SQLException{
-		ResultSet rs=query(sql.toString(), connectionInfo);
+	private Map<String, ColumnInfo> getSqlColumnInfos(StringBuilder sql,Connection connection) throws SQLException{
+		ResultSet rs=query(sql.toString(), connection);
 		log("result count:"+count(rs));
 		ResultSetMetaData rsMetaData=rs.getMetaData();
 		Map<String, ColumnInfo>  columnInfos=convertToColumnInfos(rsMetaData);
@@ -507,7 +548,7 @@ public class DBTest extends BaseTest{
 		
 		
 	}
-	private void processComment(Map<String, ColumnInfo>  columnInfos,ConnectionInfo connectionInfo){
+	private void processComment(Map<String, ColumnInfo>  columnInfos,Connection connection){
 		Set<String> tableNames=new HashSet<String>();
 		String tableSchema="";
 		for(Map.Entry<String, ColumnInfo> entry:columnInfos.entrySet()){
@@ -521,7 +562,7 @@ public class DBTest extends BaseTest{
 		log(sb);
 		Map<String,ColumnDetail> columnDetails=new HashMap<>();
 		try {
-			ResultSet rs=query(sb.toString(), connectionInfo);
+			ResultSet rs=query(sb.toString(), connection);
 			while(rs.next()){
 				ColumnDetail columnDetail=new ColumnDetail();
 				columnDetail.setColumnComment(rs.getString(1));
@@ -569,8 +610,7 @@ public class DBTest extends BaseTest{
 		}
 		return count;
 	}
-	private ResultSet query(String sql,DBUtils.ConnectionInfo connectionInfo) throws SQLException{
-		Connection connection=DBUtils.getConnection(connectionInfo);
+	private ResultSet query(String sql,Connection connection) throws SQLException{
 //		DatabaseMetaData databaseMetaData=connection.getMetaData();
 //		String dbType=databaseMetaData.getDatabaseProductName();
 //		if(dbType.toLowerCase().contains("mysql")){
@@ -591,7 +631,7 @@ public class DBTest extends BaseTest{
 	public void testOracel() {
 		testConnection(DEV_CREDIT_ZX);
 	}
-	private void testConnection(DBUtils.ConnectionInfo connectionInfo) {
+	private void testConnection(DBConnectionPair connectionInfo) {
 		try {
 			Connection connection=DBUtils.getConnection(connectionInfo);
 			DatabaseMetaData metaData=connection.getMetaData();

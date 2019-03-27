@@ -5,6 +5,9 @@ import java.sql.Driver;
 import java.sql.DriverManager;
 import java.sql.SQLException;
 
+import org.jack.common.util.net.AuthenticatePair;
+import org.jack.common.util.net.DBConnectionPair;
+
 public class DBUtils {
 	static{
 		registerDriver(ClassLoaderUtils.loadClass("com.mysql.cj.jdbc.Driver"));
@@ -52,5 +55,10 @@ public class DBUtils {
 	}
 	public static Connection getConnection(ConnectionInfo connectionInfo) throws SQLException{
 		return DriverManager.getConnection(connectionInfo.url, connectionInfo.user, connectionInfo.password);
+	}
+	public static Connection getConnection(DBConnectionPair dbConnectionPair) throws SQLException{
+		AuthenticatePair authenticatePair=dbConnectionPair.getConnection().getAuthenticate();
+		return DriverManager.getConnection(dbConnectionPair.toJdbcUrlString(),authenticatePair.getUsername(),authenticatePair.getPassword());
+		
 	}
 }
