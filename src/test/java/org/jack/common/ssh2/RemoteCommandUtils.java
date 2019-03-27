@@ -8,7 +8,12 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.UnsupportedEncodingException;
+import java.util.Collection;
 
+import org.jack.common.util.PathPair;
+import org.jack.common.util.net.AuthenticatePair;
+import org.jack.common.util.net.ConnectionPair;
+import org.jack.common.util.net.NetAddressPair;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.util.StringUtils;
@@ -23,20 +28,29 @@ public class RemoteCommandUtils {
 
     private static final Logger logger = LoggerFactory.getLogger(RemoteCommandUtils.class);
     private static String  DEFAULTCHART="UTF-8"; 
-
+    public static Connection login(ConnectionPair connectionPair) {
+    	NetAddressPair netAddress=connectionPair.getNetAddress();
+    	AuthenticatePair authenticate=connectionPair.getAuthenticate();
+		return login(netAddress.getHostname(),netAddress.getPort(),authenticate.getUsername(),authenticate.getPassword());
+	}
     /** 
      * 登录主机 
      * @return 
      *      登录成功返回true，否则返回false 
      */  
-    public static Connection login(String ip,
+    public static Connection login(String ip,int port,
                             String userName,
                             String userPwd){  
 
         boolean flg=false;
         Connection conn = null;
         try {  
-            conn = new Connection(ip);  
+        	if(port>0){
+        		conn = new Connection(ip,port); 
+        	}else{
+        		conn = new Connection(ip); 
+        	}
+             
             conn.connect();//连接  
             flg=conn.authenticateWithPassword(userName, userPwd);//认证  
             if(flg){
@@ -49,29 +63,58 @@ public class RemoteCommandUtils {
         }  
         return conn;  
     }
-    public static void uploadFile(File file,String remoteFile,Connection conn){
+    public static void uploadFile(Collection<String> fileNames,PathPair pathPair,Connection conn){
+    	File dir=new File(pathPair.getSource());
     	try {
 			SFTPv3Client sftp=new SFTPv3Client(conn);
-			SFTPv3FileHandle fileHandle=sftp.createFile(remoteFile);
-			FileInputStream fin=new FileInputStream(file);
-			BufferedInputStream bin=new BufferedInputStream(fin);
-			byte[] bytes=new byte[1024];
-			int size=0;
-			while(true){
-				int count=bin.read(bytes);
-				if(count>0){
-					sftp.write(fileHandle, size, bytes, 0, count);
-					size+=count;
-				}else if(count==-1){
-					break;
-				}
-			}
-			bin.close();
-			sftp.closeFile(fileHandle);
+			for(String fileName:fileNames){
+	    		uploadFile(new File(dir,fileName), pathPair.getDestFilePath(fileName), sftp);
+	    	}
+			sftp.close();
 		} catch (IOException e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
+    	
+    }
+    public static void uploadFile(String fileName,PathPair pathPair,Connection conn){
+    	try {
+    		SFTPv3Client sftp=new SFTPv3Client(conn);
+			uploadFile(fileName, pathPair, sftp);
+			sftp.close();
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+    }
+    public static void uploadFile(File file,String remoteFile,Connection conn){
+    	try {
+    		SFTPv3Client sftp=new SFTPv3Client(conn);
+			uploadFile(file, remoteFile,sftp);
+			sftp.close();
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+    }
+    public static void uploadFile(String fileName,PathPair pathPair,SFTPv3Client sftp) throws IOException{
+    	File dir=new File(pathPair.getSource());
+    	uploadFile(new File(dir,fileName), pathPair.getDestFilePath(fileName), sftp);
+    }
+    public static void uploadFile(File file,String remoteFile,SFTPv3Client sftp) throws IOException{
+    	SFTPv3FileHandle fileHandle=sftp.createFile(remoteFile);
+		FileInputStream fin=new FileInputStream(file);
+		BufferedInputStream bin=new BufferedInputStream(fin);
+		byte[] bytes=new byte[1024];
+		int size=0;
+		while(true){
+			int count=bin.read(bytes);
+			if(count>0){
+				sftp.write(fileHandle, size, bytes, 0, count);
+				size+=count;
+			}else if(count==-1){
+				break;
+			}
+		}
+		bin.close();
+		sftp.closeFile(fileHandle);
     }
     public static String execute(Connection conn,String cmd) {
 		try {
