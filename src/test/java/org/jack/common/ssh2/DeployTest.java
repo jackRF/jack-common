@@ -48,9 +48,14 @@ public class DeployTest extends SSH2Test {
 	}
 	@Test	
 	public void testDeployCfs() {
-		// TODO Auto-generated method stub
-
+		WebDeploy webDeploy=new WebDeploy(DEV_CFS);
+		webDeploy.setArtifactId("cfs-web-boss");
+		webDeploy.setContainerPath("/home/cfs/apache-tomcat-7.0.69");
+		webDeploy.setSourcePath("D:/Projects/com/tongc-soft/CFS/cfs-web-boss/target");
+		deploy(webDeploy);
+		
 	}
+	
 	@Test
 	public void testDeployRule() {
 		DubboDeploy dubboDeploy=new DubboDeploy(DEV_RULE);
@@ -76,22 +81,54 @@ public class DeployTest extends SSH2Test {
 		dubboDeploy.setSourcePath("D:/Projects/com/tongc-soft/BDS/bds-biz/target");
 		deploy(dubboDeploy);
 	}
-	private void deploy(DubboDeploy dubboDeploy){
-		Connection conn=RemoteCommandUtils.login(dubboDeploy.getConnectionPair());
-		ProcessInfo processInfo=grepParse(execute(conn, "ps -ef|grep dubbo"), dubboDeploy.getArtifactId());;
+	private void deploy(WebDeploy deploy) {
+		Connection conn=RemoteCommandUtils.login(deploy.getConnectionPair());
+		ProcessInfo processInfo=grepParse(execute(conn, " ps -ef|grep java"), deploy.getContainerPath());
 		if(processInfo!=null){
 			execute(conn, "kill -9 "+processInfo.getPid());
 		}
 		PathPair pathPair=new PathPair();
-		pathPair.setSource(dubboDeploy.getSourcePath());
-		pathPair.setDest(dubboDeploy.getRemotePath());
-		RemoteCommandUtils.uploadFile(dubboDeploy.getDeployTarget(),pathPair, conn);
+		pathPair.setSource(deploy.getSourcePath());
+		pathPair.setDest(deploy.getRemotePath());
+		RemoteCommandUtils.uploadFile(deploy.getDeployTarget(),pathPair, conn);
 		log("----------restart--------");
-		if(dubboDeploy.useRemotePath()){
-			execute(conn, "cd "+dubboDeploy.getRemotePath()+" && sh auto_deploy.sh");
+		if(deploy.useRemotePath()){
+			execute(conn, "cd "+deploy.getRemotePath()+" && sh auto_deploy.sh");
 		}else{
 			execute(conn, "sh auto_deploy.sh");
 		}
 		conn.close();
+	}
+	private void deploy(DubboDeploy deploy){
+		Connection conn=RemoteCommandUtils.login(deploy.getConnectionPair());
+		ProcessInfo processInfo=grepParse(execute(conn, "ps -ef|grep dubbo"), deploy.getArtifactId());
+		if(processInfo!=null){
+			execute(conn, "kill -9 "+processInfo.getPid());
+		}
+		PathPair pathPair=new PathPair();
+		pathPair.setSource(deploy.getSourcePath());
+		pathPair.setDest(deploy.getRemotePath());
+		RemoteCommandUtils.uploadFile(deploy.getDeployTarget(),pathPair, conn);
+		log("----------restart--------");
+		if(deploy.useRemotePath()){
+			execute(conn, "cd "+deploy.getRemotePath()+" && sh auto_deploy.sh");
+		}else{
+			execute(conn, "sh auto_deploy.sh");
+		}
+		conn.close();
+	}
+	protected void update(DubboDeploy deploy){
+		Connection conn=RemoteCommandUtils.login(deploy.getConnectionPair());
+		PathPair pathPair=new PathPair();
+		pathPair.setSource(deploy.getSourcePath());
+		pathPair.setDest(deploy.getRemotePath());
+		RemoteCommandUtils.uploadFile(deploy.getDeployTarget(),pathPair, conn);
+	}
+	protected void update(WebDeploy deploy){
+		Connection conn=RemoteCommandUtils.login(deploy.getConnectionPair());
+		PathPair pathPair=new PathPair();
+		pathPair.setSource(deploy.getSourcePath());
+		pathPair.setDest(deploy.getRemotePath());
+		RemoteCommandUtils.uploadFile(deploy.getDeployTarget(),pathPair, conn);
 	}
 }
