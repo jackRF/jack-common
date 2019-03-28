@@ -1,6 +1,7 @@
 package org.jack.common.reflect;
 
 import java.lang.reflect.Constructor;
+import java.lang.reflect.Field;
 import java.lang.reflect.GenericArrayType;
 import java.lang.reflect.Method;
 import java.lang.reflect.ParameterizedType;
@@ -14,6 +15,13 @@ import org.junit.Test;
 import org.springframework.core.ResolvableType;
 
 public class ReflectTest extends BaseTest{
+	@Test
+	public void test7() {
+		Field[] fs=E2.class.asSubclass(E1.class).getDeclaredFields();
+		log(fs);
+		fs=E1.class.getDeclaredFields();
+		log(fs);
+	}
 	@Test
 	public void test6() {
 		Method[] methods=RA2.class.getDeclaredMethods();
