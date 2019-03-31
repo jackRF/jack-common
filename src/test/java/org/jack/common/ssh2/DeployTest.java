@@ -49,9 +49,9 @@ public class DeployTest extends SSH2Test {
 		deploy.setProjectPath("D:/Projects/com/tongc-soft/preCreditJob");
 		deploy.setArtifactId("job-admin");
 		deploy.setVersion("2.0.2-SNAPSHOT");
-//		if(!compile(deploy.getProjectPath())){
-//			return;
-//		}
+		if(!compile(deploy.getProjectPath())){
+			return;
+		}
 		deploy.setSourcePath("job-admin/target");
 		deploy.setContainerPath("/usr/local/apache-tomcat-8.5.38");
 		deploy(deploy);
