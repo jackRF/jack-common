@@ -1,6 +1,10 @@
 package org.jack.common.ssh2;
 
 
+import java.io.BufferedReader;
+import java.io.IOException;
+import java.io.InputStreamReader;
+
 import org.jack.common.util.PathPair;
 import org.jack.common.util.net.AuthenticatePair;
 import org.jack.common.util.net.ConnectionPair;
@@ -37,6 +41,20 @@ public class DeployTest extends SSH2Test {
 			connectionPair.setAuthenticate(new AuthenticatePair("root", "zd,123"));
 			DEV_BDS=connectionPair;
 		}
+	}
+	
+	@Test
+	public void testDeployJob() {
+		WebDeploy deploy=new WebDeploy(DEV_BMS);
+		deploy.setProjectPath("D:/Projects/com/tongc-soft/preCreditJob");
+		deploy.setArtifactId("job-admin");
+		deploy.setVersion("2.0.2-SNAPSHOT");
+//		if(!compile(deploy.getProjectPath())){
+//			return;
+//		}
+		deploy.setSourcePath("job-admin/target");
+		deploy.setContainerPath("/usr/local/apache-tomcat-8.5.38");
+		deploy(deploy);
 	}
 	@Test
 	public void testDeployBms() {
@@ -81,54 +99,53 @@ public class DeployTest extends SSH2Test {
 		dubboDeploy.setSourcePath("D:/Projects/com/tongc-soft/BDS/bds-biz/target");
 		deploy(dubboDeploy);
 	}
-	private void deploy(WebDeploy deploy) {
+	private void deploy(AbstractDeploy deploy){
 		Connection conn=RemoteCommandUtils.login(deploy.getConnectionPair());
-		ProcessInfo processInfo=grepParse(execute(conn, " ps -ef|grep java"), deploy.getContainerPath());
+		ProcessInfo processInfo=grepParse(execute(conn, deploy.getPsCommand()), deploy.useGrep());
 		if(processInfo!=null){
 			execute(conn, "kill -9 "+processInfo.getPid());
 		}
-		PathPair pathPair=new PathPair();
-		pathPair.setSource(deploy.getSourcePath());
-		pathPair.setDest(deploy.getRemotePath());
-		RemoteCommandUtils.uploadFile(deploy.getDeployTarget(),pathPair, conn);
+		RemoteCommandUtils.uploadFile(deploy.getDeployTarget(),deploy.getPathPair(), conn);
 		log("----------restart--------");
-		if(deploy.useRemotePath()){
-			execute(conn, "cd "+deploy.getRemotePath()+" && sh auto_deploy.sh");
-		}else{
-			execute(conn, "sh auto_deploy.sh");
-		}
+		execute(conn,deploy.useStartCommand());
 		conn.close();
 	}
-	private void deploy(DubboDeploy deploy){
+	protected void update(AbstractDeploy deploy){
 		Connection conn=RemoteCommandUtils.login(deploy.getConnectionPair());
-		ProcessInfo processInfo=grepParse(execute(conn, "ps -ef|grep dubbo"), deploy.getArtifactId());
-		if(processInfo!=null){
-			execute(conn, "kill -9 "+processInfo.getPid());
-		}
-		PathPair pathPair=new PathPair();
-		pathPair.setSource(deploy.getSourcePath());
-		pathPair.setDest(deploy.getRemotePath());
-		RemoteCommandUtils.uploadFile(deploy.getDeployTarget(),pathPair, conn);
-		log("----------restart--------");
-		if(deploy.useRemotePath()){
-			execute(conn, "cd "+deploy.getRemotePath()+" && sh auto_deploy.sh");
-		}else{
-			execute(conn, "sh auto_deploy.sh");
-		}
-		conn.close();
+		RemoteCommandUtils.uploadFile(deploy.getDeployTarget(),deploy.getPathPair(), conn);
 	}
-	protected void update(DubboDeploy deploy){
-		Connection conn=RemoteCommandUtils.login(deploy.getConnectionPair());
-		PathPair pathPair=new PathPair();
-		pathPair.setSource(deploy.getSourcePath());
-		pathPair.setDest(deploy.getRemotePath());
-		RemoteCommandUtils.uploadFile(deploy.getDeployTarget(),pathPair, conn);
+	protected boolean compile(String pomPath) {
+		String command="D:/soft/apache-maven-3.2.5/bin/mvn.bat clean install -Dmaven.test.skip=true -f "+pomPath+"/pom.xml";
+		return exec(command);
 	}
-	protected void update(WebDeploy deploy){
-		Connection conn=RemoteCommandUtils.login(deploy.getConnectionPair());
-		PathPair pathPair=new PathPair();
-		pathPair.setSource(deploy.getSourcePath());
-		pathPair.setDest(deploy.getRemotePath());
-		RemoteCommandUtils.uploadFile(deploy.getDeployTarget(),pathPair, conn);
+	protected void execCmd(String command) {
+		exec("cmd /k start "+command);
+	}
+	protected boolean exec(String command) {
+		try {
+			Process p = Runtime.getRuntime().exec(command);
+			BufferedReader reader = new BufferedReader(new InputStreamReader(p.getInputStream(),"UTF-8"));
+			BufferedReader errReader = new BufferedReader(new InputStreamReader(p.getErrorStream(),"UTF-8"));
+			String line=null;
+			while((line=reader.readLine())!=null){
+				log(line);
+			}
+			while((line=errReader.readLine())!=null){
+				log(line);
+			}
+			reader.close();
+			errReader.close();
+			if(p.exitValue()==0){
+				log("执行成功");
+				return true;
+			}else{
+				log(p.exitValue());
+				log("执行失败");
+				return false;
+			}
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+		return false;
 	}
 }

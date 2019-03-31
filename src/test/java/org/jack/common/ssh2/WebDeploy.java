@@ -1,43 +1,20 @@
 package org.jack.common.ssh2;
 
+import org.jack.common.util.DeployPathPair;
+import org.jack.common.util.PathPair;
 import org.jack.common.util.net.ConnectionPair;
 
-public class WebDeploy {
-	private final ConnectionPair connectionPair;
-	private String artifactId;
-	private String version;
+public class WebDeploy extends AbstractDeploy{
 	private String sourcePath;
-	private String remotePath;
 	private String containerPath;
 	public WebDeploy(ConnectionPair connectionPair) {
-		this.connectionPair=connectionPair;
-	}
-	public ConnectionPair getConnectionPair() {
-		return connectionPair;
-	}
-	public String getArtifactId() {
-		return artifactId;
-	}
-	public void setArtifactId(String artifactId) {
-		this.artifactId = artifactId;
-	}
-	public String getVersion() {
-		return version;
-	}
-	public void setVersion(String version) {
-		this.version = version;
+		super(connectionPair);
 	}
 	public String getSourcePath() {
 		return sourcePath;
 	}
 	public void setSourcePath(String sourcePath) {
 		this.sourcePath = sourcePath;
-	}
-	public String getRemotePath() {
-		return remotePath;
-	}
-	public void setRemotePath(String remotePath) {
-		this.remotePath = remotePath;
 	}
 	public String getContainerPath() {
 		return containerPath;
@@ -46,9 +23,24 @@ public class WebDeploy {
 		this.containerPath = containerPath;
 	}
 	public String getDeployTarget() {
+		if(version!=null&&!version.isEmpty()){
+			return String.format("%s-%s.war", artifactId,version);
+		}
 		return artifactId+".war";
 	}
-	public boolean useRemotePath() {
-		return remotePath!=null&&!remotePath.isEmpty();
+	@Override
+	protected PathPair getPathPair() {
+		PathPair pathPair=new DeployPathPair(version!=null&&!version.isEmpty());
+		pathPair.setSource(PathPair.getChildFilePath(projectPath, sourcePath));
+		pathPair.setDest(PathPair.getChildFilePath(containerPath, "webapps"));
+		return pathPair;
+	}
+	@Override
+	protected String useStartCommand() {
+		return String.format("cd %s && sh bin/startup.sh", containerPath);
+	}
+	@Override
+	public String useGrep() {
+		return containerPath;
 	}
 }

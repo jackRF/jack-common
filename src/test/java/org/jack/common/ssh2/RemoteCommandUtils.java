@@ -99,6 +99,8 @@ public class RemoteCommandUtils {
     	uploadFile(new File(dir,fileName), pathPair.getDestFilePath(fileName), sftp);
     }
     public static void uploadFile(File file,String remoteFile,SFTPv3Client sftp) throws IOException{
+    	System.out.println("uploadFile "+file+"----->"+remoteFile);
+    	sftp.rm(remoteFile);
     	SFTPv3FileHandle fileHandle=sftp.createFile(remoteFile);
 		FileInputStream fin=new FileInputStream(file);
 		BufferedInputStream bin=new BufferedInputStream(fin);
