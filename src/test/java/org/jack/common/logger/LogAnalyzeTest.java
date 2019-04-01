@@ -1,4 +1,4 @@
-package org.jack.common;
+package org.jack.common.logger;
 
 import java.io.File;
 import java.io.FileNotFoundException;
@@ -15,6 +15,7 @@ import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import org.jack.common.BaseTest;
 import org.jack.common.util.DateUtils;
 import org.jack.common.util.IOUtils;
 import org.jack.common.util.Task;
