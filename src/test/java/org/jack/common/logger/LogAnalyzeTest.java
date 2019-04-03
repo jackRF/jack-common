@@ -29,10 +29,10 @@ public class LogAnalyzeTest extends BaseTest {
 	private LocalInfo lastlocalInfo;
 
 	@Test
-	public void testAnalyze() throws IOException {
+	public void testAnalyzeTime() throws IOException {
 		
 		final Map<String,LocalInfo> threadMap=new HashMap<String,LocalInfo>();
-		File logPath=new File("D:\\data\\online");
+		File logPath=new File("D:\\data\\online\\bms");
 		String fileName="bms-api-info1108_2.log";
 		fileName="bms-api-info.log_2018-11-08-11.log.txt";
 		fileName="bms-api-info1109.log";
@@ -40,9 +40,11 @@ public class LogAnalyzeTest extends BaseTest {
 		fileName="bms-api-info1112.2.log";
 		fileName="bms-api-info1112-13.2.log";
 		fileName="bms-api-info.log_2018-11-13-09.log.txt";
-		fileName="bms-api-info.log.txt";
+		fileName="bms-api-info.log_2019-04-01-03.log";
+		String destFileName="1"+"-"+fileName;
+//		fileName="bms-api-info.log.txt";
 //		fileName="bms-api-info2.log";
-		File logFile=new File(logPath,fileName);
+		File logFile=new File(logPath,destFileName);
 		analyzeLogFile(logFile, threadMap);
 	}
 	private void analyzeLogFile(File logFile,final Map<String,LocalInfo> threadMap) throws IOException {

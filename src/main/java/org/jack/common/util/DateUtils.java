@@ -51,6 +51,20 @@ public class DateUtils {
 		}
 		return dateStart;
 	}
+	public static Date addDay(Date date, int day) {
+		Calendar c = Calendar.getInstance();
+		c.setLenient(false);
+		c.setTime(date);
+		c.add(Calendar.DAY_OF_MONTH, day);
+		return c.getTime();
+	}
+	public static Date addHour(Date date, int hour) {
+		Calendar c = Calendar.getInstance();
+		c.setLenient(false);
+		c.setTime(date);
+		c.add(Calendar.HOUR_OF_DAY, hour);
+		return c.getTime();
+	}
 	public static Date setMilliseconds(Date date, int amount) {
         return set(date, Calendar.MILLISECOND, amount);
     } 
