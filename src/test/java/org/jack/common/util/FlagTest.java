@@ -1,5 +1,6 @@
-package org.jack.common;
+package org.jack.common.util;
 
+import org.jack.common.BaseTest;
 import org.jack.common.util.LoanFlag;
 import org.junit.Test;
 

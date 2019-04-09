@@ -1,5 +1,6 @@
-package org.jack.common;
+package org.jack.common.lang;
 
+import org.jack.common.BaseTest;
 import org.junit.Test;
 
 public class NormalTest extends BaseTest{

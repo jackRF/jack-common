@@ -1,4 +1,4 @@
-package org.jack.common;
+package org.jack.common.io;
 
 import java.io.File;
 import java.io.IOException;
@@ -7,6 +7,7 @@ import java.util.HashSet;
 import java.util.Properties;
 import java.util.Set;
 
+import org.jack.common.BaseTest;
 import org.jack.common.util.IOUtils;
 import org.jack.common.util.Task;
 import org.junit.Test;

@@ -1,7 +1,8 @@
-package org.jack.common;
+package org.jack.common.lang;
 
 import java.util.Arrays;
 
+import org.jack.common.BaseTest;
 import org.junit.Test;
 
 public class ArrayTest extends BaseTest{

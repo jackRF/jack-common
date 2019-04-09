@@ -1,4 +1,4 @@
-package org.jack.common;
+package org.jack.common.util;
 
 import java.io.IOException;
 import java.util.HashMap;
@@ -6,6 +6,7 @@ import java.util.Map;
 import java.util.concurrent.CountDownLatch;
 
 import org.apache.http.client.ClientProtocolException;
+import org.jack.common.BaseTest;
 import org.jack.common.util.HttpUtils;
 import org.junit.Test;
 

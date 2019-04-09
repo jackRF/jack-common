@@ -1,4 +1,4 @@
-package org.jack.common;
+package org.jack.common.io;
 
 import java.io.File;
 import java.io.FileFilter;
@@ -8,6 +8,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
+import org.jack.common.BaseTest;
 import org.junit.Test;
 
 public class FileTest extends BaseTest {

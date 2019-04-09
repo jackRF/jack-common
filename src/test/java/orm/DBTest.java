@@ -1,4 +1,4 @@
-package org.jack.common;
+package orm;
 
 import java.beans.PropertyDescriptor;
 import java.io.FileNotFoundException;
@@ -26,6 +26,7 @@ import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.Table;
 
+import org.jack.common.BaseTest;
 import org.jack.common.util.ClassScaner;
 import org.jack.common.util.DBUtils;
 import org.jack.common.util.DBUtils.ConnectionInfo;
@@ -41,10 +42,10 @@ import org.springframework.util.CollectionUtils;
 import org.springframework.util.StringUtils;
 
 public class DBTest extends BaseTest{
-	private static DBConnectionPair DEV_BMS;
-	private static DBConnectionPair DEV_CREDIT_ZX;
-	private static DBConnectionPair TEST_MYCAT;
-	private static DBConnectionPair DEV_BDS;
+	protected static DBConnectionPair DEV_BMS;
+	protected static DBConnectionPair DEV_CREDIT_ZX;
+	protected static DBConnectionPair TEST_MYCAT;
+	protected static DBConnectionPair DEV_BDS;
 	static{
 		{
 			DBConnectionPair dbConnectionPair=new DBConnectionPair();
@@ -128,7 +129,7 @@ public class DBTest extends BaseTest{
 		}
 		return null;
 	}
-	private Connection getConnection(DBConnectionPair dbConnectionPair){
+	protected Connection getConnection(DBConnectionPair dbConnectionPair){
 		try {
 			return DBUtils.getConnection(dbConnectionPair);
 		} catch (SQLException e) {
@@ -180,7 +181,7 @@ public class DBTest extends BaseTest{
 	@Test
 	public void testColumns(){
 //		testColumns(DEV_BMS, "bms_social_insurance_info");
-		testColumns(getConnection(DEV_BMS), "bms_loan_review");
+		testColumns(getConnection(DEV_BMS), "bms_tm_app_salary_loan_info");
 //		testColumns(DEV_BMS, "bms_loan_base");
 //		testColumns(DEV_CREDIT_ZX, "T_PBCCRC_REPORT");
 //		testColumns(TEST_MYCAT, "company");
@@ -509,7 +510,7 @@ public class DBTest extends BaseTest{
 		}
 		
 	}
-	private Map<String, ColumnInfo> getTableColumnInfos(String tableName,Connection connection) throws SQLException{
+	protected Map<String, ColumnInfo> getTableColumnInfos(String tableName,Connection connection) throws SQLException{
 		StringBuilder sql=new StringBuilder();
 		sql.append("SELECT * FROM  ");
 		sql.append(tableName);

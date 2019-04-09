@@ -1,4 +1,4 @@
-package org.jack.common;
+package orm;
 
 import java.io.File;
 import java.io.FileInputStream;
