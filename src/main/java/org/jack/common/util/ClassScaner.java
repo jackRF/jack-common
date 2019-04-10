@@ -9,6 +9,7 @@ import java.util.Set;
 
 import org.springframework.beans.factory.BeanDefinitionStoreException;
 import org.springframework.context.ResourceLoaderAware;
+import org.springframework.core.io.DefaultResourceLoader;
 import org.springframework.core.io.Resource;
 import org.springframework.core.io.ResourceLoader;
 import org.springframework.core.io.support.PathMatchingResourcePatternResolver;
@@ -19,6 +20,7 @@ import org.springframework.core.type.classreading.MetadataReader;
 import org.springframework.core.type.classreading.MetadataReaderFactory;
 import org.springframework.core.type.filter.AnnotationTypeFilter;
 import org.springframework.core.type.filter.TypeFilter;
+import org.springframework.util.ClassUtils;
 import org.springframework.util.SystemPropertyUtils;
 
 public class ClassScaner implements ResourceLoaderAware {
@@ -27,7 +29,8 @@ public class ClassScaner implements ResourceLoaderAware {
 	  
     private final List<TypeFilter> includeFilters = new LinkedList<TypeFilter>();   
   
-    private final List<TypeFilter> excludeFilters = new LinkedList<TypeFilter>();   
+    private final List<TypeFilter> excludeFilters = new LinkedList<TypeFilter>();
+    private ClassLoader classLoader;
   
     private MetadataReaderFactory metadataReaderFactory = new CachingMetadataReaderFactory(   
             this.resourcePatternResolver);   
@@ -42,7 +45,10 @@ public class ClassScaner implements ResourceLoaderAware {
         this.metadataReaderFactory = new CachingMetadataReaderFactory(   
                 resourceLoader);   
     }   
-  
+    public void setClassLoader(ClassLoader classLoader){
+    	this.classLoader=classLoader;
+    	setResourceLoader(new DefaultResourceLoader(classLoader));
+    }
     public final ResourceLoader getResourceLoader() {   
         return this.resourcePatternResolver;   
     }   
@@ -98,8 +104,9 @@ public class ClassScaner implements ResourceLoaderAware {
                     if ((includeFilters.size() == 0 && excludeFilters.size() == 0)   
                             || matches(metadataReader)) {   
                         try {   
-                            classes.add(Class.forName(metadataReader   
-                                    .getClassMetadata().getClassName()));   
+                        	Class<?> clazz=ClassUtils.forName(metadataReader   
+                                    .getClassMetadata().getClassName(), classLoader);
+                            classes.add(clazz);   
                         } catch (ClassNotFoundException e) {   
                             e.printStackTrace();   
                         }   
