@@ -1,4 +1,4 @@
-package orm;
+package org.jack.common.orm;
 
 import java.beans.PropertyDescriptor;
 import java.io.FileNotFoundException;
@@ -84,6 +84,33 @@ public class DBTest extends BaseTest{
 	private static interface MatchFilter{
 		boolean match(String tableName,String tableType,ColumnInfo columnInfo);
 		void accept(String tableName,String tableType,ColumnInfo columnInfo);
+	}
+	@Test
+	public void testTables() {
+		try {
+			List<String> list=getAllTables(DEV_BMS);
+			for(String tableName:list){
+				log(tableName);
+			}
+		} catch (SQLException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+	}
+	protected List<String> getAllTables(DBConnectionPair dbConnectionPair) throws SQLException{
+		Connection sqlConnection=getConnection(dbConnectionPair);
+		return getAllTables(sqlConnection);
+	}
+	protected List<String> getAllTables(Connection sqlConnection) throws SQLException{
+		StringBuilder sql=new StringBuilder();
+		sql.append("select table_name from information_schema.tables where table_schema='bms_cyb' and table_type='BASE TABLE'");
+		ResultSet rs=query(sql.toString(), sqlConnection);
+		List<String> list=new ArrayList<String>();
+		while(rs.next()){
+			list.add(rs.getString("table_name"));
+		}
+		rs.close();
+		return list;
 	}
 	@Test
 	public void testConn() {
@@ -324,10 +351,17 @@ public class DBTest extends BaseTest{
 	
 	private void compareEntity(Class<?> entityClass) throws SQLException{
 		Table table=entityClass.getAnnotation(Table.class);
-		Map<String, ColumnInfo> columnInfos=getTableColumnInfos(table.name(), getConnection(DEV_BMS));
+		compareEntity(entityClass, table.name(), DEV_BMS);
+	}
+	protected void compareEntity(Class<?> entityClass,String tableName,DBConnectionPair dbConnectionPair) throws SQLException {
+		Map<String, ColumnInfo> columnInfos=getTableColumnInfos(tableName, getConnection(dbConnectionPair));
 		compareEntity(columnInfos, entityClass);
 	}
-	private void compareEntity(Map<String, ColumnInfo> columnInfos,Class<?> entityClass) {
+	protected void compareEntity(Class<?> entityClass,String tableName,Connection connection) throws SQLException {
+		Map<String, ColumnInfo> columnInfos=getTableColumnInfos(tableName,connection);
+		compareEntity(columnInfos, entityClass);
+	}
+	protected void compareEntity(Map<String, ColumnInfo> columnInfos,Class<?> entityClass) {
 		BeanWrapperImpl wrapper=new BeanWrapperImpl(entityClass);
 		StringBuilder sb=new StringBuilder();
 		PropertyDescriptor[] propertyDescriptors=wrapper.getPropertyDescriptors();
@@ -520,6 +554,9 @@ public class DBTest extends BaseTest{
 	private Map<String, ColumnInfo> getSqlColumnInfos(StringBuilder sql,Connection connection) throws SQLException{
 		ResultSet rs=query(sql.toString(), connection);
 		log("result count:"+count(rs));
+		return getSqlColumnInfos(rs);
+	}
+	private Map<String, ColumnInfo> getSqlColumnInfos(ResultSet rs) throws SQLException{
 		ResultSetMetaData rsMetaData=rs.getMetaData();
 		Map<String, ColumnInfo>  columnInfos=convertToColumnInfos(rsMetaData);
 		return columnInfos;

@@ -1,8 +1,10 @@
-package orm;
+package org.jack.common.orm;
 
 import java.io.File;
+import java.sql.Connection;
 import java.sql.SQLException;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -35,11 +37,66 @@ public class MapperHleperTest extends DBTest {
 			for(Class<?> clazz:classes){
 				log(clazz);
 			}
+			compare(classes, getConnection(DEV_BMS));
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
-		
 	}
+	
+	private void compare(Set<Class<?>> classes, Connection connection) throws SQLException {
+		List<String> tableNames=getAllTables(connection);
+		Map<Class<?>,String> unMatch=new HashMap<Class<?>,String>();
+		for(Class<?> clazz:classes){
+			if(!clazz.getSimpleName().endsWith("Entity")){
+				log("ignore "+clazz);
+				continue;
+			}
+			try{
+				clazz.newInstance();
+			}catch(Exception e){
+				log("clazz instance fail:"+clazz);
+				continue;
+			}
+			
+			String tableName=match(clazz, tableNames);
+			if(tableName!=null){
+				log("compareEntity:"+clazz+"|"+tableName);
+				compareEntity(clazz, tableName, connection);
+			}else{
+				unMatch.put(clazz, tableName);
+			}
+		}
+		log("unMatch:"+unMatch);
+	}
+	private String match(Class<?> clazz,List<String> tableNames){
+		Table table=clazz.getAnnotation(Table.class);
+		if(table!=null){
+			return table.name();
+		}
+		String simpleName=clazz.getSimpleName();
+		float same=-1;
+		String useTableName=null;
+		for(String tableName: tableNames){
+			if(simpleName.equalsIgnoreCase(tableName)){
+				return tableName;
+			}
+			float temp=Utils.Levenshtein(simpleName,tableName);
+			if(temp>same){
+				same=temp;
+				useTableName=tableName;
+			}
+		}
+		return useTableName;
+	}
+	@Test
+	public void testsame() {
+//		log(Utils.Levenshtein("bms_loan_base", "BMSLoanBaseEntity"));
+//		log(Utils.Levenshtein("bms_loan_base", "BMSAppPersonInfoEntity"));
+		log(Utils.Levenshtein("bms_loan_audit", "AFirstTrialHangEntity"));
+		log(Utils.Levenshtein("bms_loan_audit", "BMSLoanAuditEntity"));
+		log(Utils.Levenshtein("bms_loan_audit", "BMSLoatAuditEntity"));
+	}
+	
 	@Test
 	public void testClass(){
 		String className="com.ymkj.bms.biz.entity.sign.BMSLoanChannelLockTargetEntity";
@@ -81,7 +138,11 @@ public class MapperHleperTest extends DBTest {
 		}
 		String location="E:/maven/repository/com/ymkj/base-core-biz/0.0.1-SNAPSHOT/base-core-biz-0.0.1-SNAPSHOT.jar";
 		Repository repository=new Repository(location,RepositoryType.JAR);
-		return ClassLoaderFactory.createClassLoader(list.toArray(new File[list.size()]), new Repository[]{repository}, null);
+		location="E:/maven/repository/com/ymkj/base-core-common/0.0.1-SNAPSHOT/base-core-common-0.0.1-SNAPSHOT.jar";
+		Repository repository2=new Repository(location,RepositoryType.JAR);
+		location="E:/maven/repository/com/ymkj/base-core-biz-api/0.0.1-SNAPSHOT/base-core-biz-api-0.0.1-SNAPSHOT.jar";
+		Repository repository3=new Repository(location,RepositoryType.JAR);
+		return ClassLoaderFactory.createClassLoader(list.toArray(new File[list.size()]), new Repository[]{repository,repository2,repository3}, null);
 	}
 	@Test
 	public void testProject() {

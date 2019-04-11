@@ -1,4 +1,4 @@
-package orm;
+package org.jack.common.orm;
 
 import java.util.List;
 
