@@ -11,6 +11,9 @@ public class WebDeploy extends AbstractDeploy{
 		super(connectionPair);
 	}
 	public String getSourcePath() {
+		if(sourcePath==null||sourcePath.isEmpty()){
+			return getArtifactId()+"/target";
+		};
 		return sourcePath;
 	}
 	public void setSourcePath(String sourcePath) {
@@ -31,7 +34,7 @@ public class WebDeploy extends AbstractDeploy{
 	@Override
 	protected PathPair getPathPair() {
 		PathPair pathPair=new DeployPathPair(version!=null&&!version.isEmpty());
-		pathPair.setSource(PathPair.getChildFilePath(projectPath, sourcePath));
+		pathPair.setSource(PathPair.getChildFilePath(projectPath, getSourcePath()));
 		pathPair.setDest(PathPair.getChildFilePath(containerPath, "webapps"));
 		return pathPair;
 	}
