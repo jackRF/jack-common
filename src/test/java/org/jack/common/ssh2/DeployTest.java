@@ -84,7 +84,7 @@ public class DeployTest extends SSH2Test {
 		DubboDeploy dubboDeploy=new DubboDeploy(DEV_RULE);
 		dubboDeploy.setArtifactId("rule-gate-biz");
 		dubboDeploy.setSourcePath("E:/Term/rule_gate/rule-gate-biz/target");
-//		dubboDeploy.restart=true;
+		dubboDeploy.restart=true;
 		deploy(dubboDeploy);
 	}
 	@Test

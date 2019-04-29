@@ -54,6 +54,8 @@ public class SSH2Test extends BaseTest {
 				if(file.lastModified()>destMap.get(filename).getTime()){
 					needUpdate.add(filename);
 				}
+			}else{
+				needUpdate.add(filename);
 			}
 		}
 		if(!needUpdate.isEmpty()){
