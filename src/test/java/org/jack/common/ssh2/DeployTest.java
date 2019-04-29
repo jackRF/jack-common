@@ -84,6 +84,7 @@ public class DeployTest extends SSH2Test {
 		DubboDeploy dubboDeploy=new DubboDeploy(DEV_RULE);
 		dubboDeploy.setArtifactId("rule-gate-biz");
 		dubboDeploy.setSourcePath("E:/Term/rule_gate/rule-gate-biz/target");
+//		dubboDeploy.restart=true;
 		deploy(dubboDeploy);
 	}
 	@Test
@@ -110,7 +111,9 @@ public class DeployTest extends SSH2Test {
 		if(processInfo!=null){
 			execute(conn, "kill -9 "+processInfo.getPid());
 		}
-		RemoteCommandUtils.uploadFile(deploy.getDeployTarget(),deploy.getPathPair(), conn);
+		if(!deploy.isRestart()){
+			RemoteCommandUtils.uploadFile(deploy.getDeployTarget(),deploy.getPathPair(), conn);
+		}
 		log("----------restart--------");
 		execute(conn,deploy.useStartCommand());
 		conn.close();

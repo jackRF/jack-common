@@ -61,7 +61,8 @@ public class TongcLoggerCollectTest extends AbstractLoggerCollectTest{
 	}
 	@Test
 	public void collectLogger() {
-//		collectBms("2019-04-08 13:53:03", "2019-04-08 13:53:03");
+//		collectBms("2019-04-17 11:12:34", "2019-04-17 11:12:34");
+//		collectBms("2019-04-17 13:38:49", "2019-04-17 13:38:49");
 		collectBms(null, null);
 //		collectRule("2019-04-01", "2019-04-02");
 //		collectRule(null, null);

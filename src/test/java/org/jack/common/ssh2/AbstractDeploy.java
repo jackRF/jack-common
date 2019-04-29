@@ -8,9 +8,17 @@ public abstract class AbstractDeploy {
 	protected String projectPath;
 	protected String artifactId;
 	protected String version;
+	protected boolean restart;
 	protected abstract PathPair getPathPair();
 	protected abstract String getDeployTarget();
 	protected abstract String useStartCommand();
+	
+	public boolean isRestart() {
+		return restart;
+	}
+	public void setRestart(boolean restart) {
+		this.restart = restart;
+	}
 	public String getPsCommand(){
 		return "ps -ef|grep java";
 	}
