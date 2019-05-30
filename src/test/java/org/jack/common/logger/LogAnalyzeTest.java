@@ -4,7 +4,6 @@ import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.PrintWriter;
-import java.text.ParseException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
@@ -12,10 +11,10 @@ import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Stack;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import org.jack.common.BaseTest;
 import org.jack.common.util.DateUtils;
 import org.jack.common.util.IOUtils;
 import org.jack.common.util.Task;
@@ -24,14 +23,24 @@ import org.springframework.util.StringUtils;
 
 import com.alibaba.fastjson.JSON;
 
-public class LogAnalyzeTest extends BaseTest {
-	private int i=0;
-	private LocalInfo lastlocalInfo;
-
+public class LogAnalyzeTest extends TongcLoggerCollectTest {
+	@Test
+	public void collectAnalyzeTime() throws IOException {
+//		List<File> files=collectBms("2019-05-30 03:27:50", "2019-05-30 04:27:50",true);
+		List<File> files=collectBms(null, null,false);
+//		List<File> files=collectCfs("2019-05-18", "2019-05-18",true);
+//		collectRule("2019-05-18", "2019-05-18",true);
+		for(File logFile:files){
+//			final Map<String,Stack<LineInfo>> threadMap=new HashMap<String,Stack<LineInfo>>();
+//			analyzeLogFile(logFile, threadMap,new DefaultRule(3000));
+			final Map<String,LocalInfo> detailThreadMap=new HashMap<String,LocalInfo>();
+			analyzeLogFileDetail(logFile, detailThreadMap);
+		}
+	}
 	@Test
 	public void testAnalyzeTime() throws IOException {
 		
-		final Map<String,LocalInfo> threadMap=new HashMap<String,LocalInfo>();
+		final Map<String,Stack<LineInfo>> threadMap=new HashMap<String,Stack<LineInfo>>();
 		File logPath=new File("D:\\data\\online\\bms");
 		String fileName="bms-api-info1108_2.log";
 		fileName="bms-api-info.log_2018-11-08-11.log.txt";
@@ -42,15 +51,117 @@ public class LogAnalyzeTest extends BaseTest {
 		fileName="bms-api-info.log_2018-11-13-09.log.txt";
 		fileName="bms-api-info.log_2019-04-01-03.log";
 		String destFileName="1"+"-"+fileName;
+		destFileName="part2-bms-api-info.log_2019-05-17-21.log";
 //		fileName="bms-api-info.log.txt";
 //		fileName="bms-api-info2.log";
 		File logFile=new File(logPath,destFileName);
-		analyzeLogFile(logFile, threadMap);
+		analyzeLogFile(logFile, threadMap,new DefaultRule(3000));
 	}
-	private void analyzeLogFile(File logFile,final Map<String,LocalInfo> threadMap) throws IOException {
+	private class DefaultRule implements Rule{
+		final List<LocalInfo> dest=new ArrayList<LocalInfo>();
+		final long duration;
+		public DefaultRule(long duration) {
+			this.duration=duration;
+		}
+		
+		@Override
+		public void process(Stack<LineInfo> stack) {
+			LineInfo start=stack.firstElement();
+			LineInfo last=stack.lastElement();
+			Date time2= last.getTime();
+			Date time1= start.getTime();
+			long duration=time2.getTime()-time1.getTime();
+			if(duration>this.duration){
+				LocalInfo d=new LocalInfo();
+				d.setLastLogTime(start.getTime());
+				d.setMethod(start.getMethod());
+				d.setThreadId(start.getThreadId());
+				d.setLastLoglineIndex(start.getLineIndex());
+				d.lineIndex=last.getLineIndex();
+				d.duration=duration;
+				dest.add(d);
+			}
+		}
+		@Override
+		public void complete(File logFile) {
+			Collections.sort(dest, new Comparator<LocalInfo>() {
+				@Override
+				public int compare(LocalInfo o1, LocalInfo o2) {
+					Date time1= o1.getLastLogTime();
+					Date time2= o2.getLastLogTime();
+					return time1.compareTo(time2);
+				}
+			});
+			File outFile=new File(logFile.getParentFile(),logFile.getName()+".analyze");
+			PrintWriter pw;
+			try {
+				pw = new PrintWriter(outFile);
+				for(LocalInfo localInfo:dest){
+					pw.println(String.format("%s method:%s 线程%s在%d-%d行耗时%ds ",DateUtils.formatDate(localInfo.getLastLogTime(), DateUtils.DATE_FORMAT_DATETIME)
+							,localInfo.getMethod()
+							,localInfo.getThreadId()
+							, localInfo.getLastLoglineIndex()
+							,localInfo.getLineIndex(),localInfo.getDuration()/1000					
+							));
+				}
+				pw.close();
+			} catch (FileNotFoundException e) {
+				e.printStackTrace();
+			}
+		}
+	}
+	private void analyzeLogFile(File logFile,final Map<String,Stack<LineInfo>> threadMap,Rule rule) throws IOException {
+		IOUtils.processText(logFile, new Task<String>(){
+			private int i=0;
+			private LocalInfo lastlocalInfo;
+			@Override
+			public void toDo(String line) {
+				i++;
+				LineInfo lineInfo=null;
+				try{
+					lineInfo=parseLine(line,i,lastlocalInfo);
+					if(lineInfo==null){
+						return;
+					}
+				}catch(Exception e){
+					e.printStackTrace();
+					return;
+				}
+				Stack<LineInfo> stackLocalInfo=threadMap.get(lineInfo.getThreadId());
+				if(stackLocalInfo==null){
+					stackLocalInfo=new Stack<LineInfo>();
+					threadMap.put(lineInfo.getThreadId(), stackLocalInfo);
+				}
+				if(lineInfo.isMethodEnd()){
+					rule.process(stackLocalInfo);
+					threadMap.remove(lineInfo.getThreadId());
+					return;
+				}
+				if(lineInfo.isMethodStart()){
+					stackLocalInfo.removeAllElements();
+				}
+				stackLocalInfo.add(lineInfo);
+				LocalInfo localInfo=new LocalInfo();
+				localInfo.setThreadId(lineInfo.getThreadId());
+				localInfo.setLastLoglineIndex(lineInfo.getLineIndex());
+				localInfo.setLastLogTime(lineInfo.getTime());
+				if(StringUtils.hasText(lineInfo.getBizId())){
+					localInfo.setBizId(lineInfo.getBizId());
+				}
+				localInfo.setMethodStart(lineInfo.isMethodStart());
+				localInfo.setMethodEnd(lineInfo.isMethodEnd());
+				localInfo.setMethod(lineInfo.getMethod());
+				localInfo.setLastLine(line);
+				lastlocalInfo=localInfo;
+			}
+		});
+		rule.complete(logFile);
+	}
+	private void analyzeLogFileDetail(File logFile,final Map<String,LocalInfo> threadMap) throws IOException {
 		final List<LocalInfo> dest=new ArrayList<LocalInfo>();
 		IOUtils.processText(logFile, new Task<String>(){
-
+			private int i=0;
+			private LocalInfo lastlocalInfo;
 			@Override
 			public void toDo(String line) {
 				i++;
@@ -95,7 +206,7 @@ public class LogAnalyzeTest extends BaseTest {
 				return time1.compareTo(time2);
 			}
 		});
-		File outFile=new File(logFile.getParentFile(),logFile.getName()+".analyze");
+		File outFile=new File(logFile.getParentFile(),logFile.getName()+".analyze.detail");
 		PrintWriter pw=new PrintWriter(outFile);
 		for(LocalInfo localInfo:dest){
 			pw.println(String.format("%s method:%s 线程%s在%d-%d行耗时%ds ",DateUtils.formatDate(localInfo.getLastLogTime(), DateUtils.DATE_FORMAT_DATETIME)
@@ -164,8 +275,14 @@ public class LogAnalyzeTest extends BaseTest {
 			return null;
 		}
 		lineInfo.setLineIndex(lineIndex);
+		lineInfo.setLine(line);
+		lineInfo.setMethodStart(line.startsWith("==========开始调用服务接口"));
 		lineInfo.setMethodEnd(line.startsWith("==========结束调用服务接口"));
 		return lineInfo;
+	}
+	static interface Rule{
+		void process(Stack<LineInfo> stack);
+		void complete(File logFile);
 	}
 	static class LineInfo{
 		private Date time;
@@ -174,8 +291,22 @@ public class LogAnalyzeTest extends BaseTest {
 		private int lineIndex;
 		private String method;
 		private Map<String,Object> props;
+		private String line;
 		private boolean isMethodEnd;
+		public boolean methodStart;
 		
+		public String getLine() {
+			return line;
+		}
+		public void setLine(String line) {
+			this.line = line;
+		}
+		public boolean isMethodStart() {
+			return methodStart;
+		}
+		public void setMethodStart(boolean methodStart) {
+			this.methodStart = methodStart;
+		}
 		public boolean isMethodEnd() {
 			return isMethodEnd;
 		}
@@ -225,6 +356,7 @@ public class LogAnalyzeTest extends BaseTest {
 		private int lastLoglineIndex;
 		private String bizId;
 		private boolean isMethodEnd;
+		private boolean methodStart;
 		private int lineIndex;
 		private long duration;
 		private String method;
@@ -236,10 +368,19 @@ public class LogAnalyzeTest extends BaseTest {
 			lastLoglineIndex=src.lastLoglineIndex;
 			bizId=src.bizId;
 			isMethodEnd=src.isMethodEnd;
+			methodStart=src.methodStart;
 			lineIndex=src.lineIndex;
 			method=src.method;
 			lastLine=src.lastLine;
 		}
+		public boolean isMethodStart() {
+			return methodStart;
+		}
+
+		public void setMethodStart(boolean methodStart) {
+			this.methodStart = methodStart;
+		}
+
 		public String getLastLine() {
 			return lastLine;
 		}

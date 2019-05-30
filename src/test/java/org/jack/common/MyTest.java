@@ -25,6 +25,24 @@ import sun.misc.Unsafe;
 
 public class MyTest extends BaseTest {
 	@Test
+	public void test8() {
+		int limit=500;
+		StringBuilder sql=new StringBuilder();
+		sql.append("select  b.LOAN_NO,b.STATUS,b.RTF_STATE,b.APPLY_TYPE,p.INIT_PRODUCT_CD, p.PRODUCT_CD");
+		sql.append(",b.CREATED_TIME,b.MODIFIED_TIME ");
+		sql.append(",a.CREATED_TIME as FIRST_COMMIT_DATE");
+		sql.append(",e.FIRST_LEVLE_REASONS_CODE,e.TWO_LEVLE_REASONS_CODE");
+		sql.append(",b.PERSON_ID,b.RTF_NODE_STATE,b.APP_INPUT_FLAG");
+		sql.append(" from bms_loan_base b left join bms_loan_audit a on  b.LOAN_NO=a.LOAN_NO");
+		sql.append(" left join bms_loan_ext e on  b.LOAN_NO=e.LOAN_NO");
+		sql.append(" left join bms_loan_product p on  b.LOAN_NO=p.LOAN_NO");
+		sql.append(" where b.ID_NO=:idNo and b.STATUS!='NORMAL' ORDER BY b.id desc");
+		if(limit>0) {
+			sql.append(" limit "+limit);
+		}
+		log(sql.toString());
+	}
+	@Test
 	public void test7() {
 		log(LoanFlag.unitFlags());
 	}
