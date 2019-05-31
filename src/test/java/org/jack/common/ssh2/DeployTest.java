@@ -14,38 +14,12 @@ import org.junit.Test;
 import ch.ethz.ssh2.Connection;
 
 public class DeployTest extends SSH2Test {
-	private  static final ConnectionPair DEV_BMS;
-	private  static final ConnectionPair DEV_RULE;
-	private  static final ConnectionPair DEV_CFS;
-	private  static final ConnectionPair DEV_BDS;
-	static{
-		{
-			ConnectionPair connectionPair=new ConnectionPair();
-			connectionPair.setNetAddress(new NetAddressPair("172.16.235.9"));
-			connectionPair.setAuthenticate(new AuthenticatePair("root", "zd,123"));
-			DEV_BMS=connectionPair;
-		}
-		{
-			ConnectionPair connectionPair=new ConnectionPair();
-			connectionPair.setNetAddress(new NetAddressPair("172.16.230.50"));
-			connectionPair.setAuthenticate(new AuthenticatePair("rule", "zd,123"));
-			DEV_RULE=connectionPair;
-		}{
-			ConnectionPair connectionPair=new ConnectionPair();
-			connectionPair.setNetAddress(new NetAddressPair("172.16.235.172"));
-			connectionPair.setAuthenticate(new AuthenticatePair("cfs", "zd,123"));
-			DEV_CFS=connectionPair;
-		}{
-			ConnectionPair connectionPair=new ConnectionPair();
-			connectionPair.setNetAddress(new NetAddressPair("172.16.230.49"));
-			connectionPair.setAuthenticate(new AuthenticatePair("root", "zd,123"));
-			DEV_BDS=connectionPair;
-		}
-	}
+	
+	private IServerConfig serverConfig=new ServerConfig();
 	
 	@Test
 	public void testDeployJob() {
-		WebDeploy deploy=new WebDeploy(DEV_BMS);
+		WebDeploy deploy=new WebDeploy(serverConfig.getServer("BMS", "DEV"));
 		deploy.setProjectPath("D:/Projects/com/tongc-soft/preCreditJob");
 		deploy.setContainerPath("/usr/local/apache-tomcat-8.5.38");
 //		deploy.setArtifactId("job-admin");
@@ -63,7 +37,7 @@ public class DeployTest extends SSH2Test {
 	}
 	@Test
 	public void testDeployBms() {
-		DubboDeploy dubboDeploy=new DubboDeploy(DEV_BMS);
+		DubboDeploy dubboDeploy=new DubboDeploy(serverConfig.getServer("BMS", "DEV"));
 		dubboDeploy.setArtifactId("bms-biz");
 		dubboDeploy.setRemotePath("/home/bms/bms_biz");
 		dubboDeploy.setSourcePath("D:/Projects/com/tongc-soft/bms-trade/bms-biz/target");
@@ -71,7 +45,7 @@ public class DeployTest extends SSH2Test {
 	}
 	@Test	
 	public void testDeployCfs() {
-		WebDeploy webDeploy=new WebDeploy(DEV_CFS);
+		WebDeploy webDeploy=new WebDeploy(serverConfig.getServer("CFS", "DEV"));
 		webDeploy.setArtifactId("cfs-web-boss");
 		webDeploy.setContainerPath("/home/cfs/apache-tomcat-7.0.69");
 		webDeploy.setSourcePath("D:/Projects/com/tongc-soft/CFS/cfs-web-boss/target");
@@ -81,7 +55,7 @@ public class DeployTest extends SSH2Test {
 	
 	@Test
 	public void testDeployRule() {
-		DubboDeploy dubboDeploy=new DubboDeploy(DEV_RULE);
+		DubboDeploy dubboDeploy=new DubboDeploy(serverConfig.getServer("RULE", "DEV"));
 		dubboDeploy.setArtifactId("rule-gate-biz");
 		dubboDeploy.setSourcePath("D:/Projects/com/tongc-soft/rule_gate/rule-gate-biz/target");
 		dubboDeploy.restart=true;
@@ -89,7 +63,7 @@ public class DeployTest extends SSH2Test {
 	}
 	@Test
 	public void testDeployRulePack() {
-		Connection connection=RemoteCommandUtils.login(DEV_RULE);
+		Connection connection=RemoteCommandUtils.login(serverConfig.getServer("RULE", "DEV"));
 		PathPair pathPair=new PathPair();
 		pathPair.setSource("D:/data/rule");
 		pathPair.setDest("rule_conf");
@@ -99,7 +73,7 @@ public class DeployTest extends SSH2Test {
 	}
 	@Test
 	public void testDeployBds() {
-		DubboDeploy dubboDeploy=new DubboDeploy(DEV_BDS);
+		DubboDeploy dubboDeploy=new DubboDeploy(serverConfig.getServer("BDS", "DEV"));
 		dubboDeploy.setArtifactId("bds-biz");
 		dubboDeploy.setRemotePath("/home");
 		dubboDeploy.setSourcePath("D:/Projects/com/tongc-soft/BDS/bds-biz/target");

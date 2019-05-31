@@ -129,6 +129,11 @@ public class RemoteCommandUtils {
 		}
 		return null;
 	}
+    public static Session executeCmd(Connection conn,String cmd) throws IOException {
+    	Session session=conn.openSession();
+    	session.execCommand(cmd);
+    	return session;
+    }
     /** 
      * 远程执行shll脚本或者命令 
      * @param cmd 

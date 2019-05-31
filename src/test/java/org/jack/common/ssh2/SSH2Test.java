@@ -12,13 +12,27 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import org.jack.common.BaseTest;
+import org.jack.common.util.IOUtils;
 import org.jack.common.util.PathPair;
+import org.jack.common.util.Task;
+import org.jack.common.util.net.ConnectionPair;
 
 import ch.ethz.ssh2.Connection;
 import ch.ethz.ssh2.SFTPv3Client;
 import ch.ethz.ssh2.SFTPv3DirectoryEntry;
+import ch.ethz.ssh2.Session;
 
 public class SSH2Test extends BaseTest {
+	protected void execute(ConnectionPair connectionPair,String cmd,Task<String> task){
+		Connection connection=RemoteCommandUtils.login(connectionPair);
+		try {
+			Session session=RemoteCommandUtils.executeCmd(connection, cmd);
+			IOUtils.processText(session.getStdout(), "UTF-8",task);
+			session.close();
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+	}
 	protected String execute(Connection connection,String cmd) {
 		String stdout=RemoteCommandUtils.execute(connection, cmd);
 		log(stdout);
