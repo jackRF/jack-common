@@ -6,8 +6,11 @@ import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.text.ParseException;
+import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Date;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Stack;
 import java.util.regex.Matcher;
@@ -43,10 +46,101 @@ public class LoggerSearchTest extends SSH2Test {
 	@Test
 	public void testRuleTest() {
 		try {
-			IOUtils.processText(new File("D:\\tmp\\stdout.log"), new RuleDetailTask(new File("D:\\tmp\\rule detail")));
+			IOUtils.processText(new File("D:\\tmp\\stdout.log"), new RuleDetailTask(new File("D:\\tmp\\rule")));
 		} catch (IOException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
+		}
+	}
+	private static class RuleTask implements Task<String>{
+		private File destLoggerDir;
+		public RuleTask(File destLoggerDir) {
+			this.destLoggerDir=destLoggerDir;
+		}
+		public RuleTask(File destLoggerDir,boolean logger) {
+			this.destLoggerDir=destLoggerDir;
+			this.logger=logger;
+		}
+		private Map<String,StackBizInfo> threadStack=new HashMap<String,StackBizInfo>();
+		private LoggerInfo last;
+		private ILoggerRule loggerRule=new RuleRule();
+		private boolean logger;
+		private int lineIndex=0;
+		@Override
+		public void toDo(String line) {
+			if(logger){
+				log(line);
+			}
+			lineIndex++;
+			LoggerInfo current=loggerRule.parseLine(line, last);
+			if(current==null){
+				return;
+			}
+			current.setLineIndex(lineIndex);
+			last=current;
+			StackBizInfo stackBizInfo=threadStack.get(current.getThreadId());
+			if(stackBizInfo==null){
+				stackBizInfo=new StackBizInfo();
+				threadStack.put(current.getThreadId(), stackBizInfo);
+			}
+			stackBizInfo.getStack().add(current);
+			if(loggerRule.ruleStart(current, stackBizInfo)){
+				stackBizInfo.getStack().clear();
+				stackBizInfo.getStack().add(current);
+			}else if(loggerRule.ruleEnd(current, stackBizInfo)){
+				LoggerInfo start=stackBizInfo.getStack().firstElement();
+				if(start!=null&&start!=current&&loggerRule.ruleStart(start, stackBizInfo)){
+					String ruleAlias=decideRuleAlias(start, current);
+					stackBizInfo.setRuleAlias(ruleAlias);
+				}
+				if(StringUtils.hasText(stackBizInfo.getRuleAlias())){
+					String fileName=stackBizInfo.getRuleAlias()+"_"+DateUtils.formatDate(current.getTime(), "yyyy-MM-dd HH_mm_ss_SSS")+".txt";
+					List<LoggerInfo> list=new ArrayList<LoggerInfo>();
+					list.add(start);
+					list.add(current);
+					loggerStack(list,new File(destLoggerDir,fileName));
+				}
+				threadStack.remove(current.getThreadId());
+			}
+		}
+		private String decideRuleAlias(LoggerInfo start,LoggerInfo end){
+			if(start.getContent().contains("\"VALUE IN JAVA XS\"")){
+				return "XS01";
+			}
+			if(start.getContent().contains("\"VALUE IN JAVA ZDQQRGCZ\"")){
+				return "ZDQQRGCZ";
+			}
+			if(start.getContent().contains("\"VALUE IN JAVA QYRGCZ\"")){
+				return "QYRGCZ";
+			}
+			if(start.getContent().contains("\"VALUE IN JAVA KFLDRGCZ\"")){
+				return "KFRGCZ";
+			}
+			if(start.getContent().contains("\"VALUE OUT JAVA ZHHKDJ\"")){
+				return "ZHHKDJ";
+			}
+			if(start.getContent().contains("\"VALUE OUT JAVA ZHHKDJ\"")){
+				return "ZHHKDJ";
+			}
+			if(start.getContent().contains("\"VALUE OUT JAVA ZDSCB\"")){
+				return "ZDSCB";
+			}
+			if(start.getContent().contains("\"VALUE OUT JAVA ZDSCC\"")){
+				return "ZDSCC";
+			}
+			if(start.getContent().contains("\"VALUE IN JAVA APPRZPP\"")){
+				return "APPRZPP";
+			}
+			if(start.getContent().contains("\"VALUE IN JAVA APPRGCZ\"")){
+				return "APPRGCZ";
+			}
+			if(start.getContent().contains("\"grantCount\"")){
+				return "XEDSX";
+			}
+			if(start.getContent().contains("\"previousMonthIntegralGrant\"")){
+				return "ZYJF";
+			}
+			return "rulexxx";
 		}
 	}
 	private static class RuleDetailTask implements Task<String>{
@@ -82,10 +176,11 @@ public class LoggerSearchTest extends SSH2Test {
 			}
 			stackBizInfo.getStack().add(current);
 			if(loggerRule.ruleStart(current, stackBizInfo)){
-				
+				stackBizInfo.getStack().clear();
+				stackBizInfo.getStack().add(current);
 			}else if(loggerRule.ruleEnd(current, stackBizInfo)){
 				if(StringUtils.hasText(stackBizInfo.getRuleAlias())){
-					String fileName=stackBizInfo.getRuleAlias()+"_"+DateUtils.formatDate(current.getTime(), "yyyy-MM-dd HH_mm_ss_SSS")+".txt";
+					String fileName=stackBizInfo.getRuleAlias()+"_detail_"+DateUtils.formatDate(current.getTime(), "yyyy-MM-dd HH_mm_ss_SSS")+".txt";
 					loggerStack(stackBizInfo.getStack(),new File(destLoggerDir,fileName));
 				}
 				threadStack.remove(current.getThreadId());
@@ -94,10 +189,10 @@ public class LoggerSearchTest extends SSH2Test {
 			}
 		}
 	}
-	private static void loggerStack(Stack<LoggerInfo> stack,File file){
+	private static void loggerStack(Collection<LoggerInfo> loggerInfos,File file){
 		try {
 			PrintWriter pw= new PrintWriter(file);
-			for(LoggerInfo  loggerInfo:stack){
+			for(LoggerInfo  loggerInfo:loggerInfos){
 				pw.println(loggerInfo.getContent());
 			}
 			pw.close();
@@ -155,11 +250,7 @@ public class LoggerSearchTest extends SSH2Test {
 			Matcher matcher=loggerInfo.getMatcher();
 			if(matcher!=null){
 				String str=loggerInfo.getContent().substring(matcher.end());
-				boolean start=str.startsWith(" >>>>>规则计算传入参数:");
-				if(start){
-					stackBizInfo.getStack().clear();
-					stackBizInfo.getStack().add(loggerInfo);
-				}
+				return str.startsWith(" >>>>>规则计算传入参数:");
 			}
 			return false;
 		}
@@ -280,9 +371,12 @@ public class LoggerSearchTest extends SSH2Test {
 		public void setLineIndex(int lineIndex) {
 			this.lineIndex = lineIndex;
 		}
-	} 
+	}
+	private void tailLoggerRule(ConnectionPair connectionPair,String cmd){
+		execute(connectionPair,cmd,new RuleDetailTask(new File("D:\\tmp\\rule"),true));
+	}
 	private void tailLoggerDetail(ConnectionPair connectionPair,String cmd){
-		execute(connectionPair,cmd,new RuleDetailTask(new File("D:\\tmp\\rule detail"),true));
+		execute(connectionPair,cmd,new RuleDetailTask(new File("D:\\tmp\\rule"),true));
 	}
 	
 	private void tailLogger(ConnectionPair connectionPair,String cmd) {
