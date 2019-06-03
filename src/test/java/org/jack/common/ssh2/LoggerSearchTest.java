@@ -155,7 +155,11 @@ public class LoggerSearchTest extends SSH2Test {
 			Matcher matcher=loggerInfo.getMatcher();
 			if(matcher!=null){
 				String str=loggerInfo.getContent().substring(matcher.end());
-				return str.startsWith(" >>>>>规则计算传入参数:");
+				boolean start=str.startsWith(" >>>>>规则计算传入参数:");
+				if(start){
+					stackBizInfo.getStack().clear();
+					stackBizInfo.getStack().add(loggerInfo);
+				}
 			}
 			return false;
 		}
