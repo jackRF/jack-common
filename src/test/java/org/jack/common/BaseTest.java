@@ -88,37 +88,37 @@ public abstract class BaseTest {
 		}
 		return map;
 	}
-	protected void log(double...msgs) {
+	protected static void log(double...msgs) {
 		for(double msg:msgs){
 			log(msg);
 		}
 	}
-	protected void log(float...msgs) {
+	protected static void log(float...msgs) {
 		for(float msg:msgs){
 			log(msg);
 		}
 	}
-	protected void log(long...msgs) {
+	protected static void log(long...msgs) {
 		for(long msg:msgs){
 			log(msg);
 		}
 	}
-	protected void log(int...msgs) {
+	protected static void log(int...msgs) {
 		for(int msg:msgs){
 			log(msg);
 		}
 	}
-	protected void log(char...msgs) {
+	protected static void log(char...msgs) {
 		for(char msg:msgs){
 			log(msg);
 		}
 	}
-	protected void log(short...msgs) {
+	protected static void log(short...msgs) {
 		for(short msg:msgs){
 			log(msg);
 		}
 	}
-	protected void log(byte...msgs) {
+	protected static void log(byte...msgs) {
 		for(byte msg:msgs){
 			log(msg);
 		}
@@ -128,7 +128,7 @@ public abstract class BaseTest {
 			log(msg);
 		}
 	}
-	protected void log(Object msg) {
+	protected static void log(Object msg) {
 		System.out.println(msg);
 	}
 }
