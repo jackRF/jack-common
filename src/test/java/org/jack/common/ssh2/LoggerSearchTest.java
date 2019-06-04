@@ -29,7 +29,7 @@ public class LoggerSearchTest extends SSH2Test {
 	
 	@Test
 	public void testTailRule() {
-		tailLoggerDetail(serverConfig.getServer("RULE", "DEV"),"tail -f  /home/rule/rule-gate-biz/logs/stdout.log");
+		tailLoggerRule(serverConfig.getServer("RULE", "DEV"),"tail -f  /home/rule/rule-gate-biz/logs/stdout.log");
 	}
 	@Test
 	public void testTailBms() {
@@ -373,7 +373,7 @@ public class LoggerSearchTest extends SSH2Test {
 		}
 	}
 	private void tailLoggerRule(ConnectionPair connectionPair,String cmd){
-		execute(connectionPair,cmd,new RuleDetailTask(new File("D:\\tmp\\rule"),true));
+		execute(connectionPair,cmd,new RuleTask(new File("D:\\tmp\\rule"),true));
 	}
 	private void tailLoggerDetail(ConnectionPair connectionPair,String cmd){
 		execute(connectionPair,cmd,new RuleDetailTask(new File("D:\\tmp\\rule"),true));
