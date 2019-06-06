@@ -19,6 +19,11 @@ public abstract class AbstractTask<T extends Ilogger,S> implements Task<String>{
 	protected ILoggerPattern<T,S> loggerPattern;
 	protected boolean logger;
 	protected int lineIndex=0;
+	public AbstractTask(File destLoggerDir,ILoggerPattern<T,S> loggerPattern,boolean logger) {
+		this.destLoggerDir=destLoggerDir;
+		this.loggerPattern=loggerPattern;
+		this.logger=logger;
+	}
 	@Override
 	public void toDo(String line) {
 
@@ -39,18 +44,33 @@ public abstract class AbstractTask<T extends Ilogger,S> implements Task<String>{
 		}
 		stackLogger.add(current);
 		if(loggerPattern.matcherStart(current, stackLogger)){
-			stackLogger.clear();
-			stackLogger.add(current);
+			onStackStart(current, stackLogger);
 		}else if(loggerPattern.matcherEnd(current, stackLogger)){
-			completeStackLogger(current, stackLogger);
+			onStackEnd(current, stackLogger);
 			threadStack.remove(threadId);
 		}else{
-			loggerPattern.onLogger(current, stackLogger);
+			onLogger(current, stackLogger);
 		}
 	}
-	protected abstract void completeStackLogger(T current,StackLogger<T, S> stackLogger);
-	protected void export(Collection<T> loggers,String fileName) {
-		File file=new File(destLoggerDir,fileName);
+	protected void onLogger(T current,StackLogger<T, S> stackLogger) {
+		loggerPattern.onLogger(current, stackLogger);
+	}
+	protected void onStackStart(T current,StackLogger<T, S> stackLogger) {
+		stackLogger.clear();
+		stackLogger.add(current);
+	}
+	protected abstract void onStackEnd(T current,StackLogger<T, S> stackLogger);
+	protected void export(Collection<T> loggers,String...paths) {
+		int ln=paths.length;
+		File file=destLoggerDir;
+		for(int i=0;i<ln;i++){
+			file=new File(file,paths[i]);
+			if(i!=(ln-1)){
+				if(!file.exists()){
+					file.mkdir();
+				}
+			}
+		}
 		try {
 			PrintWriter pw= new PrintWriter(file);
 			for(T  logger:loggers){

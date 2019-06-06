@@ -35,7 +35,6 @@ public class RuleLoggerPattern implements  ILoggerPattern<LoggerInfo,String>{
 			return info;
 		}else if(last!=null){
 			info.copy(last);
-			info.setContent(line);
 			return info;
 		}
 		return null;

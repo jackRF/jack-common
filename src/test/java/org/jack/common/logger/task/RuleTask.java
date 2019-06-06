@@ -18,13 +18,11 @@ public class RuleTask extends AbstractTask<LoggerInfo,String>{
 		this(destLoggerDir,logger,false);
 	}
 	public RuleTask(File destLoggerDir,boolean logger,boolean simple) {
-		this.destLoggerDir=destLoggerDir;
-		this.logger=logger;
+		super(destLoggerDir,new RuleLoggerPattern(),logger);
 		this.simple=simple;
-		this.loggerPattern=new RuleLoggerPattern();
 	}
 	@Override
-	protected void completeStackLogger(LoggerInfo current,
+	protected void onStackEnd(LoggerInfo current,
 			StackLogger<LoggerInfo, String> stackLogger) {
 		boolean useSimple=false;
 		if(StringUtils.hasText(stackLogger.getS())){

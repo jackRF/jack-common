@@ -15,6 +15,9 @@ public class LoggerInfo implements Ilogger {
 	private String content;
 	private int lineIndex;
 	private Matcher matcher;
+	private String clazz;
+	private String method;
+	private LoggerInfo prev;
 	public LoggerInfo(String content) {
 		this.content=content;
 	}
@@ -27,8 +30,16 @@ public class LoggerInfo implements Ilogger {
 		this.time=other.time;
 		this.threadGroup=other.threadGroup;
 		this.threadId=other.threadId;
+		this.clazz=other.clazz;
+		this.method=other.method;
+		this.prev=other;
 	}
-	
+	public LoggerInfo getPrev() {
+		return prev;
+	}
+	public void setPrev(LoggerInfo prev) {
+		this.prev = prev;
+	}
 	public Matcher getMatcher() {
 		return matcher;
 	}
@@ -78,6 +89,19 @@ public class LoggerInfo implements Ilogger {
 	}
 	public void setLineIndex(int lineIndex) {
 		this.lineIndex = lineIndex;
+	}
+	
+	public String getClazz() {
+		return clazz;
+	}
+	public void setClazz(String clazz) {
+		this.clazz = clazz;
+	}
+	public String getMethod() {
+		return method;
+	}
+	public void setMethod(String method) {
+		this.method = method;
 	}
 	@Override
 	public String getLocation() {

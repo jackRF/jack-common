@@ -4,6 +4,7 @@ package org.jack.common.ssh2;
 import java.io.File;
 import java.io.IOException;
 
+import org.jack.common.logger.task.BmsTask;
 import org.jack.common.logger.task.RuleTask;
 import org.jack.common.util.IOUtils;
 import org.jack.common.util.Task;
@@ -22,7 +23,9 @@ public class LoggerSearchTest extends SSH2Test {
 	}
 	@Test
 	public void testTailBms() {
-		tailLogger(serverConfig.getServer("BMS", "DEV"),"tail -f  /home/bms/bms_biz/bms-biz/logs/stdout.log");
+		tailLogger(serverConfig.getServer("BMS", "DEV")
+				,"tail -f  /home/bms/bms_biz/bms-biz/logs/stdout.log"
+				,new BmsTask(new File("D:\\tmp\\bms"),true));
 	}
 	@Test
 	public void testTailCfs() {
