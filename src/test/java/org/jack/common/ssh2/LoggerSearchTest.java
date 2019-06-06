@@ -2,28 +2,13 @@ package org.jack.common.ssh2;
 
 
 import java.io.File;
-import java.io.FileNotFoundException;
 import java.io.IOException;
-import java.io.PrintWriter;
-import java.text.ParseException;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Date;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Stack;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 
-import org.jack.common.logger.LoggerInfo;
 import org.jack.common.logger.task.RuleTask;
-import org.jack.common.util.DateUtils;
 import org.jack.common.util.IOUtils;
 import org.jack.common.util.Task;
 import org.jack.common.util.net.ConnectionPair;
 import org.junit.Test;
-import org.springframework.util.StringUtils;
 
 
 public class LoggerSearchTest extends SSH2Test {
