@@ -80,6 +80,9 @@ public class LoggerSearchTest extends SSH2Test {
 			}
 			private boolean filterMethod(String method,String contains,InvokeInfo<LoggerInfo> e){
 				if(method.equals(e.getMethod())){
+					if(contains==null){
+						return true;
+					}
 					return e.getStart().getContent().contains(contains);
 				}
 				return false;
