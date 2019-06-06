@@ -9,7 +9,7 @@ import org.jack.common.logger.LoggerInfo;
 import org.jack.common.logger.StackLogger;
 import org.jack.common.util.DateUtils;
 
-public class BmsLoggerPattern implements ILoggerPattern<LoggerInfo, InvokeInfo>{
+public class BmsLoggerPattern implements ILoggerPattern<LoggerInfo, InvokeInfo<LoggerInfo>>{
 	private static final String threadGroup="[\\w\\d\\.-]+:[\\w\\d-]+";
 	private static final String level="\\[(\\w+)\\s*\\]";
 	private static final String day= "[\\d]{4}-[01][0-9]-[01][0-9]";
@@ -48,7 +48,7 @@ public class BmsLoggerPattern implements ILoggerPattern<LoggerInfo, InvokeInfo>{
 
 	@Override
 	public boolean matcherStart(LoggerInfo logger,
-			StackLogger<LoggerInfo, InvokeInfo> stackLogger) {
+			StackLogger<LoggerInfo, InvokeInfo<LoggerInfo>> stackLogger) {
 		if("com.ymkj.base.core.biz.filter.BizLoggerFilter.invoke".equals(logger.getClazz()+"."+logger.getMethod())){
 			if(logger.getContent().startsWith("==========开始调用服务接口:")){
 				return true;
@@ -59,11 +59,12 @@ public class BmsLoggerPattern implements ILoggerPattern<LoggerInfo, InvokeInfo>{
 
 	@Override
 	public void onLogger(LoggerInfo logger,
-			StackLogger<LoggerInfo, InvokeInfo> stackLogger) {
-		InvokeInfo ii=stackLogger.getS();
+			StackLogger<LoggerInfo, InvokeInfo<LoggerInfo>> stackLogger) {
+		InvokeInfo<LoggerInfo> ii=stackLogger.getS();
 		if(ii==null){
-			ii=new InvokeInfo();
+			ii=new InvokeInfo<LoggerInfo>();
 			stackLogger.setS(ii);
+			ii.setStart(logger);
 		}
 		String content=logger.getContent();
 		int s=content.indexOf("[");
@@ -81,7 +82,7 @@ public class BmsLoggerPattern implements ILoggerPattern<LoggerInfo, InvokeInfo>{
 
 	@Override
 	public boolean matcherEnd(LoggerInfo logger,
-			StackLogger<LoggerInfo, InvokeInfo> stackLogger) {
+			StackLogger<LoggerInfo, InvokeInfo<LoggerInfo>> stackLogger) {
 		if("com.ymkj.base.core.biz.filter.BizLoggerFilter.invoke".equals(logger.getClazz()+"."+logger.getMethod())){
 			if(logger.getContent().startsWith("==========结束调用服务接口:")){
 				return true;

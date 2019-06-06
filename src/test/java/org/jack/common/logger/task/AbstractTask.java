@@ -81,6 +81,11 @@ public abstract class AbstractTask<T extends Ilogger,S> implements Task<String>{
 			e.printStackTrace();
 		}
 	}
+	protected void log(Collection<T> loggers){
+		for(T  logger:loggers){
+			log(logger.getContent());
+		}
+	}
 	protected void log(Object message){
 		System.out.println(message);
 	}

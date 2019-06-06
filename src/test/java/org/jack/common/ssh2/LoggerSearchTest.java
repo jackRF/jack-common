@@ -4,7 +4,10 @@ package org.jack.common.ssh2;
 import java.io.File;
 import java.io.IOException;
 
+import org.jack.common.logger.InvokeInfo;
+import org.jack.common.logger.LoggerInfo;
 import org.jack.common.logger.task.BmsTask;
+import org.jack.common.logger.task.Filter;
 import org.jack.common.logger.task.RuleTask;
 import org.jack.common.util.IOUtils;
 import org.jack.common.util.Task;
@@ -23,9 +26,76 @@ public class LoggerSearchTest extends SSH2Test {
 	}
 	@Test
 	public void testTailBms() {
+		Filter<InvokeInfo<LoggerInfo>> filter=new Filter<InvokeInfo<LoggerInfo>>() {
+			
+			@Override
+			public boolean filter(InvokeInfo<LoggerInfo> e) {
+				LoggerInfo start=e.getStart();
+				if(start==null){
+					return false;
+				}
+				if(!"com.ymkj.bms.biz.api.service.apply.IApplyValidateExecuter".equals(e.getClazz())){
+					return false;
+				}
+				return filterValidateNameIdNo(e);
+			}
+			private boolean filterPreparePettyLoanRuleData(InvokeInfo<LoggerInfo> e){
+				String idNoStr="\"idNo\":\"622923199111138769\"";
+				return filterMethod("preparePettyLoanRuleData", idNoStr, e);
+			}
+			private boolean filterPrepareCoreRuleData(InvokeInfo<LoggerInfo> e){
+				String idNoStr="\"idNo\":\"622923199111138769\"";
+				String loanNoStr="\"loanNo\":\"20171011B3CEA6\"";
+				return filterMethod("prepareCoreRuleData", idNoStr, e);
+			}
+			private boolean filterPrepareSuanHuaInLoanRuleData(InvokeInfo<LoggerInfo> e){
+				String idNoStr="\"idNo\":\"622923199111138769\"";
+				String loanNoStr="\"loanNo\":\"20171011B3CEA6\"";
+				return filterMethod("prepareSuanHuaInLoanRuleData", idNoStr, e);
+			}
+			private boolean filterPrepareZDQQRuleData(InvokeInfo<LoggerInfo> e){
+				String idNoStr="\"idNo\":\"622923199111138769\"";
+				String loanNoStr="\"loanNo\":\"20171011B3CEA6\"";
+				return filterMethod("prepareZDQQRuleData", idNoStr, e);
+			}
+			private boolean filterPrepareZDQQRuleBackendData(InvokeInfo<LoggerInfo> e){
+				String idNoStr="\"idNo\":\"622923199111138769\"";
+				String loanNoStr="\"loanNo\":\"20171011B3CEA6\"";
+				return filterMethod("prepareZDQQRuleBackendData", idNoStr, e);
+			}
+			private boolean filterPrepareSignRuleData(InvokeInfo<LoggerInfo> e){
+				String idNoStr="\"idNo\":\"622923199111138769\"";
+				String loanNoStr="\"loanNo\":\"20171011B3CEA6\"";
+				return filterMethod("prepareSignRuleData", idNoStr, e);
+			}
+			private boolean filterQueryApplyDataIsYBR(InvokeInfo<LoggerInfo> e){
+				String idNoStr="\"idNo\":\"622923199111138769\"";
+				String loanNoStr="\"loanNo\":\"20171011B3CEA6\"";
+				return filterMethod("queryApplyDataIsYBR", idNoStr, e);
+			}
+			private boolean filterValidateNameIdNo(InvokeInfo<LoggerInfo> e){
+				String idNoStr="\"idNo\":\"622923199111138769\"";
+				String loanNoStr="\"loanNo\":\"20171011B3CEA6\"";
+				return filterMethod("validateNameIdNo", idNoStr, e);
+			}
+			private boolean filterMethod(String method,String contains,InvokeInfo<LoggerInfo> e){
+				if(method.equals(e.getMethod())){
+					return e.getStart().getContent().contains(contains);
+				}
+				return false;
+			}
+			private boolean determineDuration(InvokeInfo<LoggerInfo> e,long ms){
+				return e.getEnd().getTime().getTime()-e.getStart().getTime().getTime()>=ms;
+			}
+			
+			@Override
+			public boolean export() {
+				return false;
+			}
+		};
 		tailLogger(serverConfig.getServer("BMS", "DEV")
 				,"tail -f  /home/bms/bms_biz/bms-biz/logs/stdout.log"
-				,new BmsTask(new File("D:\\tmp\\bms"),true));
+				,new BmsTask(new File("D:\\tmp\\bms"),false,filter));
 	}
 	@Test
 	public void testTailCfs() {

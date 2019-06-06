@@ -1,10 +1,12 @@
 package org.jack.common.logger;
 
-public class InvokeInfo {
+public class InvokeInfo<T> {
 	private String clazz;
 	private String method;
 	private String idNo;
 	private String loanNo;
+	private T start;
+	private T end;
 	public String getClazz() {
 		return clazz;
 	}
@@ -28,6 +30,18 @@ public class InvokeInfo {
 	}
 	public void setLoanNo(String loanNo) {
 		this.loanNo = loanNo;
+	}
+	public T getStart() {
+		return start;
+	}
+	public void setStart(T start) {
+		this.start = start;
+	}
+	public T getEnd() {
+		return end;
+	}
+	public void setEnd(T end) {
+		this.end = end;
 	}
 	
 }
