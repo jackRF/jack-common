@@ -1,0 +1,67 @@
+package org.jack.common.logger.task;
+
+import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.PrintWriter;
+import java.util.Collection;
+import java.util.HashMap;
+import java.util.Map;
+
+import org.jack.common.logger.Ilogger;
+import org.jack.common.logger.StackLogger;
+import org.jack.common.logger.pattern.ILoggerPattern;
+import org.jack.common.util.Task;
+
+public abstract class AbstractTask<T extends Ilogger,S> implements Task<String>{
+	protected File destLoggerDir;
+	protected Map<String,StackLogger<T,S>> threadStack=new HashMap<String,StackLogger<T,S>>();
+	protected T last;
+	protected ILoggerPattern<T,S> loggerPattern;
+	protected boolean logger;
+	protected int lineIndex=0;
+	@Override
+	public void toDo(String line) {
+
+		if(logger){
+			log(line);
+		}
+		lineIndex++;
+		T current=loggerPattern.parseLine(line,lineIndex, last);
+		if(current==null){
+			return;
+		}
+		last=current;
+		String threadId=current.getThreadId();
+		StackLogger<T, S> stackLogger=threadStack.get(threadId);
+		if(stackLogger==null){
+			stackLogger=new StackLogger<T, S>();
+			threadStack.put(threadId, stackLogger);
+		}
+		stackLogger.add(current);
+		if(loggerPattern.matcherStart(current, stackLogger)){
+			stackLogger.clear();
+			stackLogger.add(current);
+		}else if(loggerPattern.matcherEnd(current, stackLogger)){
+			completeStackLogger(current, stackLogger);
+			threadStack.remove(threadId);
+		}else{
+			loggerPattern.onLogger(current, stackLogger);
+		}
+	}
+	protected abstract void completeStackLogger(T current,StackLogger<T, S> stackLogger);
+	protected void export(Collection<T> loggers,String fileName) {
+		File file=new File(destLoggerDir,fileName);
+		try {
+			PrintWriter pw= new PrintWriter(file);
+			for(T  logger:loggers){
+				pw.println(logger.getContent());
+			}
+			pw.close();
+		} catch (FileNotFoundException e) {
+			e.printStackTrace();
+		}
+	}
+	protected void log(Object message){
+		System.out.println(message);
+	}
+}
