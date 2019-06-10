@@ -6,7 +6,9 @@ import org.jack.common.util.net.NetAddressPair;
 
 public class ServerConfig implements IServerConfig{
 	private ConnectionPair DEV_BMS;
+	private ConnectionPair SIT1_BMS;
 	private ConnectionPair DEV_RULE;
+	private ConnectionPair SIT1_RULE;
 	private ConnectionPair DEV_CFS;
 	private ConnectionPair DEV_BDS;
 	public ServerConfig() {
@@ -15,6 +17,18 @@ public class ServerConfig implements IServerConfig{
 			connectionPair.setNetAddress(new NetAddressPair("172.16.235.9"));
 			connectionPair.setAuthenticate(new AuthenticatePair("root", "zd,123"));
 			DEV_BMS=connectionPair;
+		}
+		{
+			ConnectionPair connectionPair=new ConnectionPair();
+			connectionPair.setNetAddress(new NetAddressPair("10.100.200.88"));
+			connectionPair.setAuthenticate(new AuthenticatePair("bmb", "bmb,123"));
+			SIT1_BMS=connectionPair;
+		}
+		{
+			ConnectionPair connectionPair=new ConnectionPair();
+			connectionPair.setNetAddress(new NetAddressPair("172.16.230.148"));
+			connectionPair.setAuthenticate(new AuthenticatePair("rule", "rule"));
+			SIT1_RULE=connectionPair;
 		}
 		{
 			ConnectionPair connectionPair=new ConnectionPair();
@@ -44,6 +58,10 @@ public class ServerConfig implements IServerConfig{
 			return DEV_RULE;
 		}else if("DEV_BMS".equals(envApp)){
 			return DEV_BMS;
+		}else if("SIT1_BMS".equals(envApp)){
+			return SIT1_BMS;
+		}else if("SIT1_RULE".equals(envApp)){
+			return SIT1_RULE;
 		}
 		return null;
 	}

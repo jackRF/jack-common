@@ -20,9 +20,10 @@ public class LoggerSearchTest extends SSH2Test {
 	
 	@Test
 	public void testTailRule() {
-		tailLogger(serverConfig.getServer("RULE", "DEV")
-				,"tail -f  /home/rule/rule-gate-biz/logs/stdout.log"
-				,new RuleTask(new File("D:\\tmp\\rule"),true,true));
+		tailLogger(serverConfig.getServer("RULE", "SIT1")
+//				,"tail -f  /home/rule/rule-gate-biz/logs/stdout.log"
+				,"tail -f /home/rule/rule-gate-biz/logs/stdout.log"
+				,new RuleTask(new File("D:\\data\\test\\sit1\\rule"),true,true));
 	}
 	@Test
 	public void testTailBms() {
@@ -96,9 +97,10 @@ public class LoggerSearchTest extends SSH2Test {
 				return false;
 			}
 		};
-		tailLogger(serverConfig.getServer("BMS", "DEV")
-				,"tail -f  /home/bms/bms_biz/bms-biz/logs/stdout.log"
-				,new BmsTask(new File("D:\\tmp\\bms"),false,filter));
+		tailLogger(serverConfig.getServer("BMS", "SIT1")
+//				,"tail -f  /home/bms/bms_biz/bms-biz/logs/stdout.log"
+				,"tail -f  /data/logs/bms-api-info.log"
+				,new BmsTask(new File("D:\\data\\test\\sit1\\bms"),true,null));
 	}
 	@Test
 	public void testTailCfs() {
