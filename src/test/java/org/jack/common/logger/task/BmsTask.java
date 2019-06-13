@@ -29,6 +29,7 @@ public class BmsTask extends AbstractTask<LoggerInfo,InvokeInfo<LoggerInfo>> {
 			stackLogger.add(prev);
 		}
 		stackLogger.add(current);
+		stackLogger.setS(null);
 		super.onLogger(current, stackLogger);
 	}
 	@Override

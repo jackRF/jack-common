@@ -15,6 +15,8 @@ import java.util.Stack;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import org.jack.common.logger.task.BmsTask;
+import org.jack.common.logger.task.Filter;
 import org.jack.common.util.DateUtils;
 import org.jack.common.util.IOUtils;
 import org.jack.common.util.Task;
@@ -27,14 +29,115 @@ public class LogAnalyzeTest extends TongcLoggerCollectTest {
 	@Test
 	public void collectAnalyzeTime() throws IOException {
 //		List<File> files=collectBms("2019-05-30 03:27:50", "2019-05-30 04:27:50",true);
-		List<File> files=collectBms(null, null,false);
+		List<File> files=collectBms("2019-06-13 12:27:50", "2019-06-13 12:27:50",true);
 //		List<File> files=collectCfs("2019-05-18", "2019-05-18",true);
 //		collectRule("2019-05-18", "2019-05-18",true);
 		for(File logFile:files){
-//			final Map<String,Stack<LineInfo>> threadMap=new HashMap<String,Stack<LineInfo>>();
-//			analyzeLogFile(logFile, threadMap,new DefaultRule(3000));
+			final Map<String,Stack<LineInfo>> threadMap=new HashMap<String,Stack<LineInfo>>();
+			analyzeLogFile(logFile, threadMap,new DefaultRule(3000));
 			final Map<String,LocalInfo> detailThreadMap=new HashMap<String,LocalInfo>();
 			analyzeLogFileDetail(logFile, detailThreadMap);
+		}
+	}
+	@Test
+	public void testSearchLoggerBms() {
+//		List<File> files=collectBms(null, null,false);
+		List<File> files=collectBms("2019-06-13 12:27:50", "2019-06-13 12:27:50",false);
+		for(File file:files){
+			destSearchLoggerBms(file);
+		}
+	}
+	private void destSearchLoggerBms(File file) {
+		Filter<InvokeInfo<LoggerInfo>> filter=new Filter<InvokeInfo<LoggerInfo>>() {
+			
+			@Override
+			public boolean filter(InvokeInfo<LoggerInfo> e) {
+				LoggerInfo start=e.getStart();
+				if(start==null){
+					return false;
+				}
+				String clazz="com.ymkj.bms.biz.api.service.app.IAPPExecuter";
+				String method=	"queryApply";
+			   if(filterMethod(clazz, method, e)){
+				   
+			   }
+//				if(!"com.ymkj.bms.biz.api.service.apply.IApplyValidateExecuter".equals(e.getClazz())){
+//					return false;
+//				}
+				
+			   return determineDuration(e, 50000);
+//				return filterValidateNameIdNo(e);
+			}
+			private boolean filterPreparePettyLoanRuleData(InvokeInfo<LoggerInfo> e){
+				String idNoStr="\"idNo\":\"622923199111138769\"";
+				return filterMethodContains("preparePettyLoanRuleData", idNoStr, e);
+			}
+			private boolean filterPrepareCoreRuleData(InvokeInfo<LoggerInfo> e){
+				String idNoStr="\"idNo\":\"622923199111138769\"";
+				String loanNoStr="\"loanNo\":\"20171011B3CEA6\"";
+				return filterMethodContains("prepareCoreRuleData", idNoStr, e);
+			}
+			private boolean filterPrepareSuanHuaInLoanRuleData(InvokeInfo<LoggerInfo> e){
+				String idNoStr="\"idNo\":\"622923199111138769\"";
+				String loanNoStr="\"loanNo\":\"20171011B3CEA6\"";
+				return filterMethodContains("prepareSuanHuaInLoanRuleData", idNoStr, e);
+			}
+			private boolean filterPrepareZDQQRuleData(InvokeInfo<LoggerInfo> e){
+				String idNoStr="\"idNo\":\"622923199111138769\"";
+				String loanNoStr="\"loanNo\":\"20171011B3CEA6\"";
+				return filterMethodContains("prepareZDQQRuleData", idNoStr, e);
+			}
+			private boolean filterPrepareZDQQRuleBackendData(InvokeInfo<LoggerInfo> e){
+				String idNoStr="\"idNo\":\"622923199111138769\"";
+				String loanNoStr="\"loanNo\":\"20171011B3CEA6\"";
+				return filterMethodContains("prepareZDQQRuleBackendData", idNoStr, e);
+			}
+			private boolean filterPrepareSignRuleData(InvokeInfo<LoggerInfo> e){
+				String idNoStr="\"idNo\":\"622923199111138769\"";
+				String loanNoStr="\"loanNo\":\"20171011B3CEA6\"";
+				return filterMethodContains("prepareSignRuleData", idNoStr, e);
+			}
+			private boolean filterQueryApplyDataIsYBR(InvokeInfo<LoggerInfo> e){
+				String idNoStr="\"idNo\":\"622923199111138769\"";
+				String loanNoStr="\"loanNo\":\"20171011B3CEA6\"";
+				return filterMethodContains("queryApplyDataIsYBR", idNoStr, e);
+			}
+			private boolean filterValidateNameIdNo(InvokeInfo<LoggerInfo> e){
+				String idNoStr="\"idNo\":\"622923199111138769\"";
+				String loanNoStr="\"loanNo\":\"20171011B3CEA6\"";
+				return filterMethodContains("validateNameIdNo", idNoStr, e);
+			}
+			private boolean filterMethod(String clazz,String method,InvokeInfo<LoggerInfo> e){
+				return method.equals(e.getMethod())&&clazz.equals(e.getClazz());
+			}
+			private boolean filterMethodContains(String method,String contains,InvokeInfo<LoggerInfo> e){
+				if(method.equals(e.getMethod())){
+					if(contains==null){
+						return true;
+					}
+					return e.getStart().getContent().contains(contains);
+				}
+				return false;
+			}
+			private boolean determineDuration(InvokeInfo<LoggerInfo> e,long ms){
+				return e.getEnd().getTime().getTime()-e.getStart().getTime().getTime()>=ms;
+			}
+			
+			@Override
+			public boolean export() {
+				return true;
+			}
+		};
+		File dir=file.getParentFile();
+		File dest=new File(dir,"dest");
+		try {
+			if(!dest.exists()){
+				dest.mkdir();
+			}
+			IOUtils.processText(file, new BmsTask(dest,false,filter));
+		} catch (IOException e1) {
+			// TODO Auto-generated catch block
+			e1.printStackTrace();
 		}
 	}
 	@Test
