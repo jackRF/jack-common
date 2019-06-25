@@ -24,7 +24,7 @@ public class RuleTask extends AbstractTask<LoggerInfo,String>{
 	@Override
 	protected void onStackStart(LoggerInfo current,
 			StackLogger<LoggerInfo, String> stackLogger) {
-//		super.onStackStart(current, stackLogger);
+		super.onStackStart(current, stackLogger);
 	}
 	@Override
 	protected void onStackEnd(LoggerInfo current,
