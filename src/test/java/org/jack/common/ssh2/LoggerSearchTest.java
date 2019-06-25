@@ -27,7 +27,13 @@ public class LoggerSearchTest extends SSH2Test {
 	}
 	@Test
 	public void testTailBms() {
-		Filter<InvokeInfo<LoggerInfo>> filter=new Filter<InvokeInfo<LoggerInfo>>() {
+		tailLogger(serverConfig.getServer("BMS", env)
+				,"tail -f  /home/bms/bms_biz/bms-biz/logs/stdout.log"
+//				,"tail -f  /data/logs/bms-api-info.log"
+				,new BmsTask(new File("D:\\data\\test\\"+env.toLowerCase()+"\\bms"),true,null));
+	}
+	private Filter<InvokeInfo<LoggerInfo>> getFilter(){
+		return new Filter<InvokeInfo<LoggerInfo>>() {
 			
 			@Override
 			public boolean filter(InvokeInfo<LoggerInfo> e) {
@@ -97,10 +103,6 @@ public class LoggerSearchTest extends SSH2Test {
 				return false;
 			}
 		};
-		tailLogger(serverConfig.getServer("BMS", env)
-				,"tail -f  /home/bms/bms_biz/bms-biz/logs/stdout.log"
-//				,"tail -f  /data/logs/bms-api-info.log"
-				,new BmsTask(new File("D:\\data\\test\\"+env.toLowerCase()+"\\bms"),true,null));
 	}
 	@Test
 	public void testTailCfs() {

@@ -4,6 +4,7 @@ import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.PrintWriter;
+import java.text.ParseException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
@@ -29,25 +30,30 @@ public class LogAnalyzeTest extends TongcLoggerCollectTest {
 	@Test
 	public void collectAnalyzeTime() throws IOException {
 //		List<File> files=collectBms("2019-05-30 03:27:50", "2019-05-30 04:27:50",true);
-		List<File> files=collectBms("2019-06-13 12:27:50", "2019-06-13 12:27:50",true);
-//		List<File> files=collectCfs("2019-05-18", "2019-05-18",true);
+		List<File> files=collectBms("2019-06-15 00:27:50", "2019-06-15 12:27:50",false);
+//		List<File> files=collectCfs("2019-06-15", "2019-06-15",true);
 //		collectRule("2019-05-18", "2019-05-18",true);
 		for(File logFile:files){
-			final Map<String,Stack<LineInfo>> threadMap=new HashMap<String,Stack<LineInfo>>();
-			analyzeLogFile(logFile, threadMap,new DefaultRule(3000));
-			final Map<String,LocalInfo> detailThreadMap=new HashMap<String,LocalInfo>();
-			analyzeLogFileDetail(logFile, detailThreadMap);
+//			final Map<String,Stack<LineInfo>> threadMap=new HashMap<String,Stack<LineInfo>>();
+//			analyzeLogFile(logFile, threadMap,new DefaultRule(3000));
+//			final Map<String,LocalInfo> detailThreadMap=new HashMap<String,LocalInfo>();
+//			analyzeLogFileDetail(logFile, detailThreadMap);
+			destSearchLoggerBms(logFile,"dest1");
 		}
 	}
 	@Test
 	public void testSearchLoggerBms() {
 //		List<File> files=collectBms(null, null,false);
-		List<File> files=collectBms("2019-06-13 12:27:50", "2019-06-13 12:27:50",false);
+//		List<File> files=collectBms("2019-06-13 12:27:50", "2019-06-13 12:27:50",false);
+		List<File> files=collectBms("2019-06-13 11:27:50", "2019-06-13 11:27:50",false);
 		for(File file:files){
 			destSearchLoggerBms(file);
 		}
 	}
 	private void destSearchLoggerBms(File file) {
+		destSearchLoggerBms(file,"dest");
+	}
+	private void destSearchLoggerBms(File file,String dest) {
 		Filter<InvokeInfo<LoggerInfo>> filter=new Filter<InvokeInfo<LoggerInfo>>() {
 			
 			@Override
@@ -57,15 +63,32 @@ public class LogAnalyzeTest extends TongcLoggerCollectTest {
 					return false;
 				}
 				String clazz="com.ymkj.bms.biz.api.service.app.IAPPExecuter";
+				clazz="com.ymkj.bms.biz.api.service.apply.IApplyEnterExecuter";
+				clazz="com.ymkj.bms.biz.api.service.job.IBMSLoanJobExecuter";
+				clazz="com.ymkj.bms.biz.api.service.apply.IApplyValidateExecuter";
 				String method=	"queryApply";
-			   if(filterMethod(clazz, method, e)){
-				   
-			   }
-//				if(!"com.ymkj.bms.biz.api.service.apply.IApplyValidateExecuter".equals(e.getClazz())){
-//					return false;
-//				}
+				method="saveOrUpdate";
+				method="zhongAnHistory";
+				method="prepareSuanHuaInLoanRuleData";
+				if(!filterMethod(clazz, method, e)){
+					return false;
+				}
 				
-			   return determineDuration(e, 50000);
+				try {
+					Date time1 = DateUtils.parseDate("2019-06-15 07:41:46", DateUtils.DATE_FORMAT_DATETIME);
+					Date time2=DateUtils.parseDate("2019-06-15 07:51:52", DateUtils.DATE_FORMAT_DATETIME);
+					if(filterTime(time1, time2.getTime()-time1.getTime(),1, e)){
+						String[] loanNos={"23626094", "20170508170000611317", "88317568", "15567829", "20180329326714", "20170104180000451431", "20170531160000662139", "20170930160000917424", "48307925", "16931574"};
+						for(String loanNo:loanNos){
+							if(filterContains("\""+loanNo+"\"", e)){
+								return true;
+							}
+						}
+//						return filterMethod(clazz, method, e)&&(filterContains("20190613BB6E22", e)||filterContains("3856184", e)||filterContains("510129198407050013", e));
+					  }
+				} catch (ParseException e2) {
+				}
+			  return false;
 //				return filterValidateNameIdNo(e);
 			}
 			private boolean filterPreparePettyLoanRuleData(InvokeInfo<LoggerInfo> e){
@@ -110,6 +133,33 @@ public class LogAnalyzeTest extends TongcLoggerCollectTest {
 			private boolean filterMethod(String clazz,String method,InvokeInfo<LoggerInfo> e){
 				return method.equals(e.getMethod())&&clazz.equals(e.getClazz());
 			}
+			private boolean filterContains(String contains,InvokeInfo<LoggerInfo> e){
+				return e.getStart().getContent().contains(contains);
+			}
+			private boolean filterTime(Date time,long precision,int type,InvokeInfo<LoggerInfo> e){
+				long basems=time.getTime();
+				long ms=e.getStart().getTime().getTime();
+				long diff=ms-basems;
+				if(precision==0){
+					if(type==0){
+						return diff==0;
+					}else if(type==1){
+						return diff>=0;
+					}else if(type==-1){
+						return diff<=0;
+					}
+					return false;
+				}
+				if(type==0){
+					return -precision<=diff&&diff<=precision;
+				}else if(type==1){
+					return 0<=diff&&diff<=precision;
+				}else if(type==-1){
+					return -precision<=diff&&diff<=0;
+				}
+				return false;
+				
+			}
 			private boolean filterMethodContains(String method,String contains,InvokeInfo<LoggerInfo> e){
 				if(method.equals(e.getMethod())){
 					if(contains==null){
@@ -129,12 +179,12 @@ public class LogAnalyzeTest extends TongcLoggerCollectTest {
 			}
 		};
 		File dir=file.getParentFile();
-		File dest=new File(dir,"dest");
+		File destDir=new File(dir,dest);
 		try {
-			if(!dest.exists()){
-				dest.mkdir();
+			if(!destDir.exists()){
+				destDir.mkdir();
 			}
-			IOUtils.processText(file, new BmsTask(dest,false,filter));
+			IOUtils.processText(file, new BmsTask(destDir,false,filter));
 		} catch (IOException e1) {
 			// TODO Auto-generated catch block
 			e1.printStackTrace();
