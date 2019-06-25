@@ -16,11 +16,6 @@ public class BmsLoggerPattern implements ILoggerPattern<LoggerInfo, InvokeInfo<L
 	private static final String time= "[0-2][0-9]:[0-5][0-9]:[0-5][0-9]";
 	private static final String method="\\w+(?:\\.\\w+)+\\(\\)";
 	private static final Pattern pattern=Pattern.compile(String.format("^(%s)%s\\[(%s)\\]\\[(%s)\\]", day+" "+time,level,method,threadGroup));
-	public static void main(String[] args) {
-		String line="2019-06-25 15:18:07[INFO][com.ymkj.bms.biz.service.adapter.CreditZXService.baseRequest()][DubboServerHandler-172.16.235.9:20880-thread-99]:";
-		BmsLoggerPattern p=new BmsLoggerPattern();
-		System.out.println(p.parseLine(line, 1, null));
-	}
 	@Override
 	public LoggerInfo parseLine(String line, int index, LoggerInfo last) {
 		LoggerInfo logger=index>0?new LoggerInfo(line, index):new LoggerInfo(line);
