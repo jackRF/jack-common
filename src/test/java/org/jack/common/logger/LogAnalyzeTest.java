@@ -18,6 +18,7 @@ import java.util.regex.Pattern;
 
 import org.jack.common.logger.task.BmsTask;
 import org.jack.common.logger.task.Filter;
+import org.jack.common.logger.task.RuleTask;
 import org.jack.common.util.DateUtils;
 import org.jack.common.util.IOUtils;
 import org.jack.common.util.Task;
@@ -30,7 +31,8 @@ public class LogAnalyzeTest extends TongcLoggerCollectTest {
 	@Test
 	public void collectAnalyzeTime() throws IOException {
 //		List<File> files=collectBms("2019-05-30 03:27:50", "2019-05-30 04:27:50",true);
-		List<File> files=collectBms("2019-06-15 00:27:50", "2019-06-15 12:27:50",false);
+//		List<File> files=collectBms("2019-07-11 18:19:23", "2019-07-11 18:19:23",true);
+		List<File> files=collectBms(null,null,true);
 //		List<File> files=collectCfs("2019-06-15", "2019-06-15",true);
 //		collectRule("2019-05-18", "2019-05-18",true);
 		for(File logFile:files){
@@ -38,7 +40,7 @@ public class LogAnalyzeTest extends TongcLoggerCollectTest {
 //			analyzeLogFile(logFile, threadMap,new DefaultRule(3000));
 //			final Map<String,LocalInfo> detailThreadMap=new HashMap<String,LocalInfo>();
 //			analyzeLogFileDetail(logFile, detailThreadMap);
-			destSearchLoggerBms(logFile,"dest1");
+			destSearchLoggerBms(logFile,"dest071809");
 		}
 	}
 	@Test
@@ -49,6 +51,16 @@ public class LogAnalyzeTest extends TongcLoggerCollectTest {
 		for(File file:files){
 			destSearchLoggerBms(file);
 		}
+	}
+	@Test
+	public void testSearchLogger() {
+//		File dir=new File("D:\\data\\test\\dev");
+		File dir=new File("D:\\data\\logs\\dev");
+		File dest=new File(dir,"dest1");
+		if(!dest.exists()){
+			dest.mkdir();
+		}
+		loggerSearch(new File(dir,"rule-gate.log"), new RuleTask(dest,false,true));
 	}
 	private void destSearchLoggerBms(File file) {
 		destSearchLoggerBms(file,"dest");
@@ -62,34 +74,43 @@ public class LogAnalyzeTest extends TongcLoggerCollectTest {
 				if(start==null){
 					return false;
 				}
-				String clazz="com.ymkj.bms.biz.api.service.app.IAPPExecuter";
-				clazz="com.ymkj.bms.biz.api.service.apply.IApplyEnterExecuter";
+				String clazz="";
+				String method="";
+//				clazz="com.ymkj.bms.biz.api.service.app.IAPPExecuter";
+//				clazz="com.ymkj.bms.biz.api.service.apply.IApplyEnterExecuter";
 				clazz="com.ymkj.bms.biz.api.service.job.IBMSLoanJobExecuter";
-				clazz="com.ymkj.bms.biz.api.service.apply.IApplyValidateExecuter";
-				String method=	"queryApply";
-				method="saveOrUpdate";
-				method="zhongAnHistory";
-				method="prepareSuanHuaInLoanRuleData";
-				if(!filterMethod(clazz, method, e)){
+//				clazz="com.ymkj.bms.biz.api.service.apply.IApplyValidateExecuter";
+//				clazz="com.ymkj.bms.biz.api.service.apply.IEntryAuditExecuter";
+//				method=	"queryApply";
+//				method="saveOrUpdate";
+//				method="zhongAnHistory";
+//				method="prepareSuanHuaInLoanRuleData";
+				
+				if(!filterMethod(clazz, "processPettyLoanAPPPush", e)){
 					return false;
 				}
-				
-				try {
-					Date time1 = DateUtils.parseDate("2019-06-15 07:41:46", DateUtils.DATE_FORMAT_DATETIME);
-					Date time2=DateUtils.parseDate("2019-06-15 07:51:52", DateUtils.DATE_FORMAT_DATETIME);
-					if(filterTime(time1, time2.getTime()-time1.getTime(),1, e)){
-						String[] loanNos={"23626094", "20170508170000611317", "88317568", "15567829", "20180329326714", "20170104180000451431", "20170531160000662139", "20170930160000917424", "48307925", "16931574"};
-						for(String loanNo:loanNos){
-							if(filterContains("\""+loanNo+"\"", e)){
-								return true;
-							}
-						}
-//						return filterMethod(clazz, method, e)&&(filterContains("20190613BB6E22", e)||filterContains("3856184", e)||filterContains("510129198407050013", e));
-					  }
-				} catch (ParseException e2) {
-				}
-			  return false;
+				return true;
+//				return filterContains("120221198608241512", e);//||filterContains("2019070305ECFD", e)||filterContains("20190704384EA9", e);
+//				try {
+//					Date time1 = DateUtils.parseDate("2019-06-15 07:41:46", DateUtils.DATE_FORMAT_DATETIME);
+//					Date time2=DateUtils.parseDate("2019-06-15 07:51:52", DateUtils.DATE_FORMAT_DATETIME);
+//					if(filterTime(time1, time2.getTime()-time1.getTime(),1, e)){
+//						String[] loanNos={"23626094", "20170508170000611317", "88317568", "15567829", "20180329326714", "20170104180000451431", "20170531160000662139", "20170930160000917424", "48307925", "16931574"};
+//						filterContains(e, loanNos);
+////						return filterMethod(clazz, method, e)&&(filterContains("20190613BB6E22", e)||filterContains("3856184", e)||filterContains("510129198407050013", e));
+//					  }
+//				} catch (ParseException e2) {
+//				}
+//			  return false;
 //				return filterValidateNameIdNo(e);
+			}
+			private boolean filterContains(InvokeInfo<LoggerInfo> e,String...contents){
+				for(String content:contents){
+					if(filterContains(content, e)){
+						return true;
+					}
+				}
+				return false;
 			}
 			private boolean filterPreparePettyLoanRuleData(InvokeInfo<LoggerInfo> e){
 				String idNoStr="\"idNo\":\"622923199111138769\"";
@@ -184,9 +205,16 @@ public class LogAnalyzeTest extends TongcLoggerCollectTest {
 			if(!destDir.exists()){
 				destDir.mkdir();
 			}
-			IOUtils.processText(file, new BmsTask(destDir,false,filter));
+			IOUtils.processText(file,new BmsTask(destDir,false,filter));
 		} catch (IOException e1) {
 			// TODO Auto-generated catch block
+			e1.printStackTrace();
+		}
+	}
+	private void loggerSearch(File file,Task<String> task){
+		try {
+			IOUtils.processText(file,task);
+		} catch (IOException e1) {
 			e1.printStackTrace();
 		}
 	}

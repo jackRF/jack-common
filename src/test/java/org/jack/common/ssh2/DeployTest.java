@@ -22,12 +22,12 @@ public class DeployTest extends SSH2Test {
 		WebDeploy deploy=new WebDeploy(serverConfig.getServer("BMS", "DEV"));
 		deploy.setProjectPath("D:/Projects/com/tongc-soft/preCreditJob");
 		deploy.setContainerPath("/usr/local/apache-tomcat-8.5.38");
-//		deploy.setArtifactId("job-admin");
-//		deploy.setVersion("2.0.2-SNAPSHOT");
+		deploy.setArtifactId("job-admin");
+		deploy.setVersion("2.0.2-SNAPSHOT");
 //		if(!compile(deploy.getProjectPath())){
 //			return;
 //		}
-//		deploy(deploy);
+		deploy(deploy);
 		deploy.setArtifactId("job-executor");
 		deploy.setVersion("2.0.2-SNAPSHOT");
 //		if(!compile(deploy.getProjectPath())){
@@ -58,7 +58,7 @@ public class DeployTest extends SSH2Test {
 		DubboDeploy dubboDeploy=new DubboDeploy(serverConfig.getServer("RULE", "DEV"));
 		dubboDeploy.setArtifactId("rule-gate-biz");
 		dubboDeploy.setSourcePath("D:/Projects/com/tongc-soft/rule_gate/rule-gate-biz/target");
-		dubboDeploy.restart=true;
+//		dubboDeploy.restart=true;
 		deploy(dubboDeploy);
 	}
 	@Test

@@ -11,6 +11,7 @@ public class ServerConfig implements IServerConfig{
 	private ConnectionPair DEV_RULE;
 	private ConnectionPair SIT1_RULE;
 	private ConnectionPair SIT2_RULE;
+	private ConnectionPair UAT_RULE;
 	private ConnectionPair DEV_CFS;
 	private ConnectionPair DEV_BDS;
 	public ServerConfig() {
@@ -61,6 +62,12 @@ public class ServerConfig implements IServerConfig{
 			connectionPair.setAuthenticate(new AuthenticatePair("rule", "rule"));
 			SIT2_RULE=connectionPair;
 		}
+		{
+			ConnectionPair connectionPair=new ConnectionPair();
+			connectionPair.setNetAddress(new NetAddressPair("172.16.250.237"));
+			connectionPair.setAuthenticate(new AuthenticatePair("lookup", "lookup"));
+			UAT_RULE=connectionPair;
+		}
 	}
 	@Override
 	public ConnectionPair getServer(String app, String env) {
@@ -81,6 +88,8 @@ public class ServerConfig implements IServerConfig{
 			return SIT2_BMS;
 		}else if("SIT2_RULE".equals(envApp)){
 			return SIT2_RULE;
+		}else if("UAT_RULE".equals(envApp)){
+			return UAT_RULE;
 		}
 		return null;
 	}

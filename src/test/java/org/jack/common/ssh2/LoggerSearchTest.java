@@ -17,19 +17,20 @@ import org.junit.Test;
 
 public class LoggerSearchTest extends SSH2Test {
 	private IServerConfig serverConfig=new ServerConfig();
-	private String env="DEV";
+	private String env="UAT";
 	@Test
 	public void testTailRule() {
 		tailLogger(serverConfig.getServer("RULE", env)
-				,"tail -f  /home/rule/rule-gate-biz/logs/stdout.log"
+//				,"tail -1000f  /home/rule/rule-gate-biz/logs/stdout.log"
 //				,"tail -f /home/rule/rule-gate-biz/logs/stdout.log"
+				,"tail -1000f /data/logs/dubbo/rule-gate.log"
 				,new RuleTask(new File("D:\\data\\test\\"+env.toLowerCase()+"\\rule"),true,true));
 	}
 	@Test
 	public void testTailBms() {
 		tailLogger(serverConfig.getServer("BMS", env)
-				,"tail -f  /home/bms/bms_biz/bms-biz/logs/stdout.log"
-//				,"tail -f  /data/logs/bms-api-info.log"
+//				,"tail -f  /home/bms/bms_biz/bms-biz/logs/stdout.log"
+				,"tail -1000f  /data/logs/bms-api-debug.log"
 				,new BmsTask(new File("D:\\data\\test\\"+env.toLowerCase()+"\\bms"),true,null));
 	}
 	private Filter<InvokeInfo<LoggerInfo>> getFilter(){
