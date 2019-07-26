@@ -30,7 +30,7 @@ public class LoggerSearchTest extends SSH2Test {
 	public void testTailBms() {
 		tailLogger(serverConfig.getServer("BMS", env)
 //				,"tail -f  /home/bms/bms_biz/bms-biz/logs/stdout.log"
-				,"tail -1000f  /data/logs/bms-api-debug.log"
+				,"tail -f  /data/logs/bms-api-debug.log"
 				,new BmsTask(new File("D:\\data\\test\\"+env.toLowerCase()+"\\bms"),true,null));
 	}
 	private Filter<InvokeInfo<LoggerInfo>> getFilter(){

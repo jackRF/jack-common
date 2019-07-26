@@ -13,11 +13,21 @@ import org.jack.common.util.IOUtils;
 import org.jack.common.util.Task;
 
 public class HashDigest {
-	public static String getFileSHA1(File file) throws NoSuchAlgorithmException, IOException {
-		return hash(file,"SHA-1",40);
+	public static String getFileSHA1(File file) throws IOException {
+		try {
+			return hash(file,"SHA-1",40);
+		} catch (NoSuchAlgorithmException e) {
+			e.printStackTrace();
+		}
+		return null;
 	}
-	public static String getFileMD5(File file) throws NoSuchAlgorithmException, IOException {
-		return hash(file,"MD5",32);
+	public static String getFileMD5(File file) throws IOException {
+		try {
+			return hash(file,"MD5",32);
+		} catch (NoSuchAlgorithmException e) {
+			e.printStackTrace();
+		}
+		return null;
 	}
 	public static void main(String[] args) throws IOException {
 		List<String> files=new ArrayList<String>();
@@ -30,25 +40,19 @@ public class HashDigest {
 			}
 		});
 		for(String file:files){
-			try {
-				String sha1=getFileSHA1(new File(file));
-				try{
-					String sha1dest=IOUtils.readText(new File(file+".sha1"));
-					if(!sha1.equals(sha1dest.trim())){
-						log(file);
-						log("sha1:"+sha1);
-						log("sha1dest:"+sha1dest);
-					}else{
-//						log(file);
-//						log("sha1:"+sha1);
-					}
-				}catch(Exception e){
-					log(e);
+			String sha1=getFileSHA1(new File(file));
+			try{
+				String sha1dest=IOUtils.readText(new File(file+".sha1"));
+				if(!sha1.equals(sha1dest.trim())){
+					log(file);
+					log("sha1:"+sha1);
+					log("sha1dest:"+sha1dest);
+				}else{
+//					log(file);
+//					log("sha1:"+sha1);
 				}
-				
-				
-			} catch (NoSuchAlgorithmException e) {
-				e.printStackTrace();
+			}catch(Exception e){
+				log(e);
 			}
 		}
 	}
