@@ -18,7 +18,6 @@ import org.jack.common.util.ClassScaner;
 import org.jack.common.util.Utils;
 import org.jack.common.util.net.DBConnectionPair;
 import org.junit.Test;
-import org.springframework.core.io.DefaultResourceLoader;
 
 import com.alibaba.fastjson.JSON;
 
@@ -37,7 +36,7 @@ public class MapperHleperTest extends DBTest {
 			for(Class<?> clazz:classes){
 				log(clazz);
 			}
-			compare(classes, getConnection(DEV_BMS));
+			compare(classes, getConnection(getDatabase("DEV_BMS")));
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
@@ -151,7 +150,7 @@ public class MapperHleperTest extends DBTest {
 	@Test
 	public void testInsertCondition() {
 		String cls="IF_LOCAL_REGISTER,VERSION,IS_DELETE";
-		insertCondition(DEV_BMS, "bms_tm_app_salary_loan_info",cls.split(","));
+		insertCondition(getDatabase("DEV_BMS"), "bms_tm_app_salary_loan_info",cls.split(","));
 	}
 	private void insertCondition(DBConnectionPair dbConnectionPair,String tableName,String...columns) {
 		StringBuilder keysb=new StringBuilder();

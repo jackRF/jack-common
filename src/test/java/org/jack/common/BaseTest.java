@@ -5,12 +5,57 @@ import java.lang.reflect.Method;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
+import java.util.Properties;
 import java.util.Set;
 
+import org.jack.common.util.net.AuthenticatePair;
+import org.jack.common.util.net.ConnectionPair;
+import org.jack.common.util.net.DBConnectionPair;
+import org.jack.common.util.net.DBPair;
+import org.jack.common.util.net.NetAddressPair;
 import org.springframework.beans.BeanWrapper;
 import org.springframework.beans.BeanWrapperImpl;
+import org.springframework.beans.factory.config.YamlPropertiesFactoryBean;
+import org.springframework.core.io.ClassPathResource;
 
 public abstract class BaseTest {
+	
+	private static Map<String,DBConnectionPair> envDatabaseMap=new HashMap<>();
+	private static class DatabaseConfigHolder{
+		private static Properties databaseConfig=loadDatabaseYaml();
+		public static Properties loadDatabaseYaml() {
+	        YamlPropertiesFactoryBean yaml = new YamlPropertiesFactoryBean();
+	        yaml.setResources(new ClassPathResource("META-INF/database-config.yml"));
+	        Properties databaseConfig=yaml.getObject();
+			return databaseConfig;
+	    }
+		public static String get(String key) {
+			return databaseConfig.getProperty(key);
+		}
+	}
+	
+	public DBConnectionPair getDatabase(String env){
+		env=env.toLowerCase();
+		if(envDatabaseMap.containsKey(env)) {
+			return envDatabaseMap.get(env);
+		}
+		String type=DatabaseConfigHolder.get(String.format("database.%s.db.type", env));
+		String name=DatabaseConfigHolder.get(String.format("database.%s.db.name", env));
+		String ip=DatabaseConfigHolder.get(String.format("database.%s.netaddress.ip", env));
+		String port=DatabaseConfigHolder.get(String.format("database.%s.netaddress.port", env));
+		String username=DatabaseConfigHolder.get(String.format("database.%s.authenticate.username", env));
+		String password=DatabaseConfigHolder.get(String.format("database.%s.authenticate.password", env));
+		{
+			DBConnectionPair dbConnectionPair=new DBConnectionPair();
+			ConnectionPair connection=new ConnectionPair();
+			connection.setAuthenticate(new AuthenticatePair(username, password));
+			connection.setNetAddress(new NetAddressPair(ip, Integer.valueOf(port)));
+			dbConnectionPair.setConnection(connection);
+			dbConnectionPair.setDb(new DBPair(DBPair.of(type), name));
+			envDatabaseMap.put(env, dbConnectionPair);
+			return dbConnectionPair;
+		}
+	}
 	protected void testCompare(Object bean1,Object bean2){
 		Map<String,Class<?>> map1=propertiesMap(bean1);
 		Map<String,Class<?>> map2=propertiesMap(bean2);

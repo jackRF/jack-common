@@ -42,53 +42,18 @@ import org.springframework.util.CollectionUtils;
 import org.springframework.util.StringUtils;
 
 public class DBTest extends BaseTest{
-	protected static DBConnectionPair DEV_BMS;
-	protected static DBConnectionPair DEV_CREDIT_ZX;
-	protected static DBConnectionPair TEST_MYCAT;
-	protected static DBConnectionPair DEV_BDS;
-	static{
-		{
-			DBConnectionPair dbConnectionPair=new DBConnectionPair();
-			ConnectionPair connection=new ConnectionPair();
-			connection.setAuthenticate(new AuthenticatePair("bms", "bms"));
-			connection.setNetAddress(new NetAddressPair("172.16.230.122", 3306));
-			dbConnectionPair.setConnection(connection);
-			dbConnectionPair.setDb(new DBPair(DBPair.MYSQL, "bms_cyb"));
-			DEV_BMS=dbConnectionPair;
-		}{
-			DBConnectionPair dbConnectionPair=new DBConnectionPair();
-			ConnectionPair connection=new ConnectionPair();
-			connection.setAuthenticate(new AuthenticatePair("xd_zx", "123456"));
-			connection.setNetAddress(new NetAddressPair("172.16.230.90", 1521));
-			dbConnectionPair.setConnection(connection);
-			dbConnectionPair.setDb(new DBPair(DBPair.ORACLE, "stupor"));
-			DEV_CREDIT_ZX=dbConnectionPair;
-		}{
-			DBConnectionPair dbConnectionPair=new DBConnectionPair();
-			ConnectionPair connection=new ConnectionPair();
-			connection.setAuthenticate(new AuthenticatePair("root", "123456"));
-			connection.setNetAddress(new NetAddressPair("localhost", 8066));
-			dbConnectionPair.setConnection(connection);
-			dbConnectionPair.setDb(new DBPair(DBPair.MYSQL, "TESTDB"));
-			TEST_MYCAT=dbConnectionPair;
-		}{
-			DBConnectionPair dbConnectionPair=new DBConnectionPair();
-			ConnectionPair connection=new ConnectionPair();
-			connection.setAuthenticate(new AuthenticatePair("bds", "bds"));
-			connection.setNetAddress(new NetAddressPair("172.16.230.122", 3306));
-			dbConnectionPair.setConnection(connection);
-			dbConnectionPair.setDb(new DBPair(DBPair.MYSQL, "bds"));
-			DEV_BDS=dbConnectionPair;
-		}
-	}
 	private static interface MatchFilter{
 		boolean match(String tableName,String tableType,ColumnInfo columnInfo);
 		void accept(String tableName,String tableType,ColumnInfo columnInfo);
 	}
+	public static Table getTable(DBConnectionPair connectionPair,String name){
+		return null;
+		
+	}
 	@Test
 	public void testTables() {
 		try {
-			List<String> list=getAllTables(DEV_BMS);
+			List<String> list=getAllTables(getDatabase("DEV_CRM"));
 			for(String tableName:list){
 				log(tableName);
 			}
@@ -101,10 +66,24 @@ public class DBTest extends BaseTest{
 		Connection sqlConnection=getConnection(dbConnectionPair);
 		return getAllTables(sqlConnection);
 	}
+	
 	protected List<String> getAllTables(Connection sqlConnection) throws SQLException{
 		StringBuilder sql=new StringBuilder();
-		sql.append("select table_name from information_schema.tables where table_schema='bms_cyb' and table_type='BASE TABLE'");
-		ResultSet rs=query(sql.toString(), sqlConnection);
+		DatabaseMetaData dmd=sqlConnection.getMetaData();
+		ResultSet rs=dmd.getSchemas();
+		List<String> schemas=new ArrayList<>();
+		while(rs.next()) {
+			schemas.add(rs.getString(1));
+		}
+		rs.close();
+		String productName=dmd.getDatabaseProductName();
+		if("Mysql".equals(productName)) {
+			sql.append("select table_name from information_schema.tables where table_schema='"+schemas.get(0)+"' and table_type='BASE TABLE'");
+		}else if("Oracle".equals(productName)){
+			sql.append(" select table_name from user_tables");
+		}
+		
+		rs=query(sql.toString(), sqlConnection);
 		List<String> list=new ArrayList<String>();
 		while(rs.next()){
 			list.add(rs.getString("table_name"));
@@ -114,8 +93,34 @@ public class DBTest extends BaseTest{
 	}
 	@Test
 	public void testConn() {
-		Connection sqlConnection=getConnection(DEV_BMS);
+		Connection sqlConnection=getConnection(getDatabase("DEV_CRM"));
+		try {
+			DatabaseMetaData dmd=sqlConnection.getMetaData();
+			viewDatabaseMetaData(dmd);
+		} catch (SQLException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
 		log(sqlConnection.toString());
+	}
+	private void viewDatabaseMetaData(DatabaseMetaData dmd) throws SQLException {
+		log("getCatalogs start");
+		ResultSet rs=dmd.getCatalogs();
+		while(rs.next()) {
+			log(rs.getString(1));
+		}
+		log("getCatalogs end");
+		log(dmd.getUserName());
+		log("getSchemas start");
+		rs=dmd.getSchemas();
+		while(rs.next()) {
+			log(rs.getString(1));
+		}
+		log("getSchemas end");
+		log(dmd.getDatabaseProductName());
+		log(dmd.getDatabaseMajorVersion());
+		log(dmd.getDatabaseMinorVersion());
+		log(dmd.getDatabaseProductVersion());
 	}
 	@Test
 	public void propertyToColumn(){
@@ -125,7 +130,7 @@ public class DBTest extends BaseTest{
 	@Test
 	public void testMatchColumn() {
 		final List<ColumnInfo> matched=new ArrayList<ColumnInfo>();
-		matchColumn(getConnection(DEV_BMS), new MatchFilter() {
+		matchColumn(getConnection(getDatabase("DEV_BMS")), new MatchFilter() {
 			@Override
 			public boolean match(String tableName, String tableType,
 					ColumnInfo columnInfo) {
@@ -208,7 +213,7 @@ public class DBTest extends BaseTest{
 	@Test
 	public void testColumns(){
 //		testColumns(DEV_BMS, "bms_social_insurance_info");
-		testColumns(getConnection(DEV_BMS), "bms_app_person_info_ext");
+		testColumns(getConnection(getDatabase("DEV_CRM")), "bms_app_person_info_ext");
 //		testColumns(DEV_BMS, "bms_loan_base");
 //		testColumns(DEV_CREDIT_ZX, "T_PBCCRC_REPORT");
 //		testColumns(TEST_MYCAT, "company");
@@ -219,7 +224,7 @@ public class DBTest extends BaseTest{
 		sql.append("select id,name,QUANTITY,price from test_product");
 		sql.append(" where id>2 and id <7  limit 4");
 		try {
-			ResultSet rs=query(sql.toString(), getConnection(TEST_MYCAT));
+			ResultSet rs=query(sql.toString(), getConnection(getDatabase("DEV_MYCAT")));
 			int columnCount=rs.getMetaData().getColumnCount();
 			StringBuilder sb=new StringBuilder();
 			for(int i=0;i<columnCount;i++){
@@ -266,7 +271,7 @@ public class DBTest extends BaseTest{
 		for(String column:columna){
 			columns.add(column);
 		}
-		generateEntity(getConnection(DEV_BMS), "BMS_LOAN_PRODUCT",columns);
+		generateEntity(getConnection(getDatabase("DEV_BMS")), "BMS_LOAN_PRODUCT",columns);
 	}
 	@Test
 	public void testSqlEntity() {
@@ -351,7 +356,7 @@ public class DBTest extends BaseTest{
 	
 	private void compareEntity(Class<?> entityClass) throws SQLException{
 		Table table=entityClass.getAnnotation(Table.class);
-		compareEntity(entityClass, table.name(), DEV_BMS);
+		compareEntity(entityClass, table.name(), getDatabase("DEV_BMS"));
 	}
 	protected void compareEntity(Class<?> entityClass,String tableName,DBConnectionPair dbConnectionPair) throws SQLException {
 		Map<String, ColumnInfo> columnInfos=getTableColumnInfos(tableName, getConnection(dbConnectionPair));
@@ -663,11 +668,11 @@ public class DBTest extends BaseTest{
 	}
 	@Test
 	public void testMySQL() {
-		testConnection(DEV_BMS);
+		testConnection(getDatabase("DEV_BMS"));
 	}
 	@Test
 	public void testOracel() {
-		testConnection(DEV_CREDIT_ZX);
+		testConnection(getDatabase("DEV_CREDIT_ZX"));
 	}
 	private void testConnection(DBConnectionPair connectionInfo) {
 		try {
