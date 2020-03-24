@@ -14,6 +14,7 @@ import org.apache.http.HttpResponse;
 import org.apache.http.NameValuePair;
 import org.apache.http.client.ClientProtocolException;
 import org.apache.http.client.HttpClient;
+import org.apache.http.client.config.RequestConfig;
 import org.apache.http.client.entity.UrlEncodedFormEntity;
 import org.apache.http.client.methods.HttpGet;
 import org.apache.http.client.methods.HttpPost;
@@ -34,8 +35,23 @@ public class HttpUtils {
 		private static final HttpClient HTTP_CLIENT;
 		static{
 			HttpClientBuilder httpClientBuilder=HttpClientBuilder.create();
+			//连接池中最大连接数
 			httpClientBuilder.setMaxConnTotal(200);
+			/** 
+			 * 分配给同一个route(路由)最大的并发连接数。 
+			 * route：运行环境机器 到 目标机器的一条线路。 
+			 * 举例来说，我们使用HttpClient的实现来分别请求 www.baidu.com 的资源和 www.bing.com 的资源那么他就会产生两个route。 
+			 */ 
 			httpClientBuilder.setMaxConnPerRoute(100);
+			RequestConfig requestConfig = RequestConfig.custom()
+					 //从连接池中获取连接的超时时间
+                    .setConnectionRequestTimeout(1000)  
+                    //与服务器连接超时时间：httpclient会创建一个异步线程用以创建socket连接，此处设置该socket的连接超时时间  
+					.setConnectTimeout(5000)  
+					//socket读数据超时时间：从服务器获取响应数据的超时时间
+                    .setSocketTimeout(5000)                 
+                    .build();
+			httpClientBuilder.setDefaultRequestConfig(requestConfig);
 			HTTP_CLIENT=httpClientBuilder.build();
 		}
 	}
