@@ -1,0 +1,45 @@
+database:
+
+  dev_crm:
+    db:
+      type: oracle
+      name: testdb
+    netaddress:
+      ip: 192.168.52.50
+      port: 1521
+    authenticate:
+      username: crm
+      password: crm
+      
+  dev_bms:
+    db:
+      type: mysql
+      name: bms_cyb
+    netaddress:
+      ip: 172.16.230.122
+      port: 3306
+    authenticate:
+      username: bms
+      password: bms
+      
+  dev_credit_zx:
+    db:
+      type: oracle
+      name: stupor
+    netaddress:
+      ip: 172.16.230.90
+      port: 1521
+    authenticate:
+      username: xd_zx
+      password: 123456
+      
+  dev_mycat:
+    db:
+      type: mysql
+      name: TESTDB
+    netaddress:
+      ip: localhost
+      port: 8066
+    authenticate:
+      username: root
+      password: 123456

@@ -1,6 +1,10 @@
 package org.jack.common.util;
 
 public class Utils {
+	public static String tableToClass(String table,StringBuilder sb){
+		String cla=columnToProperty(table, sb);
+		return Character.toUpperCase(cla.charAt(0))+cla.substring(1);
+	}
 	public static String propertyToColumn(String property,StringBuilder sb){
 		sb.setLength(0);
 		int i=0;

@@ -25,6 +25,27 @@ public class DBPair {
 	public String toJdbcUrlString(NetAddressPair netAddress) {
 		return String.format(dbType.format, netAddress.toString(),database);
 	}
+	public static  DBTypePair of(String type) {
+		if("MYSQL".equalsIgnoreCase(type)) {
+			return MYSQL;
+		}
+		if("ORACLE".equalsIgnoreCase(type)) {
+			return ORACLE;
+		}
+		if("DB2".equalsIgnoreCase(type)) {
+			return DB2;
+		}
+		if("SQLSERVER".equalsIgnoreCase(type)) {
+			return SQLSERVER;
+		}
+		if("SYBASE".equalsIgnoreCase(type)) {
+			return SYBASE;
+		}
+		if("POSTGRESQL".equalsIgnoreCase(type)) {
+			return POSTGRESQL;
+		}
+		return null;
+	}
 	private static class DBTypePair {
 		private static final Set<DBTypePair> dbTypes=new HashSet<DBTypePair>(); 
 		private final int type;
