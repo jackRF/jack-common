@@ -1,0 +1,47 @@
+package com.drools.demo.point;
+
+import java.math.BigDecimal;
+import java.util.List;
+import java.util.ArrayList;
+import com.jd.drools.test.PointDomain;
+import com.jd.drools.test.Order;
+
+function void processOrderPoint(PointDomain pointDomain) {
+    List<Order> list=pointDomain.getOrders();
+    if(list!=null&&list.size()>0){
+        BigDecimal sum=BigDecimal.ZERO;
+        for(Order order:list){
+            sum=sum.add(order.getBalance());
+        }
+        if(sum.compareTo(BigDecimal.valueOf(15000))>=0){
+            pointDomain.setPoint(pointDomain.getPoint()+150);
+            pointDomain.recordPointLog(pointDomain.getUserName(),"orderPoint");
+        }
+    }
+}
+
+rule orderPoint
+salience 100
+lock-on-active true
+when
+    $pointDomain :PointDomain();
+then
+    processOrderPoint($pointDomain);
+end
+
+rule listOrderPoint
+salience 100
+lock-on-active true
+when
+    $orders:ArrayList();
+    $pointDomain :PointDomain();
+then
+    BigDecimal sum=BigDecimal.ZERO;
+    for(Order order:(List<Order>)$orders){
+        sum=sum.add(order.getBalance());
+    }
+    if(sum.compareTo(BigDecimal.valueOf(15000))>=0){
+        $pointDomain.setPoint($pointDomain.getPoint()+150);
+        $pointDomain.recordPointLog($pointDomain.getUserName(),"listOrderPoint");
+    }
+end

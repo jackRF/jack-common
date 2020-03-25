@@ -1,0 +1,18 @@
+package com.drools.demo.point;
+import com.jd.drools.test.PointDomain;
+import com.jd.drools.test.Customer;
+
+rule customerPoint
+
+salience 100
+lock-on-active true
+
+when
+    $customer:Customer();
+    $pointDomain :PointDomain();
+then
+    if($customer.getIdentityNo()!=null){
+        $pointDomain.setPoint($pointDomain.getPoint()+100);
+        $pointDomain.recordPointLog($pointDomain.getUserName(),"customerPoint");
+    }
+end
