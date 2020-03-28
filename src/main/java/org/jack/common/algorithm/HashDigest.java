@@ -30,7 +30,7 @@ public class HashDigest {
 		return null;
 	}
 	public static void main(String[] args) throws IOException {
-		List<String> files=new ArrayList<String>();
+		final List<String> files=new ArrayList<String>();
 		IOUtils.processText(new File("D:\\tmp\\dependecties.txt"), new Task<String>() {
 			
 			@Override

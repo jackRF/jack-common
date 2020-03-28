@@ -291,7 +291,7 @@ public class LogAnalyzeTest extends TongcLoggerCollectTest {
 			}
 		}
 	}
-	private void analyzeLogFile(File logFile,final Map<String,Stack<LineInfo>> threadMap,Rule rule) throws IOException {
+	private void analyzeLogFile(File logFile,final Map<String,Stack<LineInfo>> threadMap,final Rule rule) throws IOException {
 		IOUtils.processText(logFile, new Task<String>(){
 			private int i=0;
 			private LocalInfo lastlocalInfo;

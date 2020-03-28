@@ -1,0 +1,12 @@
+2020-03-28 21:39:19[ERROR][com.jd.drools.test.Point2RuleEngine.loadKiePackages()][main]:
+规则文件解析错误：Wrong date-effective value: Invalid date input format: [2011-01-08 23:59:59] it should follow: [dd-MMM-yyyy] : [Rule name='billThisMonthPoint']
+
+Wrong date-expires value: Invalid date input format: [2011-08-08 23:59:59] it should follow: [dd-MMM-yyyy] : [Rule name='billThisMonthPoint']
+
+
+2020-03-28 21:40:01[ERROR][com.jd.drools.test.Point2RuleEngine.loadKiePackages()][main]:
+规则文件解析错误：Wrong date-effective value: Invalid date input format: [2011-01-08 23:59:59] it should follow: [dd-MMM-yyyy] : [Rule name='billThisMonthPoint']
+
+Wrong date-expires value: Invalid date input format: [2011-08-08 23:59:59] it should follow: [dd-MMM-yyyy] : [Rule name='billThisMonthPoint']
+
+

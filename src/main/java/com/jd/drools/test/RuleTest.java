@@ -15,7 +15,7 @@ import org.junit.Test;
 public class RuleTest {
     @Test
     public void testPointRule(String input) {
-        PointRuleEngine pointRuleEngine = new PointRuleEngineImpl();
+        Point2RuleEngine pointRuleEngine = new Point2RuleEngine();
         while (true) {
             InputStream is = System.in;
             BufferedReader br = new BufferedReader(new InputStreamReader(is));
@@ -26,16 +26,8 @@ public class RuleTest {
             // e.printStackTrace();
             // }
             System.out.println("请输入命令：");
-            if (null != input && "s".equals(input)) {
-                System.out.println("初始化规则引擎…");
-                pointRuleEngine.initEngine();
-                System.out.println("初始化规则引擎结束.");
-            } else if ("e".equals(input)) {
+            if ("e".equals(input)) {
                 final PointDomain pointDomain = new PointDomain();
-                System.out.println("初始化规则引擎…");
-                pointRuleEngine.initEngine();
-                System.out.println("初始化规则引擎结束.");
-                long startMillis = System.currentTimeMillis();
                 pointDomain.setUserName("hello kity");
                 pointDomain.setBackMondy(100d);
                 pointDomain.setBuyMoney(500d);
@@ -100,16 +92,13 @@ public class RuleTest {
                 customer2.setIdentityNo("34010119760104882X");
                 customer2.setBindMobile("18604103630");
                 customer2.setChannelId("TTTNET01");
-                pointRuleEngine.executeRuleEngine(pointDomain,customer,orders,customer2);
-                System.out.println(String.format("执行时间：%sms", System.currentTimeMillis()-startMillis));
+                pointRuleEngine.execute(pointDomain,customer,orders,customer2);
                 System.out.println("执行完毕BillThisMonth：" + pointDomain.getBillThisMonth());
                 System.out.println("执行完毕BuyMoney：" + pointDomain.getBuyMoney());
                 System.out.println("执行完毕BuyNums：" + pointDomain.getBuyNums());
                 System.out.println("执行完毕规则引擎决定发送积分：" + pointDomain.getPoint());
             } else if ("r".equals(input)) {
-                System.out.println("刷新规则文件…");
-                pointRuleEngine.refreshEnginRule();
-                System.out.println("刷新规则文件结束.");
+                pointRuleEngine.refresh();
             }
             break;
         }

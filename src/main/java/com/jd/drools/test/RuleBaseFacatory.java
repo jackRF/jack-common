@@ -1,7 +1,8 @@
 package com.jd.drools.test;
 
-import org.drools.RuleBase;
-import org.drools.RuleBaseFactory;
+import org.drools.core.impl.InternalKnowledgeBase;
+import org.drools.core.impl.KnowledgeBaseFactory;
+import org.drools.core.marshalling.impl.ProtobufMessages.KnowledgeBase;
 
 /**
  * RuleBaseFacatory 单实例RuleBase生成工具
@@ -11,9 +12,9 @@ import org.drools.RuleBaseFactory;
 
 public class RuleBaseFacatory {
 
-    private static RuleBase ruleBase;
+    private static InternalKnowledgeBase knowledgeBase;
 
-    public static RuleBase getRuleBase() {
-        return null != ruleBase ? ruleBase : RuleBaseFactory.newRuleBase();
+    public static InternalKnowledgeBase getRuleBase() {
+        return knowledgeBase= KnowledgeBaseFactory.newKnowledgeBase();
     }
 }

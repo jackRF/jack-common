@@ -44,8 +44,8 @@ public class HttpUtilsTest extends BaseTest{
 	/**
 	 * 测试并发
 	 */
-	private void testConcurrency(int threadCount,Task<String> task) {
-		CountDownLatch latch=new CountDownLatch(1);
+	private void testConcurrency(int threadCount,final Task<String> task) {
+		final CountDownLatch latch=new CountDownLatch(1);
 		for(int i=0;i<threadCount;i++){
 			final int ui=i;
 			Thread thread=new Thread(new Runnable() {

@@ -114,3 +114,17 @@ $pointDomain.setPoint($pointDomain.getPoint()+ 100);
 $pointDomain.recordPointLog($pointDomain.getUserName(),"allFitPoint");
 
 end
+
+// rule kaihulianxi
+// salience 96
+// lock-on-active true
+// when 
+//    $customer:Customer(createTime+yizhou>now&& brokecode==null);
+//    $taskContext:TaskContext();
+//    $config:Config();
+// then
+//    Task task=new Task();
+//     task.setxxx($confg.getxxx());
+//    $taskContext.add(task);
+
+//  end 
