@@ -1,17 +1,28 @@
 package org.jack.common.util;
+
+import org.jack.common.core.AbstractBitFlag;
+
 /**
  * 借款标记
+ * 
  * @author zhangwei
  *
  */
 public class LoanFlag extends AbstractBitFlag<LoanFlag>{
-	public static final LoanFlag EMPTY=new LoanFlag(0l);
-	public static final LoanFlag APPLY_SMS=new LoanFlag(1l);
-	public static final LoanFlag HIGH_QUALITY=new LoanFlag(4l);
-	private static final LoanFlag[] UNIT_FLAGS=new LoanFlag[] {
-			APPLY_SMS,HIGH_QUALITY
-	};
-	private static final LoanFlag ALL=new LoanFlag(mergeValue(UNIT_FLAGS));
+
+	private static enum FlagHolder{
+		EMPTY(new LoanFlag(0l)),
+		APPLY_SMS(new LoanFlag(1l)),
+		HIGH_QUALITY(new LoanFlag(4l));
+		private LoanFlag flag;
+		private FlagHolder(LoanFlag flag){
+			this.flag=flag;
+		}
+	}
+	public static final LoanFlag EMPTY=FlagHolder.EMPTY.flag;
+	public static final LoanFlag APPLY_SMS=FlagHolder.APPLY_SMS.flag;
+	public static final LoanFlag HIGH_QUALITY=FlagHolder.HIGH_QUALITY.flag;
+	private static final LoanFlag ALL=new LoanFlag(mergeValue(unitFlags()));
 	protected LoanFlag(Long value) {
 		super(value);
 	}
@@ -42,16 +53,19 @@ public class LoanFlag extends AbstractBitFlag<LoanFlag>{
 		if(equals(ALL.value,value)) {
 			return ALL;
 		}
-		LoanFlag[] unitFlags=UNIT_FLAGS;
-		
-		for(LoanFlag flag:unitFlags) {
-			if(equals(flag.value,value)) {
-				return flag;
+		for(FlagHolder flagHolder:FlagHolder.values()) {
+			if(equals(flagHolder.flag.value,value)) {
+				return flagHolder.flag;
 			}
 		}
 		return null;
 	}
 	public static LoanFlag[] unitFlags() {
-		return UNIT_FLAGS.clone();
+		int i=0;
+		LoanFlag[] unitFlags=new LoanFlag[FlagHolder.values().length];
+		for(FlagHolder flagHolder:FlagHolder.values()) {
+			unitFlags[i++]=flagHolder.flag;
+		}
+		return unitFlags;
 	}
 }

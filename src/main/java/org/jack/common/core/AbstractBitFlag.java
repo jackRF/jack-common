@@ -1,4 +1,4 @@
-package org.jack.common.util;
+package org.jack.common.core;
 /**
  * 抽象bit位标记
  * @author zhangwei
