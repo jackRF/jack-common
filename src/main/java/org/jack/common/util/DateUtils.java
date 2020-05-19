@@ -14,6 +14,26 @@ public class DateUtils {
 	public static final String DATE_FORMAT_DATE=DATE_FORMAT_YYYY_MM_DD;
 	public static final String DATE_FORMAT_DATETIME="yyyy-MM-dd HH:mm:ss";
 	public static final String DATE_FORMAT_TIMESTAMP="yyyy-MM-dd HH:mm:ss,SSS";
+	public static int getAge(Date birthDay){
+        Calendar cal = Calendar.getInstance();
+        if (cal.before(birthDay)) {
+            throw new IllegalArgumentException("The birthDay is before Now.It's unbelievable!");
+        }
+        int yearNow = cal.get(Calendar.YEAR);
+        int monthNow = cal.get(Calendar.MONTH);
+        int dayOfMonthNow = cal.get(Calendar.DAY_OF_MONTH);
+        cal.setTime(birthDay);
+        int yearBirth = cal.get(Calendar.YEAR);
+        int monthBirth = cal.get(Calendar.MONTH);
+        int dayOfMonthBirth = cal.get(Calendar.DAY_OF_MONTH);
+        int age = yearNow - yearBirth;
+        if (monthNow <= monthBirth) {
+            if (monthNow<monthBirth||dayOfMonthNow < dayOfMonthBirth) {
+                age--;
+            }
+        }
+        return age;
+    }
 	public static String formatDate(Date date,String format){
 		SimpleDateFormat sdf=new SimpleDateFormat(format);
 		return sdf.format(date);
