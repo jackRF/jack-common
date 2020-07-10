@@ -1,5 +1,7 @@
 package org.jack.common.util;
 
+import java.beans.PropertyDescriptor;
+import java.lang.reflect.Method;
 import java.math.BigDecimal;
 import java.text.NumberFormat;
 import java.util.ArrayList;
@@ -7,7 +9,51 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import com.alibaba.fastjson.JSON;
+
+import org.jack.common.core.Pair;
+import org.springframework.beans.BeanWrapperImpl;
+import org.springframework.util.ObjectUtils;
+
 public class ValueUtils {
+	public static <T> T parseObject(String json,Class<T> clazz){
+        return JSON.parseObject(json, clazz);
+    }
+    public static String toJSONString(Object bean){
+        return JSON.toJSONString(bean);
+    }
+    public static void fillMap(Object bean,Map<String,Object> map){
+        BeanWrapperImpl wrapper=new BeanWrapperImpl(bean);
+        PropertyDescriptor[] pds=wrapper.getPropertyDescriptors();
+        if(pds==null||pds.length==0){
+            return;
+        }
+        for(PropertyDescriptor pd:pds){
+            Method  method =pd.getReadMethod();
+            String propertyName=pd.getName();
+            if(method==null||Object.class.equals(method.getDeclaringClass())
+            ||!wrapper.isReadableProperty(propertyName)){
+                continue;
+            }
+           Object value=wrapper.getPropertyValue(propertyName);
+           map.put(propertyName, value);
+        }
+    }
+    public static Pair<Map<String,Object>,Map<String,Object>> diff(Map<String,Object> oldValueMap,Map<String,Object> newValueMap){
+        Map<String,Object> oldDiffMap=new HashMap<String,Object>();
+        Map<String,Object> newDiffMap=new HashMap<String,Object>();
+        for(Map.Entry<String,Object> entry:newValueMap.entrySet()){
+            String key=entry.getKey();
+            if(!ObjectUtils.nullSafeEquals(entry.getValue(), oldValueMap.get(key))){
+                oldDiffMap.put(key, oldValueMap.get(key));
+                newDiffMap.put(key, entry.getValue());
+            }
+        }
+        Pair<Map<String,Object>,Map<String,Object>> pair= new Pair<Map<String,Object>,Map<String,Object>>();
+        pair.setV1(oldDiffMap);
+        pair.setV2(newDiffMap);
+        return pair;
+    }
 	public static <T> T defaultValue(T t, T def) {
 		return t == null ? def : t;
 	}
