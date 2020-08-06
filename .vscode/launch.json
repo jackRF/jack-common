@@ -6,6 +6,13 @@
     "configurations": [
         {
             "type": "java",
+            "name": "CodeLens (Launch) - GeneralBasic",
+            "request": "launch",
+            "mainClass": "org.jack.common.tools.GeneralBasic",
+            "projectName": "jack-common"
+        },
+        {
+            "type": "java",
             "name": "Debug (Launch) - Current File",
             "request": "launch",
             "mainClass": "${file}"

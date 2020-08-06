@@ -158,8 +158,7 @@ public class IOUtils {
 		int read;
 		long total = 0;
 		byte[] buff = new byte[bufferSize];
-		while (is.available() > 0) {
-			read = is.read(buff, 0, buff.length);
+		while ((read= is.read(buff))!=-1) {
 			if (read > 0) {
 				os.write(buff, 0, read);
 				total += read;
