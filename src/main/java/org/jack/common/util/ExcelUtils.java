@@ -45,24 +45,14 @@ public class ExcelUtils {
             propertyIndexMap.put(pair.getV1(), ++i);
         }
         int firstRowNum=sheet.getFirstRowNum();
-        List<Pair<Position, List<Object>>>  list=exportData(sheet, firstRowNum, firstRowNum);
-        if(list.isEmpty()){
-            Row  row=sheet.createRow(firstRowNum+1);
-            writeHeadToExcel(row, pairList);
-            i=-1;
-            for(Pair<String,ColumnInfo> pair:pairList){
-                ++i;
-                ColumnInfo columnInfo=pair.getV2();
-                int width=columnInfo.getWidth();
-                if(width>0){
-                    sheet.setColumnWidth(i,width);
-                }
-            }
+        if(firstRowNum==-1){
+            writeHeadToExcel(sheet.createRow(firstRowNum+1), pairList);
         }
         writeDataToExcel(sheet, beanList, propertyIndexMap,pairList);
         return workbook;
     }
     public static void writeHeadToExcel(Row row,List<Pair<String,ColumnInfo>> pairList){
+        Sheet sheet=row.getSheet();
         int i=-1;
         for(Pair<String,ColumnInfo> pair:pairList){
             Cell  cell=row.getCell(++i);
@@ -70,6 +60,11 @@ public class ExcelUtils {
                 cell=row.createCell(i);
             }
             cell.setCellValue(pair.getV2().getName());
+            ColumnInfo columnInfo=pair.getV2();
+            int width=columnInfo.getWidth();
+            if(width>0){
+                sheet.setColumnWidth(i,width);
+            }
         }
     }
     public static <T> void  writeDataToExcel(Sheet sheet,List<T> beanList,Map<String,Integer> propertyIndexMap,List<Pair<String,ColumnInfo>> pairList){
@@ -199,32 +194,114 @@ public class ExcelUtils {
             if(sheetRow==null){
                 continue;
             }
-            int firstCellNum=sheetRow.getFirstCellNum();
-            int lastCellNum=sheetRow.getLastCellNum();
-            Position position=new Position(i,firstCellNum);
-            List<Object> rowData = new ArrayList<Object>();
-            for (int j = firstCellNum; j < lastCellNum; j++) {//循环获取每一列
-                Cell  cell=sheetRow.getCell(j);
-                if(cell==null){
-                    rowData.add(null);
-                    continue;
-                }
-                CellType  cellType =cell.getCellType();
-                if(CellType.STRING.equals(cellType)){
-                    rowData.add(cell.getStringCellValue());
-                }else if(CellType.NUMERIC.equals(cellType)){
-                    rowData.add(cell.getNumericCellValue());
-                }else if(CellType.BOOLEAN.equals(cellType)){
-                    rowData.add(cell.getBooleanCellValue());
-                }else{
-                    rowData.add(null);
-                }
-            }
-            Pair<Position,List<Object>>  row=new Pair<Position,List<Object>>(); 
-            row.setV1(position);
-            row.setV2(rowData);
-            data.add(row);
+            data.add(exportRowData(sheetRow, i));
         }
         return data;
+    }
+    public static <B extends ImportBean> Result<List<Pair<Position,B>>> exportData(Sheet sheet,Class<B> clazz,Map<String,String> headMap,boolean stopIfFail){
+        int firstRowNum=sheet.getFirstRowNum();
+        int lastRowNum=sheet.getLastRowNum();
+        return exportData(sheet, firstRowNum, lastRowNum, clazz, headMap, stopIfFail);
+    }
+    public static <B extends ImportBean> Result<List<Pair<Position,B>>> exportData(Sheet sheet,int firstRowNum,int lastRowNum,Class<B> clazz,Map<String,String> headMap,boolean stopIfFail){
+        List<Pair<Position,B>> data=new ArrayList<Pair<Position,B>>();
+        Pair<Position,List<Object>> head=null;
+        Map<Integer,String> propertyMap=new HashMap<Integer,String>();
+        Position nextRowPosition=null;
+        int fieldCount=0;
+        List<String> messages=new ArrayList<String>();
+        for (int i = firstRowNum; i <=lastRowNum; i++) {//循环获取工作表的每一行
+            Row sheetRow = sheet.getRow(i);
+            if(sheetRow==null){
+                if(head!=null){
+                    break;
+                }
+                continue;
+            }
+            Pair<Position,List<Object>> rowData=exportRowData(sheetRow,i);
+            if(head==null){
+                head=rowData;
+                int cellIndex=head.getV1().getCellIndex();
+                List<Object> values=head.getV2();
+                for(Object value:values){
+                    String columnName=(String)value;
+                    if(!StringUtils.hasText(columnName)){
+                        return Result.fail("列名读取错误！");
+                    }
+                    if(headMap.containsKey(columnName)){
+                        propertyMap.put(cellIndex,headMap.get(columnName));
+                    }
+                    cellIndex++;
+                }
+                nextRowPosition=rowData.getV1().bottom();
+                fieldCount=values.size();
+            }else{
+                if(!nextRowPosition.cellRange(fieldCount).inRange(rowData.getV1().cellRange(rowData.getV2().size()))){
+                    return Result.fail("读取数据错误:"+rowData.getV1().toString());
+                }
+                nextRowPosition=nextRowPosition.bottom();
+                Pair<Position,B> rowBean=convertToBean(rowData, clazz, propertyMap);
+                B bean=rowBean.getV2();
+                Result<Void> beanResult=bean.validateImport();
+                if(!beanResult.isSuccess()){
+                    String message="第"+(rowBean.getV1().getRowIndex()+1)+"行"+beanResult.getMessage();
+                    if(stopIfFail){
+                        return Result.fail(message); 
+                    }else{
+                        messages.add(message);
+                    }
+                }else if(messages.isEmpty()){
+                    data.add(rowBean);
+                }
+            }
+        }
+        if(!messages.isEmpty()){
+            return Result.fail(messages.toString());
+        }
+        return Result.success(data);
+    }
+    public static interface ImportBean{
+        Result<Void> validateImport();
+    }
+    public static <B> Pair<Position,B> convertToBean(Pair<Position,List<Object>> rowData,Class<B> clazz, Map<Integer,String> propertyMap){
+        Pair<Position,B>  rowBean=new Pair<>();
+        rowBean.setV1(rowData.getV1());
+        BeanWrapperImpl beanWrapper=new BeanWrapperImpl(clazz);
+        int currentCellIndex=rowBean.getV1().getCellIndex();
+        for(Object value:rowData.getV2()){
+            if(propertyMap.containsKey(currentCellIndex)){
+                beanWrapper.setPropertyValue(propertyMap.get(currentCellIndex), value);
+            }
+            currentCellIndex++;
+        }
+        rowBean.setV2((B)beanWrapper.getWrappedInstance());
+        return rowBean;
+    }
+    public static Pair<Position,List<Object>> exportRowData(Row sheetRow,int i){
+        int firstCellNum=sheetRow.getFirstCellNum();
+        int lastCellNum=sheetRow.getLastCellNum();
+        Position position=new Position(i,firstCellNum);
+        List<Object> rowData = new ArrayList<Object>();
+        for (int j = firstCellNum; j < lastCellNum; j++) {//循环获取每一列
+            Cell  cell=sheetRow.getCell(j);
+            if(cell==null){
+                rowData.add(null);
+                continue;
+            }
+            CellType  cellType =cell.getCellType();
+            if(CellType.STRING.equals(cellType)){
+                rowData.add(cell.getStringCellValue());
+            }else if(CellType.NUMERIC.equals(cellType)){
+                rowData.add(cell.getNumericCellValue());
+            }else if(CellType.BOOLEAN.equals(cellType)){
+                rowData.add(cell.getBooleanCellValue());
+            }else{
+                rowData.add(null);
+            }
+        }
+        Pair<Position,List<Object>>  row=new Pair<Position,List<Object>>(); 
+        row.setV1(position);
+        row.setV2(rowData);
+        return row;
     }
 }

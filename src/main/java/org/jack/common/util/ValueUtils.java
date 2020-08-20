@@ -4,24 +4,157 @@ import java.beans.PropertyDescriptor;
 import java.lang.reflect.Method;
 import java.math.BigDecimal;
 import java.text.NumberFormat;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
 import com.alibaba.fastjson.JSON;
+import com.fasterxml.jackson.annotation.JsonInclude.Include;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.JsonMappingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.module.SimpleModule;
+import com.fasterxml.jackson.datatype.jsr310.deser.LocalDateTimeDeserializer;
+import com.fasterxml.jackson.datatype.jsr310.ser.LocalDateTimeSerializer;
 
 import org.jack.common.core.Pair;
 import org.springframework.beans.BeanWrapperImpl;
 import org.springframework.util.ObjectUtils;
+import org.springframework.util.StringUtils;
 
 public class ValueUtils {
-	public static <T> T parseObject(String json,Class<T> clazz){
+	public static <T> T parseJSON2(String json,Class<T> clazz){
         return JSON.parseObject(json, clazz);
     }
-    public static String toJSONString(Object bean){
+    public static String toJSONString2(Object bean){
         return JSON.toJSONString(bean);
     }
+	public static String toJSONString(Object bean) {
+		ObjectMapper mapper = new ObjectMapper();
+		mapper.setSerializationInclusion(Include.NON_NULL);
+		SimpleModule simpleModule = new SimpleModule();
+		simpleModule.addSerializer(LocalDateTime.class,new LocalDateTimeSerializer(DateTimeFormatter.ofPattern(DateUtils.DATE_FORMAT_DATETIME)));
+		simpleModule.addDeserializer(LocalDateTime.class,new LocalDateTimeDeserializer(DateTimeFormatter.ofPattern(DateUtils.DATE_FORMAT_DATETIME)));
+		mapper.registerModule(simpleModule);
+		try {
+			return mapper.writeValueAsString(bean);
+		} catch (JsonProcessingException e) {
+			e.printStackTrace();
+		}
+		return null;
+	}
+
+	public static <T> T parseJSON(String json, Class<T> clazz) {
+		ObjectMapper mapper = new ObjectMapper();
+		SimpleModule simpleModule = new SimpleModule();
+		simpleModule.addSerializer(LocalDateTime.class,new LocalDateTimeSerializer(DateTimeFormatter.ofPattern(DateUtils.DATE_FORMAT_DATETIME)));
+		simpleModule.addDeserializer(LocalDateTime.class,new LocalDateTimeDeserializer(DateTimeFormatter.ofPattern(DateUtils.DATE_FORMAT_DATETIME)));
+		mapper.registerModule(simpleModule);
+		try {
+			return mapper.readValue(json, clazz);
+		} catch (JsonMappingException e) {
+			e.printStackTrace();
+		} catch (JsonProcessingException e) {
+			e.printStackTrace();
+		}
+		return null;
+	}
+	public static String rightPad(String text,String pad,int ln){
+		String use=StringUtils.hasText(text)?text:"";
+		for(;;){
+			if(use.length()>=ln){
+				break;
+			}
+			use=use+pad;
+		}
+		return use;
+	}
+	public static String leftPad(String text,String pad,int ln){
+		String use=StringUtils.hasText(text)?text:"";
+		for(;;){
+			if(use.length()>=ln){
+				break;
+			}
+			use=pad+use;
+		}
+		return use;
+	}
+	/**
+     * 属性转列名
+     * @param property
+     * @return
+     */
+    public static String propertyToColumn(String property){
+        return propertyToColumn(property,new StringBuilder());
+    }
+    /**
+     * 列名转属性名
+     * @param alias
+     * @return
+     */
+    public static String columnToProperty(String alias){
+        return propertyToColumn(alias,new StringBuilder());
+    }
+    /**
+     * 属性转列名
+     * @param property
+     * @param sb
+     * @return
+     */
+    public static String propertyToColumn(String property,StringBuilder sb){
+        
+		sb.setLength(0);
+		int i=0;
+		boolean startUpperCase=false;
+		while(i<property.length()){
+			char c=property.charAt(i++);
+			if(c>='A' && c<='Z'){
+				if(i>1&&!startUpperCase){
+					sb.append('_');
+				}
+				startUpperCase=true;
+			}else{
+				if(startUpperCase){
+					startUpperCase=false;
+				}
+				if(c>='a'&& c<='z'){
+					c=(char) (c-('a'-'A'));
+				}
+			}
+			sb.append(c);
+		}
+		return sb.toString();
+    }
+    /**
+     * 列名转属性名
+     * @param alias
+     * @param sb
+     * @return
+     */
+    public static String columnToProperty(String alias,StringBuilder sb){
+		sb.setLength(0);
+		boolean underlineBefore=false;
+		for(int i=0;i<alias.length();i++){
+			char c=alias.charAt(i);
+			if(c=='_'){
+				underlineBefore=true;
+				continue;
+			}
+			if(underlineBefore){
+				if(c>='a'&& c<='z'){
+					c=(char) (c-('a'-'A'));
+				}
+				underlineBefore=false;
+			}else if(c>='A' && c<='Z'){
+				c=(char) (c+('a'-'A'));
+			}
+			sb.append(c);
+		}
+		return sb.toString();
+	}
     public static void fillMap(Object bean,Map<String,Object> map){
         BeanWrapperImpl wrapper=new BeanWrapperImpl(bean);
         PropertyDescriptor[] pds=wrapper.getPropertyDescriptors();
