@@ -1,6 +1,11 @@
 package org.jack.common.tools;
 
 import java.net.URLEncoder;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
+
+import org.jack.common.util.ValueUtils;
 
 /**
 * 通用文字识别
@@ -21,7 +26,7 @@ public class GeneralBasic {
         String url = "https://aip.baidubce.com/rest/2.0/ocr/v1/general_basic";
         try {
             // 本地文件路径
-            String filePath = "D://data/ai/1595833156(1).jpg";
+            String filePath = "D://data/ai/1598946651(1).jpg";
             byte[] imgData = FileUtil.readFileByBytes(filePath);
             String imgStr = Base64Util.encode(imgData);
             String imgParam = URLEncoder.encode(imgStr, "UTF-8");
@@ -42,7 +47,14 @@ public class GeneralBasic {
 
     public static void main(String[] args) {
         String text=GeneralBasic.generalBasic();
-        // log(text);
+        Map<String,Object> result=ValueUtils.parseJSON(text, Map.class);
+        List<Map<String,Object>> words_result=(List<Map<String,Object>>)result.get("words_result");
+       List<String> words=new ArrayList<>();
+        for(Map<String,Object> word:words_result){
+            words.add((String)word.get("words"));
+        }
+        log("\n\n");
+        log(words);
     }
     public static void log(Object message){
         System.out.println(message);

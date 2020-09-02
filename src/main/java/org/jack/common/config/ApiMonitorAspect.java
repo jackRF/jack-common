@@ -21,7 +21,8 @@ public class ApiMonitorAspect{
 
     @Pointcut("@within(org.springframework.stereotype.Controller)"
     +" && execution(public * com.sitco.point.controller.*.*(..))"
-    +" && @annotation(org.springframework.web.bind.annotation.ResponseBody)")
+    +" && @annotation(org.springframework.web.bind.annotation.ResponseBody)"
+    +" && !@annotation(com.sitco.point.core.Monitor.Ignore)")
     public void ajaxPointcut(){
     }
     @Before("ajaxPointcut()")
