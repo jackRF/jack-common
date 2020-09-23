@@ -251,6 +251,9 @@ public class ExcelUtils {
                         }
                         messages.add(message);
                     }
+                }else if(!emptyMessages.isEmpty()){
+                    messages.addAll(emptyMessages);
+                    emptyMessages.clear();
                 }else if(messages.isEmpty()){
                     data.add(rowBean);
                 }
