@@ -209,6 +209,7 @@ public class ExcelUtils {
         Map<Integer,String> propertyMap=new HashMap<Integer,String>();
         Position nextRowPosition=null;
         int fieldCount=0;
+        List<String> emptyMessages=new ArrayList<String>();
         List<String> messages=new ArrayList<String>();
         for (int i = firstRowNum; i <=lastRowNum; i++) {//循环获取工作表的每一行
             Row sheetRow = sheet.getRow(i);
@@ -247,7 +248,13 @@ public class ExcelUtils {
                     String message="第"+(rowBean.getV1().getRowIndex()+1)+"行"+beanResult.getMessage();
                     if(stopIfFail){
                         return Result.fail(message); 
+                    }else if(isEmpty(rowData)){
+                        emptyMessages.add(message);
                     }else{
+                        if(!emptyMessages.isEmpty()){
+                            messages.addAll(emptyMessages);
+                            emptyMessages.clear();
+                        }
                         messages.add(message);
                     }
                 }else if(messages.isEmpty()){
@@ -259,6 +266,22 @@ public class ExcelUtils {
             return Result.fail(messages.toString());
         }
         return Result.success(data);
+    }
+    public static boolean isEmpty(Pair<Position,List<Object>> rowData){
+        List<Object> row=rowData.getV2();
+        if(CollectionUtils.isEmpty(row)){
+            return true;
+        }
+        for(Object cell:row){
+            if(cell!=null){
+                if(!(cell instanceof String)){
+                    return false;
+                }else if(StringUtils.hasText((String)cell)){
+                    return false;
+                }
+            }
+        }
+        return true;
     }
     public static interface ImportBean{
         Result<Void> validateImport();
