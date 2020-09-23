@@ -213,12 +213,6 @@ public class ExcelUtils {
         List<String> messages=new ArrayList<String>();
         for (int i = firstRowNum; i <=lastRowNum; i++) {//循环获取工作表的每一行
             Row sheetRow = sheet.getRow(i);
-            if(sheetRow==null){
-                if(head!=null){
-                    break;
-                }
-                continue;
-            }
             Pair<Position,List<Object>> rowData=exportRowData(sheetRow,i);
             if(head==null){
                 head=rowData;
@@ -301,6 +295,12 @@ public class ExcelUtils {
         return rowBean;
     }
     public static Pair<Position,List<Object>> exportRowData(Row sheetRow,int i){
+        if(sheetRow==null){
+            Pair<Position,List<Object>>  row=new Pair<Position,List<Object>>(); 
+            row.setV1(new Position(i,0));
+            row.setV2(new ArrayList<Object>());
+            return row;
+        }
         int firstCellNum=sheetRow.getFirstCellNum();
         int lastCellNum=sheetRow.getLastCellNum();
         Position position=new Position(i,firstCellNum);
