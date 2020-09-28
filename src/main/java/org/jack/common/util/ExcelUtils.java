@@ -5,6 +5,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.lang.reflect.Method;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.Date;
 import java.util.HashMap;
@@ -19,10 +20,10 @@ import org.apache.poi.ss.usermodel.Sheet;
 import org.apache.poi.ss.usermodel.Workbook;
 import org.apache.poi.ss.usermodel.WorkbookFactory;
 import org.jack.common.core.ColumnInfo;
+import org.jack.common.core.ColumnInfo.Formatter;
 import org.jack.common.core.Pair;
 import org.jack.common.core.Position;
 import org.jack.common.core.Result;
-import org.jack.common.core.ColumnInfo.Formatter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.BeanWrapperImpl;
@@ -100,20 +101,62 @@ public class ExcelUtils {
                 if(formatter!=null){
                     value=formatter.format(value, bean);
                 }
-                if(value==null){
-                    cell.setCellValue("");
-                }else if (value instanceof String){
-                    cell.setCellValue((String)value);
-                }else if (value instanceof Date){
+                if(value instanceof Date){
                     String dateFormat=columnInfo.getDateFormat();
                     if(!StringUtils.hasText(dateFormat)){
                         dateFormat=DateUtils.DATE_FORMAT_DATETIME;
                     }
-                    cell.setCellValue(DateUtils.formatDate((Date)value,dateFormat));
+                    value=DateUtils.formatDate((Date)value,dateFormat);
+                }
+                writeCell(cell, value);
+            }
+        }
+    }
+    public static void writeExcel(Sheet sheet,Position position,Object value){
+        Row row=sheet.getRow(position.getRowIndex());
+        if(row==null){
+            row=sheet.createRow(position.getRowIndex());
+        }
+        Cell  cell=row.getCell(position.getCellIndex());
+        if(cell==null){
+            cell=row.createCell(position.getCellIndex());
+        }
+        writeCell(cell, value);
+    }
+    private static void writeCell(Cell  cell,Object value){
+        if(cell==null){
+            return;
+        }
+        if(value==null){
+            cell.setCellValue("");
+        }else if (value instanceof String){
+            cell.setCellValue((String)value);
+        }else if(value instanceof Collection){
+            StringBuilder data=new StringBuilder();
+            Collection<?> values=(Collection<?>)value;
+            int i=0;
+            for(Object vi:values){
+                if(i++==0){
+                    data.append(vi);
                 }else{
-                    cell.setCellValue(value.toString());
+                    data.append(";\n").append(vi);
                 }
             }
+            writeCell(cell, data.toString());
+        }else if(value instanceof Object[]){
+            StringBuilder data=new StringBuilder();
+            Object[] values=(Object[])value;
+            int i=0;
+            for(Object vi:values){
+                if(i++==0){
+                    data.append(vi);
+                }else{
+                    data.append(";\n").append(vi);
+                }
+            }
+            writeCell(cell, data.toString());
+        }else{
+            cell.setCellValue(value.toString());
         }
     }
     public static boolean isExcelFile(String fileName){
