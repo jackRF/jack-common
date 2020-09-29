@@ -26,7 +26,31 @@ public class StockUtils extends BaseTest {
         stocks.add(new Pair<>(new String[]{"华东医药","sz000963"},600l));
         stocks.add(new Pair<>(new String[]{"红旗连锁","sz002697"},500l));
         List<Pair<String[],List<StockDecision>>> stockStrategys=stockStrategy(stocks);
-        log(ValueUtils.toJSONString(stockStrategys));
+        int hi=0;
+        StringBuilder text=new StringBuilder();
+        String[] head={"股票名称","股票代码","\t买入1","卖出1","收益率1","交易量1","买入2","卖出2","收益率2","交易量2"};
+        for(String h:head){
+            if(hi++==0){
+                text.append(h);
+            }else{
+                text.append("\t").append(h);
+            }
+        }
+        text.append("\n");
+        for(Pair<String[],List<StockDecision>> pair:stockStrategys){
+            String[] v1=pair.getV1();
+            text.append(v1[0]).append("\t").append(v1[1]);
+            List<StockDecision> v2=pair.getV2();
+            for(StockDecision sd:v2){
+                text.append("\t\t").append(sd.getPurchasePrice().setScale(2, RoundingMode.FLOOR));
+                text.append("\t").append(sd.getSellOutPrice().setScale(2, RoundingMode.CEILING));
+                text.append("\t").append(BigDecimal.valueOf(sd.getRelativeYield()*100).setScale(2, RoundingMode.HALF_UP)+"%");
+                text.append("\t").append(sd.getTurnover());
+            }
+            text.append("\n");
+        }
+        log(text);
+        // log(ValueUtils.toJSONString(stockStrategys));
     }
     private List<Pair<String[],List<StockDecision>>> stockStrategy(List<Pair<String[],Long>> stocks){
         List<Pair<String[],List<StockDecision>>> stockStrategys=new ArrayList<>();
@@ -45,10 +69,15 @@ public class StockUtils extends BaseTest {
             // log(data);
             List<StockTrade> stockTradeList=new ArrayList<>();
             String[] lines=data.split("\n");
-            for(int i=2;i<lines.length-1;i++){
+            for(int i=2;i<lines.length-2;i++){
                 StockTrade stockTrade=parseLine(lines[i]);
-                stockTradeList.add(stockTrade);
+                if("200928".compareTo(stockTrade.getTime())>0){
+                    stockTradeList.add(stockTrade);
+                }
             }
+            // if(stockCode.equals("sz002697")){
+            //     log(ValueUtils.toJSONString(stockTradeList));
+            // }
             List<StockDecision> strategys=stockStrategy(stockTradeList,turnover);
             return strategys;
         }catch (IOException e) {
