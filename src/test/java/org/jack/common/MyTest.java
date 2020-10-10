@@ -1,7 +1,5 @@
 package org.jack.common;
 
-
-
 import java.io.IOException;
 import java.lang.reflect.Field;
 import java.math.BigDecimal;
@@ -9,6 +7,7 @@ import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
@@ -17,6 +16,7 @@ import java.util.Map;
 import com.jd.drools.test.RuleTest;
 
 import org.apache.http.client.ClientProtocolException;
+import org.jack.common.util.DateUtils;
 import org.jack.common.util.HttpUtils;
 import org.jack.common.util.LoanFlag;
 import org.jack.common.validation.Validator;
@@ -27,6 +27,11 @@ import sun.misc.Unsafe;
 
 
 public class MyTest extends BaseTest {
+	@Test
+	public void test10() {
+		Date date=DateUtils.weekDay(new Date(), 1);
+		log(DateUtils.formatDate(date, "yyMMdd"));
+	}
 	@Test
 	public void test9() {
 		RuleTest test=new RuleTest();

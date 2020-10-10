@@ -72,6 +72,17 @@ public class DateUtils {
 		}
 		return dateStart;
 	}
+	public static Date weekDay(Date date,int firstDayOfWeek){
+		Calendar c = Calendar.getInstance();
+		c.setLenient(false);
+		c.setTime(date);
+		int day_of_week = c.get(Calendar.DAY_OF_WEEK) - 1;
+		if (day_of_week == 0){
+			day_of_week = 7;
+		}
+		c.add(Calendar.DATE, -day_of_week + firstDayOfWeek);
+		return c.getTime();
+	}
 	public static Date addDay(Date date, int day) {
 		Calendar c = Calendar.getInstance();
 		c.setLenient(false);

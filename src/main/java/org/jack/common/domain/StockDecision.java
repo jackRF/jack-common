@@ -13,13 +13,17 @@ public class StockDecision {
      */
     private BigDecimal sellOutPrice;
     /**
+     * 买入相对收益率
+     */
+    private Double relativePurchaseRate;
+    /**
+     * 卖出相对收益率
+     */
+    private Double relativeSellOutRate;
+    /**
      * 数量
      */
-    private Long turnover; 
-    /**
-     * 相对收益率
-     */
-    private Double relativeYield;
+    private Long turnover;
     public void apply(Stock stock,StockTrade stockTrade,StockAccount stockAccount){
         BigDecimal fund=stockAccount.getFund();
         BigDecimal maxPrice=stockTrade.getMaxPrice();
@@ -44,6 +48,22 @@ public class StockDecision {
         stockAccount.setFund(fund);
         stockAccount.getHoldShares().put(stock, holdTurnover);
     }
+    public static StockDecision of(Double relativePurchaseRate,Double relativeSellOutRate,BigDecimal basePrice){
+        StockDecision stockDecision = new StockDecision();
+        stockDecision.setPurchasePrice(BigDecimal.valueOf(1).subtract(BigDecimal.valueOf(relativePurchaseRate)).multiply(basePrice));
+        stockDecision.setSellOutPrice(BigDecimal.valueOf(1).add(BigDecimal.valueOf(relativeSellOutRate)).multiply(basePrice));
+        stockDecision.setRelativePurchaseRate(relativePurchaseRate);
+        stockDecision.setRelativeSellOutRate(relativeSellOutRate);
+        return stockDecision;
+    }
+    public static StockDecision of(BigDecimal relativePurchaseRate,BigDecimal relativeSellOutRate,BigDecimal basePrice){
+        StockDecision stockDecision = new StockDecision();
+        stockDecision.setPurchasePrice(BigDecimal.valueOf(1).subtract(relativePurchaseRate).multiply(basePrice));
+        stockDecision.setSellOutPrice(BigDecimal.valueOf(1).add(relativeSellOutRate).multiply(basePrice));
+        stockDecision.setRelativePurchaseRate(relativePurchaseRate.doubleValue());
+        stockDecision.setRelativeSellOutRate(relativeSellOutRate.doubleValue());
+        return stockDecision;
+    }
     public BigDecimal getPurchasePrice() {
         return purchasePrice;
     }
@@ -59,20 +79,26 @@ public class StockDecision {
     public void setSellOutPrice(BigDecimal sellOutPrice) {
         this.sellOutPrice = sellOutPrice;
     }
+    public Double getRelativePurchaseRate() {
+        return relativePurchaseRate;
+    }
 
+    public void setRelativePurchaseRate(Double relativePurchaseRate) {
+        this.relativePurchaseRate = relativePurchaseRate;
+    }
+
+    public Double getRelativeSellOutRate() {
+        return relativeSellOutRate;
+    }
+
+    public void setRelativeSellOutRate(Double relativeSellOutRate) {
+        this.relativeSellOutRate = relativeSellOutRate;
+    }
     public Long getTurnover() {
         return turnover;
     }
 
     public void setTurnover(Long turnover) {
         this.turnover = turnover;
-    }
-
-    public Double getRelativeYield() {
-        return relativeYield;
-    }
-
-    public void setRelativeYield(Double relativeYield) {
-        this.relativeYield = relativeYield;
     }
 }
