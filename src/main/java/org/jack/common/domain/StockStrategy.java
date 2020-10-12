@@ -70,8 +70,10 @@ public interface StockStrategy {
         
         return sdList;
     }
-    default long useTurnover(Long turnover) {
-        int cat=3;
+    default long useTurnover(Long turnover){
+        return useTurnover(turnover,getRateStrategy().useCat());
+    }
+    default long useTurnover(Long turnover,double cat) {
         if (turnover==null||turnover <= 0) {
             return 0;
         }
@@ -106,6 +108,9 @@ public interface StockStrategy {
                 return useSellOutRate(max, min, first, last, rateAverage).add(useRate(first,last));
             }
         };
+        default double useCat(){
+            return 3.0;
+        }
         default int useRateCount(){
             return 3;
         };
