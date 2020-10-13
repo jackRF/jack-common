@@ -62,8 +62,8 @@ public class SmartStockStrategy implements StockStrategy {
         return rateStrategy;
     }
     public static class RateWeight  extends Trainable {
-        private double cat=3;
-        private int rateCount=3;
+        private Double cat=3d;
+        private Integer rateCount=3;
         private BigDecimal wPurchase=BigDecimal.ONE;
         private BigDecimal bPurchase=BigDecimal.ZERO;
         private BigDecimal limitPurchase=BigDecimal.ZERO;
@@ -71,19 +71,19 @@ public class SmartStockStrategy implements StockStrategy {
         private BigDecimal bSellOut=BigDecimal.ZERO;
         private BigDecimal limitSellOut=BigDecimal.ZERO;
 
-        public double getCat() {
+        public Double getCat() {
             return cat;
         }
 
-        public void setCat(double cat) {
+        public void setCat(Double cat) {
             this.cat = cat;
         }
         
-        public int getRateCount() {
+        public Integer getRateCount() {
             return rateCount;
         }
 
-        public void setRateCount(int rateCount) {
+        public void setRateCount(Integer rateCount) {
             this.rateCount = rateCount;
         }
 

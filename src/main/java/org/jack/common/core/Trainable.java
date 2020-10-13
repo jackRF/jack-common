@@ -24,7 +24,7 @@ public abstract class Trainable {
             Object value=wapper.getPropertyValue(name);
             Object valueDest=wapperDest.getPropertyValue(name);
             if(valueDest==null||!ObjectUtils.nullSafeEquals(value, valueDest)){
-                if(better){
+                if(better||valueDest==null){
                     wapperDest.setPropertyValue(name,value);
                 }
                 Object nValue=useNewValue(name,value);

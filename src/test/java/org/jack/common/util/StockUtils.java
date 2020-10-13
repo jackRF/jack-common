@@ -96,6 +96,16 @@ public class StockUtils extends BaseTest {
         Stock stock=new Stock("红旗连锁", "sz002697");
         execMockStockTrade(stockAccount, stock, useStockStrategy(stock));
     }
+    @Test
+    public void testTrainStockTrade(){
+        // Stock stock=new Stock("君正集团", "sh601216");
+        // Stock stock=new Stock("中国银河", "sh601881");
+        // Stock stock=new Stock("百傲化学", "sh603360");
+        // Stock stock=new Stock("世运电路", "sh603920");
+        // Stock stock=new Stock("格力电器", "sz000651");
+        Stock stock = new Stock("华东医药", "sz000963");
+        trainStockTrade(stock, BigDecimal.valueOf(50000));
+    }
     private Map<Stock,SmartStockStrategy.RateWeight> swMap=new HashMap<>();
     public void trainStockTrade(List<Stock> stocks,BigDecimal fund){
         for(Stock stock:stocks){
@@ -105,8 +115,16 @@ public class StockUtils extends BaseTest {
     public SmartStockStrategy.RateWeight trainStockTrade(Stock stock,BigDecimal fund) {
         StockAccount stockAccount = new StockAccount(fund);
         SmartStockStrategy.RateWeight weightDest = new SmartStockStrategy.RateWeight();
+        weightDest.setRateCount(3);
+        weightDest.setCat(null);
+        weightDest.setwPurchase(null);
+        weightDest.setwSellOut(null);
+        weightDest.setbPurchase(null);
+        weightDest.setbSellOut(null);
+        weightDest.setLimitPurchase(null);
+        weightDest.setLimitSellOut(null);
         SmartStockStrategy.RateWeight weight = new SmartStockStrategy.RateWeight();
-        weight.setCat(1);
+        weight.setCat(1d);
         weight.setRateCount(3);
         weight.setwPurchase(BigDecimal.valueOf(0.01));
         weight.setbPurchase(BigDecimal.valueOf(0.000));
