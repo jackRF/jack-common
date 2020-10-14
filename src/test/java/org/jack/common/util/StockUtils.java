@@ -54,7 +54,7 @@ public class StockUtils extends BaseTest {
         holdShares.put(stock, 300l);
 
         for(Stock stockItem:stocks){
-            swMap.put(stockItem, trainStockTrade(stockItem, BigDecimal.valueOf(50000)));
+            swMap.put(stockItem, trainStockTrade(stockItem, BigDecimal.valueOf(50000),"rateCount","cat"));
         }
         stockAccount.setFund(BigDecimal.valueOf(12000));
         List<Pair<Stock, List<StockDecision>>> stockStrategys = applyStockStrategy(stocks, stockAccount,useStockStrategy(stock));
@@ -78,11 +78,11 @@ public class StockUtils extends BaseTest {
             for (StockDecision sd : v2) {
                 text.append("\t\t").append(sd.getPurchasePrice().setScale(2, RoundingMode.FLOOR));
                 text.append("\t").append(sd.getPurchaseTurnover());
-                text.append("\t").append(
+                text.append("\t\t\t").append(
                         BigDecimal.valueOf(sd.getRelativePurchaseRate() * 100).setScale(2, RoundingMode.HALF_UP) + "%");
                 text.append("\t\t").append(sd.getSellOutPrice().setScale(2, RoundingMode.CEILING));
                 text.append("\t").append(sd.getSellOutTurnover());
-                text.append("\t").append(
+                text.append("\t\t\t").append(
                         BigDecimal.valueOf(sd.getRelativeSellOutRate() * 100).setScale(2, RoundingMode.HALF_UP) + "%");
             }
             text.append("\n");
@@ -117,7 +117,7 @@ public class StockUtils extends BaseTest {
         trainStockTrade(stock, BigDecimal.valueOf(50000));
     }
     
-    public SmartStockStrategy.RateWeight trainStockTrade(Stock stock,BigDecimal fund) {
+    public SmartStockStrategy.RateWeight trainStockTrade(Stock stock,BigDecimal fund,String...noTrain) {
         SmartStockStrategy.RateWeight weightDest = new SmartStockStrategy.RateWeight();
         weightDest.setRateCount(null);
         weightDest.setCat(null);
@@ -127,7 +127,7 @@ public class StockUtils extends BaseTest {
         weightDest.setbSellOut(null);
         weightDest.setLimitPurchase(null);
         weightDest.setLimitSellOut(null);
-        SmartStockStrategy.RateWeight weight = new SmartStockStrategy.RateWeight("rateCount");
+        SmartStockStrategy.RateWeight weight = new SmartStockStrategy.RateWeight(noTrain);
         weight.setRateCount(3);
         weight.setCat(2d);
         weight.setwPurchase(BigDecimal.valueOf(1.5));
