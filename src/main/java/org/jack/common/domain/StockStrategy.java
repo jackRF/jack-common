@@ -6,6 +6,8 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
+import org.jack.common.util.ValueUtils;
+
 public interface StockStrategy {
     public static StockStrategy DEFAULT=new StockStrategy(){};
     public static StockStrategy RATEAVERAGE_STOCKSTRATEGY=new StockStrategy(){
@@ -65,24 +67,33 @@ public interface StockStrategy {
         if(turnover==null){
             turnover=0l;
         }
-        stockDecision.setTurnover(useTurnover(turnover));
-        stockDecision2.setTurnover(useTurnover(turnover - stockDecision.getTurnover()));
-        
+        applyTurnover(stockDecision,turnover,fund);
+        BigDecimal newFund=fund.subtract(stockDecision.getPurchasePrice().multiply(BigDecimal.valueOf(stockDecision.getPurchaseTurnover())));
+        Long newTurnover=turnover-stockDecision.getSellOutTurnover();
+        applyTurnover(stockDecision2,newTurnover,newFund);
         return sdList;
     }
-    default long useTurnover(Long turnover){
-        return useTurnover(turnover,getRateStrategy().useCat());
-    }
-    default long useTurnover(Long turnover,double cat) {
-        if (turnover==null||turnover <= 0) {
-            return 0;
+    default void applyTurnover(StockDecision stockDecision,Long turnover,BigDecimal fund){
+        double cat=getRateStrategy().useCat();
+        BigDecimal purchasePrice=stockDecision.getPurchasePrice();
+        long purchaseTurnover=0;
+        if(purchasePrice.compareTo(BigDecimal.ZERO)>0){
+            BigDecimal temp=purchasePrice.multiply(BigDecimal.valueOf(100*cat));
+            purchaseTurnover=fund.divide(temp,1,RoundingMode.FLOOR).intValue()*100;
+        }else{
+            // System.out.println("fund:"+fund+",cat:"+cat+",purchasePrice:"+purchasePrice);
         }
-        int use = BigDecimal.valueOf(turnover).divide(BigDecimal.valueOf(cat * 100), 0, RoundingMode.HALF_UP).intValue()
-                * 100;
-        if (use == 0) {
-            return 100;
+        long sellOutTurnover=0;
+        if (turnover!=null&&turnover>0) {
+            int use = BigDecimal.valueOf(turnover).divide(BigDecimal.valueOf(cat * 100), 0, RoundingMode.HALF_UP).intValue() * 100;
+            if (use == 0) {
+                sellOutTurnover=100;
+            }else{
+                sellOutTurnover=use;
+            }
         }
-        return use;
+        stockDecision.setPurchaseTurnover(purchaseTurnover);
+        stockDecision.setSellOutTurnover(sellOutTurnover);
     }
     public static interface RateStrategy{
         public static RateStrategy DEFAULT=new RateStrategy(){};

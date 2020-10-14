@@ -70,7 +70,9 @@ public class SmartStockStrategy implements StockStrategy {
         private BigDecimal wSellOut=BigDecimal.ONE;
         private BigDecimal bSellOut=BigDecimal.ZERO;
         private BigDecimal limitSellOut=BigDecimal.ZERO;
-
+        public RateWeight(String ...noTrain){
+            super(noTrain);
+        }
         public Double getCat() {
             return cat;
         }
@@ -138,42 +140,59 @@ public class SmartStockStrategy implements StockStrategy {
         @Override
         protected Object useNewValue(String name, Object value) {
             if(name.equals("rateCount")){
-                int v=(int) value;
-                if(v<=5){
-                    return v+1;
+                int v=sway((int) value,1,3);
+                if(v>=1&&v<=5){
+                    return v;
                 }
             }else if(name.equals("cat")){
-                double v=(double) value;
-                if(v<=5){
-                    return v+0.1;
+                double v=sway((double) value,0.1,2);
+                if(v>=1&&v<=3){
+                    return v;
                 }
             }else{
                 BigDecimal v=(BigDecimal)value;
                 if(name.startsWith("w")){
-                    if(v.compareTo(BigDecimal.valueOf(3.0))<0){
-                        return v.add(BigDecimal.valueOf(0.01));
+                    v=sway(v,BigDecimal.valueOf(0.01),BigDecimal.valueOf(1.5));
+                    if(v.compareTo(BigDecimal.valueOf(0.5))>=0&&v.compareTo(BigDecimal.valueOf(2.5))<=0){
+                        return v;
                     }
                 }else if(name.startsWith("b")){
-                    if(v.compareTo(BigDecimal.valueOf(0.03))<0){
-                        return v.add(BigDecimal.valueOf(0.001));
+                    v=sway(v,BigDecimal.valueOf(0.001),BigDecimal.valueOf(0.005));
+                    if(v.compareTo(BigDecimal.ZERO)>=0&&v.compareTo(BigDecimal.valueOf(0.01))<=0){
+                        return v;
                     }
                 }else{
-                    if(v.compareTo(BigDecimal.valueOf(0.03))<0){
-                        return v.add(BigDecimal.valueOf(0.001));
+                    v=sway(v,BigDecimal.valueOf(0.001),BigDecimal.valueOf(0.015));
+                    if(v.compareTo(BigDecimal.ZERO)>=0&&v.compareTo(BigDecimal.valueOf(0.03))<=0){
+                        return v;
                     }
                 }
             }
             return null;
         }
-        @Override
-        protected boolean filter(String name) {
-            if(name.equals("rateCount")
-            // ||name.equals("limitPurchase")
-            // ||name.equals("limitSellOut")
-            ){
-                return false;
+        protected BigDecimal sway(BigDecimal v,BigDecimal b, BigDecimal center){
+            if(v.compareTo(center)>0){
+                v=center.subtract(v.subtract(center)).subtract(b);
+            }else{
+                v=center.subtract(v.subtract(center)).add(b);
             }
-            return super.filter(name);
+            return v;
+        }
+        protected int sway(int v,int b, int center){
+            if(v>center){
+                v=center-(v-center)-b;
+            }else{
+                v=center-(v-center)+b;
+            }
+            return v;
+        }
+        protected double sway(double v,double b, double center){
+            if(v>center){
+                v=center-(v-center)-b;
+            }else{
+                v=center-(v-center)+b;
+            }
+            return v;
         }
         @Override
         protected void sort(PropertyDescriptor[] pds) {

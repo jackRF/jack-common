@@ -29,8 +29,9 @@ public class StockUtils extends BaseTest {
     public void testStock() {
         StockAccount stockAccount = new StockAccount(BigDecimal.valueOf(50000));
         Map<Stock, Long> holdShares = stockAccount.getHoldShares();
+        Stock stock=null;
         List<Stock> stocks = new ArrayList<>();
-        Stock stock = new Stock("君正集团", "sh601216");
+        stock = new Stock("君正集团", "sh601216");
         stocks.add(stock);
         holdShares.put(stock, 400l);
         stock = new Stock("中国银河", "sh601881");
@@ -52,13 +53,16 @@ public class StockUtils extends BaseTest {
         stocks.add(stock);
         holdShares.put(stock, 300l);
 
-        // trainStockTrade(stocks, BigDecimal.valueOf(50000));
-        
-        List<Pair<Stock, List<StockDecision>>> stockStrategys = stockStrategy(stocks, stockAccount);
+        for(Stock stockItem:stocks){
+            swMap.put(stockItem, trainStockTrade(stockItem, BigDecimal.valueOf(50000)));
+        }
+        stockAccount.setFund(BigDecimal.valueOf(12000));
+        List<Pair<Stock, List<StockDecision>>> stockStrategys = applyStockStrategy(stocks, stockAccount,useStockStrategy(stock));
         int hi = 0;
         StringBuilder text = new StringBuilder();
-        String[] head = { "股票名称", "股票代码", "\t买入1", "买入收益率1", "卖出1", "卖出收益率1", "交易量1", "买入2", "买入收益率2", "卖出2", "卖出收益率2",
-                "交易量2" };
+        String[] head = { "股票名称", "股票代码"
+        , "\t买入1","买入数量1", "买入收益率1", "卖出1","卖出数量1", "卖出收益率1"
+        ,"买入2","买入数量2", "买入收益率2", "卖出2",  "卖出数量2", "卖出收益率2"};
         for (String h : head) {
             if (hi++ == 0) {
                 text.append(h);
@@ -73,12 +77,13 @@ public class StockUtils extends BaseTest {
             List<StockDecision> v2 = pair.getV2();
             for (StockDecision sd : v2) {
                 text.append("\t\t").append(sd.getPurchasePrice().setScale(2, RoundingMode.FLOOR));
+                text.append("\t").append(sd.getPurchaseTurnover());
                 text.append("\t").append(
                         BigDecimal.valueOf(sd.getRelativePurchaseRate() * 100).setScale(2, RoundingMode.HALF_UP) + "%");
                 text.append("\t\t").append(sd.getSellOutPrice().setScale(2, RoundingMode.CEILING));
+                text.append("\t").append(sd.getSellOutTurnover());
                 text.append("\t").append(
                         BigDecimal.valueOf(sd.getRelativeSellOutRate() * 100).setScale(2, RoundingMode.HALF_UP) + "%");
-                text.append("\t\t").append(sd.getTurnover());
             }
             text.append("\n");
         }
@@ -87,35 +92,34 @@ public class StockUtils extends BaseTest {
     @Test
     public void testMockStockTrade(){
         StockAccount stockAccount = new StockAccount(BigDecimal.valueOf(50000));
-        // Stock stock=new Stock("君正集团", "sh601216");
+        Stock stock=new Stock("君正集团", "sh601216");
         // Stock stock=new Stock("中国银河", "sh601881");
         // Stock stock=new Stock("百傲化学", "sh603360");
         // Stock stock=new Stock("世运电路", "sh603920");
         // Stock stock=new Stock("格力电器", "sz000651");
         // Stock stock = new Stock("华东医药", "sz000963");
-        Stock stock=new Stock("红旗连锁", "sz002697");
-        execMockStockTrade(stockAccount, stock, useStockStrategy(stock));
+        // Stock stock=new Stock("红旗连锁", "sz002697");
+        Pair<Stock, StockTrade[]> pair=mockStockTrade(stockAccount, stock, useStockStrategy(stock));
+        Map<Stock,StockTrade> stockMarket=new HashMap<>();
+        stockMarket.put(stock, pair.getV2()[1]);
+        BigDecimal marketValue= stockAccount.useMarketValue(stockMarket);
+        StockTrade[] sts=pair.getV2();
+        log(sts[0].getTime()+"-"+sts[1].getTime()+"总资产："+marketValue);
     }
     @Test
     public void testTrainStockTrade(){
-        // Stock stock=new Stock("君正集团", "sh601216");
+        Stock stock=new Stock("君正集团", "sh601216");
         // Stock stock=new Stock("中国银河", "sh601881");
         // Stock stock=new Stock("百傲化学", "sh603360");
         // Stock stock=new Stock("世运电路", "sh603920");
         // Stock stock=new Stock("格力电器", "sz000651");
-        Stock stock = new Stock("华东医药", "sz000963");
+        // Stock stock = new Stock("华东医药", "sz000963");
         trainStockTrade(stock, BigDecimal.valueOf(50000));
     }
-    private Map<Stock,SmartStockStrategy.RateWeight> swMap=new HashMap<>();
-    public void trainStockTrade(List<Stock> stocks,BigDecimal fund){
-        for(Stock stock:stocks){
-            swMap.put(stock, trainStockTrade(stock, fund));
-        }
-    }
+    
     public SmartStockStrategy.RateWeight trainStockTrade(Stock stock,BigDecimal fund) {
-        StockAccount stockAccount = new StockAccount(fund);
         SmartStockStrategy.RateWeight weightDest = new SmartStockStrategy.RateWeight();
-        weightDest.setRateCount(3);
+        weightDest.setRateCount(null);
         weightDest.setCat(null);
         weightDest.setwPurchase(null);
         weightDest.setwSellOut(null);
@@ -123,20 +127,24 @@ public class StockUtils extends BaseTest {
         weightDest.setbSellOut(null);
         weightDest.setLimitPurchase(null);
         weightDest.setLimitSellOut(null);
-        SmartStockStrategy.RateWeight weight = new SmartStockStrategy.RateWeight();
-        weight.setCat(1d);
+        SmartStockStrategy.RateWeight weight = new SmartStockStrategy.RateWeight("rateCount");
         weight.setRateCount(3);
-        weight.setwPurchase(BigDecimal.valueOf(0.01));
-        weight.setbPurchase(BigDecimal.valueOf(0.000));
-        weight.setwSellOut(BigDecimal.valueOf(0.01));
-        weight.setbSellOut(BigDecimal.valueOf(0.000));
+        weight.setCat(2d);
+        weight.setwPurchase(BigDecimal.valueOf(1.5));
+        weight.setbPurchase(BigDecimal.valueOf(0.005));
+        weight.setwSellOut(BigDecimal.valueOf(1.5));
+        weight.setbSellOut(BigDecimal.valueOf(0.005));
         StockStrategy stockStrategy = new SmartStockStrategy(SmartStockStrategy.RATE_TYPE_AVERAGE,
                 SmartStockStrategy.RATE_TYPE_NORMAL, weight);
         // stockStrategy=StockStrategy.RATEAVERAGE_STOCKSTRATEGY;
         BigDecimal maxMarketValue = null;
+        Pair<Stock, StockTrade[]> pair=null;
         for (;;) {
-            stockAccount = new StockAccount(fund);
-            BigDecimal marketValue= execMockStockTrade(stockAccount, stock, stockStrategy);
+            StockAccount stockAccount = new StockAccount(fund);
+            pair=mockStockTrade(stockAccount, stock, stockStrategy);
+            Map<Stock,StockTrade> stockMarket=new HashMap<>();
+            stockMarket.put(stock, pair.getV2()[1]);
+            BigDecimal marketValue= stockAccount.useMarketValue(stockMarket);
             boolean better=false;
             if (maxMarketValue == null || maxMarketValue.compareTo(marketValue) < 0) {
                 maxMarketValue = marketValue;
@@ -146,14 +154,18 @@ public class StockUtils extends BaseTest {
                 break;
             }
         }
-        log("weight:" + ValueUtils.toJSONString(weightDest)+", maxMarketValue:" + maxMarketValue);
+        StockTrade[] sts=pair.getV2();
+        log("stock:"+ValueUtils.toJSONString(stock)+ sts[0].getTime()+"-"+sts[1].getTime()+"总资产:" + maxMarketValue+", weight:" + ValueUtils.toJSONString(weightDest));
         return weightDest;
     }
+    private Map<Stock,SmartStockStrategy.RateWeight> swMap=new HashMap<>();
     private StockStrategy useStockStrategy(Stock stock) {
         if(swMap.containsKey(stock)){
             StockStrategy stockStrategy = new SmartStockStrategy(SmartStockStrategy.RATE_TYPE_AVERAGE,
                 SmartStockStrategy.RATE_TYPE_NORMAL, swMap.get(stock));
             return stockStrategy;
+        }else if(stock!=null){
+            return StockStrategy.RATEAVERAGE_STOCKSTRATEGY;
         }
         Stock stockTemp = new Stock("格力电器", "sz000651");
         if (stock.equals(stockTemp)) {
@@ -182,19 +194,7 @@ public class StockUtils extends BaseTest {
 
         return StockStrategy.DEFAULT;
     }
-    public BigDecimal execMockStockTrade(StockAccount stockAccount, Stock stock, StockStrategy stockStrategy) {
-        Map<Stock, StockTrade[]> stockMarket = mockStockTrade(stockAccount, stock, stockStrategy);
-        Map<Stock, StockTrade> stockMarketNew = new HashMap<>();
-        for (Map.Entry<Stock, StockTrade[]> entry : stockMarket.entrySet()) {
-            StockTrade[] stockTrades = entry.getValue();
-            stockMarketNew.put(entry.getKey(), stockTrades[stockTrades.length - 1]);
-        }
-        StockTrade[] stockTrades = stockMarket.get(stock);
-        BigDecimal marketValue = stockAccount.useMarketValue(stockMarketNew);
-        log(stockTrades[0].getTime() + "-" + stockTrades[stockTrades.length - 1].getTime() + "总资产:" + marketValue);
-        return marketValue;
-    }
-    public Map<Stock, StockTrade[]> mockStockTrade(StockAccount stockAccount, Stock stock,
+    public Pair<Stock, StockTrade[]> mockStockTrade(StockAccount stockAccount, Stock stock,
             StockStrategy stockStrategy) {
         Date date = DateUtils.weekDay(new Date(), 1);
         String deadline = DateUtils.formatDate(date, "yyMMdd");
@@ -218,10 +218,10 @@ public class StockUtils extends BaseTest {
                     list.removeFirst();
                 }
             }
-            Map<Stock, StockTrade[]> stockMarket = new HashMap<>();
-            stockMarket.put(stock,
-                    new StockTrade[] { stockTradeList.get(0), stockTradeList.get(stockTradeList.size() - 1) });
-            return stockMarket;
+            Pair<Stock, StockTrade[]> pair=new Pair<>();
+            pair.setV1(stock);
+            pair.setV2( new StockTrade[] { stockTradeList.get(0), stockTradeList.get(stockTradeList.size() - 1)});
+            return pair;
         } catch (ClientProtocolException e) {
             e.printStackTrace();
         } catch (IOException e) {
@@ -230,30 +230,68 @@ public class StockUtils extends BaseTest {
         return null;
     }
 
-    private List<Pair<Stock, List<StockDecision>>> stockStrategy(List<Stock> stocks, StockAccount stockAccount) {
+    private List<Pair<Stock, List<StockDecision>>> applyStockStrategy(List<Stock> stocks, StockAccount stockAccount,StockStrategy stockStrategy) {
         Date date = DateUtils.weekDay(new Date(), 1);
         String deadline = DateUtils.formatDate(date, "yyMMdd");
         log("deadline:"+deadline);
-        List<Pair<Stock, List<StockDecision>>> stockStrategys = new ArrayList<>();
+        List<Pair<Stock, List<StockDecision>>> stockDecisionPairList = new ArrayList<>();
         for (Stock stock : stocks) {
-            Pair<Stock, List<StockDecision>> stockStrategy = new Pair<>();
-            stockStrategys.add(stockStrategy);
-            stockStrategy.setV1(stock);
+            Pair<Stock, List<StockDecision>> stockDecisionPair = new Pair<>();
+            stockDecisionPairList.add(stockDecisionPair);
+            stockDecisionPair.setV1(stock);
             try {
                 List<StockTrade> stockTradeList = fetchStockTrade(stock.getCode(), null, deadline);
                 Long turnover = stockAccount.getHoldShares().get(stock);
-                List<StockDecision> strategys = useStockStrategy(stock).apply(stockTradeList, turnover,
-                        BigDecimal.ZERO);
-                stockStrategy.setV2(strategys);
+                List<StockDecision> stockDecisionList = useStockStrategy(stock).apply(stockTradeList, turnover,stockAccount.getFund());
+                stockDecisionPair.setV2(stockDecisionList);
             } catch (ClientProtocolException e) {
                 e.printStackTrace();
             } catch (IOException e) {
                 e.printStackTrace();
             }
         }
-        return stockStrategys;
+        return stockDecisionPairList;
     }
     private Map<String,String> stockCache=new HashMap<>();
+    @Test
+    public void testStockMarket(){
+         // Stock stock=new Stock("君正集团", "sh601216");
+        // Stock stock=new Stock("中国银河", "sh601881");
+        // Stock stock=new Stock("百傲化学", "sh603360");
+        // Stock stock=new Stock("世运电路", "sh603920");
+        Stock stock=new Stock("格力电器", "sz000651");
+        // Stock stock = new Stock("华东医药", "sz000963");
+        try {
+            moneyFlow(stock.getCode());
+            fetchStockMarket(stock.getCode());
+        } catch (ClientProtocolException e) {
+            e.printStackTrace();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+    private void moneyFlow(String stockCode) throws ClientProtocolException, IOException {
+        String data = HttpUtils.get("http://qt.gtimg.cn/q=ff_"+stockCode);
+        data=trimData(data);
+        log(data);
+    }
+    private void fetchStockMarket(String stockCode) throws ClientProtocolException, IOException {
+        String data = HttpUtils.get("http://qt.gtimg.cn/q="+stockCode);
+        data=trimData(data);
+        String[] values=data.split("~");
+        log(values.length);
+        log(values[3]);
+        log(values[47]);
+        log(values[48]);
+        log(data);
+    }
+    private String trimData(String data ){
+        int i=data.indexOf("\"");
+        if(i>=0){
+            data=data.substring(i+1, data.indexOf("\"",i+1));
+        }
+        return data;
+    }
     private List<StockTrade> fetchStockTrade(String stockCode, String startTime, String endTime)
             throws ClientProtocolException, IOException {
         String data=null;

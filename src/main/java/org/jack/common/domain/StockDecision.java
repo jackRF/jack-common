@@ -21,9 +21,13 @@ public class StockDecision {
      */
     private Double relativeSellOutRate;
     /**
-     * 数量
+     * 买入数量
      */
-    private Long turnover;
+    private Long purchaseTurnover=0l;
+    /**
+     * 卖出数量
+     */
+    private Long sellOutTurnover=0l;
     public void apply(Stock stock,StockTrade stockTrade,StockAccount stockAccount){
         BigDecimal fund=stockAccount.getFund();
         BigDecimal maxPrice=stockTrade.getMaxPrice();
@@ -33,16 +37,18 @@ public class StockDecision {
             holdTurnover=0l;
         }
         if(maxPrice.compareTo(sellOutPrice)>=0){
-            if(holdTurnover>=turnover&&turnover>0){
-                fund=fund.add(sellOutPrice.max(stockTrade.getOpenPrice()).multiply(BigDecimal.valueOf(turnover)));
-                holdTurnover-=turnover;
+            if(holdTurnover>=sellOutTurnover&&sellOutTurnover>0){
+                fund=fund.add(sellOutPrice.max(stockTrade.getOpenPrice()).multiply(BigDecimal.valueOf(sellOutTurnover)));
+                holdTurnover-=sellOutTurnover;
             }
         }
         if(minPrice.compareTo(purchasePrice)<=0){
-            long count=fund.divide(purchasePrice,1,RoundingMode.FLOOR).divide(BigDecimal.valueOf(300),0,RoundingMode.FLOOR).intValue()*100;
-            if(count>0){
-                fund=fund.subtract(purchasePrice.min(stockTrade.getOpenPrice()).multiply(BigDecimal.valueOf(count)));
-                holdTurnover+=count;
+            if(purchaseTurnover>0){
+                BigDecimal useFund=purchasePrice.min(stockTrade.getOpenPrice()).multiply(BigDecimal.valueOf(purchaseTurnover));
+                if(fund.compareTo(useFund)>=0){
+                    fund=fund.subtract(useFund);
+                    holdTurnover+=purchaseTurnover;
+                }
             }
         }
         stockAccount.setFund(fund);
@@ -94,11 +100,21 @@ public class StockDecision {
     public void setRelativeSellOutRate(Double relativeSellOutRate) {
         this.relativeSellOutRate = relativeSellOutRate;
     }
-    public Long getTurnover() {
-        return turnover;
+
+    public Long getPurchaseTurnover() {
+        return purchaseTurnover;
     }
 
-    public void setTurnover(Long turnover) {
-        this.turnover = turnover;
+    public void setPurchaseTurnover(Long purchaseTurnover) {
+        this.purchaseTurnover = purchaseTurnover;
     }
+
+    public Long getSellOutTurnover() {
+        return sellOutTurnover;
+    }
+
+    public void setSellOutTurnover(Long sellOutTurnover) {
+        this.sellOutTurnover = sellOutTurnover;
+    }
+   
 }

@@ -7,6 +7,10 @@ import org.springframework.beans.BeanWrapperImpl;
 import org.springframework.util.ObjectUtils;
 
 public abstract class Trainable {
+    protected String[] noTrain;
+    public Trainable(String...noTrain){
+        this.noTrain=noTrain;
+    }
     public <T extends Trainable> boolean train(T trainable,boolean better){
         BeanWrapperImpl wapper=new BeanWrapperImpl(this);
         BeanWrapperImpl wapperDest=new BeanWrapperImpl(trainable);
@@ -18,10 +22,11 @@ public abstract class Trainable {
                 continue;
             }
             String name=pd.getName();
+            Object value=wapper.getPropertyValue(name);
             if(!filter(name)){
+                wapperDest.setPropertyValue(name,value);
                 continue;
             }
-            Object value=wapper.getPropertyValue(name);
             Object valueDest=wapperDest.getPropertyValue(name);
             if(valueDest==null||!ObjectUtils.nullSafeEquals(value, valueDest)){
                 if(better||valueDest==null){
@@ -38,6 +43,14 @@ public abstract class Trainable {
     protected void sort(PropertyDescriptor[] pds){
     }
     protected boolean filter(String name){
+        if(noTrain==null||noTrain.length==0){
+            return true;
+        }
+        for(String nt:noTrain){
+            if(name.equals(nt)){
+                return false;
+            }
+        }
         return true;
     }
 }
