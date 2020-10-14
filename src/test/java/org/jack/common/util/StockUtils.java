@@ -54,7 +54,7 @@ public class StockUtils extends BaseTest {
         holdShares.put(stock, 300l);
 
         for(Stock stockItem:stocks){
-            swMap.put(stockItem, trainStockTrade(stockItem, BigDecimal.valueOf(50000),"rateCount","cat"));
+            swMap.put(stockItem, trainStockTrade(stockItem, BigDecimal.valueOf(50000),"rateCount"));
         }
         stockAccount.setFund(BigDecimal.valueOf(12000));
         List<Pair<Stock, List<StockDecision>>> stockStrategys = applyStockStrategy(stocks, stockAccount,useStockStrategy(stock));

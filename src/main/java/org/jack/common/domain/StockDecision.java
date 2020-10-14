@@ -38,7 +38,8 @@ public class StockDecision {
         }
         if(maxPrice.compareTo(sellOutPrice)>=0){
             if(holdTurnover>=sellOutTurnover&&sellOutTurnover>0){
-                fund=fund.add(sellOutPrice.max(stockTrade.getOpenPrice()).multiply(BigDecimal.valueOf(sellOutTurnover)));
+                BigDecimal trade=sellOutPrice.max(stockTrade.getOpenPrice()).multiply(BigDecimal.valueOf(sellOutTurnover));
+                fund=fund.add(trade).subtract(trade.multiply(BigDecimal.valueOf(0.004)));
                 holdTurnover-=sellOutTurnover;
             }
         }
@@ -46,7 +47,7 @@ public class StockDecision {
             if(purchaseTurnover>0){
                 BigDecimal useFund=purchasePrice.min(stockTrade.getOpenPrice()).multiply(BigDecimal.valueOf(purchaseTurnover));
                 if(fund.compareTo(useFund)>=0){
-                    fund=fund.subtract(useFund);
+                    fund=fund.subtract(useFund).subtract(useFund.multiply(BigDecimal.valueOf(0.003)));
                     holdTurnover+=purchaseTurnover;
                 }
             }
