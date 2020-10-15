@@ -6,19 +6,11 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
-import org.jack.common.util.ValueUtils;
-
 public interface StockStrategy {
-    public static StockStrategy DEFAULT=new StockStrategy(){};
-    public static StockStrategy RATEAVERAGE_STOCKSTRATEGY=new StockStrategy(){
-        @Override
-        public RateStrategy getRateStrategy() {
-            return RateStrategy.RATEAVERAGE_RATESTRATEGY;
-        }
-    };
-    default RateStrategy getRateStrategy(){
-        return RateStrategy.DEFAULT;
-    }
+    public static final StockStrategy DEFAULT=SmartStockStrategy.DEFAULT;
+    public static final StockStrategy RATEAVERAGE_STOCKSTRATEGY=SmartStockStrategy.RATEAVERAGE_STOCKSTRATEGY;
+    
+    RateStrategy getRateStrategy();
     default List<StockDecision> apply(List<StockTrade> data, Long turnover,BigDecimal fund){
         Collections.sort(data);
         Collections.reverse(data);
@@ -96,47 +88,12 @@ public interface StockStrategy {
         stockDecision.setSellOutTurnover(sellOutTurnover);
     }
     public static interface RateStrategy{
-        public static RateStrategy DEFAULT=new RateStrategy(){};
-        public static RateStrategy RATEAVERAGE_RATESTRATEGY=new RateStrategy(){
-            @Override
-            public BigDecimal usePurchaseRate(BigDecimal max, BigDecimal min, StockTrade first, StockTrade last,
-                    BigDecimal rateAverage) {
-                return rateAverage.multiply(BigDecimal.valueOf(1.0)).add(BigDecimal.valueOf(0.005)).max(BigDecimal.valueOf(0.00));
-            }
-            @Override
-            public BigDecimal useSellOutRate(BigDecimal max, BigDecimal min, StockTrade first, StockTrade last,
-                    BigDecimal rateAverage) {
-                return rateAverage.multiply(BigDecimal.valueOf(1.0)).add(BigDecimal.valueOf(0.005)).max(BigDecimal.valueOf(0.00));
-            }
-            @Override
-            public BigDecimal usePurchaseRate2(BigDecimal max, BigDecimal min, StockTrade first, StockTrade last,
-                    BigDecimal rateAverage) {
-                return usePurchaseRate(max, min, first, last, rateAverage).add(useRate(first,last));
-            }
-            @Override
-            public BigDecimal useSellOutRate2(BigDecimal max, BigDecimal min, StockTrade first, StockTrade last,
-                    BigDecimal rateAverage) {
-                return useSellOutRate(max, min, first, last, rateAverage).add(useRate(first,last));
-            }
-        };
-        default double useCat(){
-            return 3.0;
-        }
-        default int useRateCount(){
-            return 3;
-        };
-        default BigDecimal usePurchaseRate(BigDecimal max,BigDecimal min,StockTrade first,StockTrade last,BigDecimal rateAverage){
-            return useMaxOrMinRate(min,last).multiply(BigDecimal.valueOf(0.8)).max(BigDecimal.valueOf(0.015));
-        }
-        default BigDecimal useSellOutRate(BigDecimal max,BigDecimal min,StockTrade first,StockTrade last,BigDecimal rateAverage){
-            return useMaxOrMinRate(max,last).multiply(BigDecimal.valueOf(0.8)).max(BigDecimal.valueOf(0.015));
-        }
-        default BigDecimal usePurchaseRate2(BigDecimal max,BigDecimal min,StockTrade first,StockTrade last,BigDecimal rateAverage){
-            return usePurchaseRate(max, min, first, last, rateAverage).add(rateAverage);
-        }
-        default BigDecimal useSellOutRate2(BigDecimal max,BigDecimal min,StockTrade first,StockTrade last,BigDecimal rateAverage){
-            return useSellOutRate(max, min, first, last, rateAverage).add(rateAverage);
-        }
+        double useCat();
+        int useRateCount();
+        BigDecimal usePurchaseRate(BigDecimal max,BigDecimal min,StockTrade first,StockTrade last,BigDecimal rateAverage);
+        BigDecimal useSellOutRate(BigDecimal max,BigDecimal min,StockTrade first,StockTrade last,BigDecimal rateAverage);
+        BigDecimal usePurchaseRate2(BigDecimal max,BigDecimal min,StockTrade first,StockTrade last,BigDecimal rateAverage);
+        BigDecimal useSellOutRate2(BigDecimal max,BigDecimal min,StockTrade first,StockTrade last,BigDecimal rateAverage);
         default BigDecimal useRate(StockTrade first, StockTrade last){
             BigDecimal lastClosePrice=last.getClosePrice();
             return first.getClosePrice().subtract(lastClosePrice).divide(lastClosePrice, 4, RoundingMode.HALF_UP).abs();

@@ -1,8 +1,15 @@
 package org.jack.common.domain;
 
 import java.math.BigDecimal;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Map;
 
-public class StockTrade implements Comparable<StockTrade>{
+import org.jack.common.core.Pair;
+
+public class StockTrade implements Comparable<StockTrade> {
     /**
      * 时间
      */
@@ -27,7 +34,38 @@ public class StockTrade implements Comparable<StockTrade>{
      * 成交量
      */
     private Long turnover;
-
+    
+    public static Pair<SmartStockStrategy.RateWeight,Pair<StockTrade[],BigDecimal>> mockStockTrade(StockAccount stockAccount, Stock stock,
+            StockStrategy stockStrategy, List<StockTrade> stockTradeList) {
+        int rateCount = stockStrategy.getRateStrategy().useRateCount();
+        Collections.sort(stockTradeList);
+        List<StockDecision> sdList = null;
+        LinkedList<StockTrade> list = new LinkedList<>();
+        for (StockTrade stockTrade : stockTradeList) {
+            if (sdList != null) {
+                for (StockDecision stockDecision : sdList) {
+                    stockDecision.apply(stock, stockTrade, stockAccount);
+                }
+            }
+            list.add(stockTrade);
+            if (list.size() == rateCount + 1) {
+                Long turnover = stockAccount.getHoldShares().get(stock);
+                sdList = stockStrategy.apply(list, turnover == null ? 0l : turnover, stockAccount.getFund());
+                list.removeFirst();
+            }
+        }
+        StockTrade last=stockTradeList.get(stockTradeList.size() - 1);
+        Map<Stock,StockTrade> stockMarket=new HashMap<>();
+        stockMarket.put(stock, last);
+        BigDecimal marketValue= stockAccount.useMarketValue(stockMarket);
+        Pair<SmartStockStrategy.RateWeight,Pair<StockTrade[],BigDecimal>> wPair=new Pair<SmartStockStrategy.RateWeight,Pair<StockTrade[],BigDecimal>>();
+        if(stockStrategy instanceof SmartStockStrategy){
+            SmartStockStrategy smartStockStrategy=(SmartStockStrategy)stockStrategy;
+            wPair.setV1(smartStockStrategy.getWeight());
+        }
+        wPair.setV2(new Pair<>(new StockTrade[]{stockTradeList.get(0),last} ,marketValue));
+        return wPair;
+    }
     public String getTime() {
         return time;
     }

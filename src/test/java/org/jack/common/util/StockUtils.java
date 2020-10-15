@@ -4,13 +4,10 @@ import java.io.IOException;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.Date;
 import java.util.HashMap;
-import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
-import java.util.Map.Entry;
 
 import org.apache.http.client.ClientProtocolException;
 import org.jack.common.BaseTest;
@@ -19,7 +16,6 @@ import org.jack.common.domain.SmartStockStrategy;
 import org.jack.common.domain.Stock;
 import org.jack.common.domain.StockAccount;
 import org.jack.common.domain.StockDecision;
-import org.jack.common.domain.StockStrategy;
 import org.jack.common.domain.StockTrade;
 import org.junit.Test;
 import org.springframework.util.StringUtils;
@@ -27,9 +23,8 @@ import org.springframework.util.StringUtils;
 public class StockUtils extends BaseTest {
     @Test
     public void testStock() {
-        StockAccount stockAccount = new StockAccount(BigDecimal.valueOf(50000));
-        Map<Stock, Long> holdShares = stockAccount.getHoldShares();
-        Stock stock=null;
+        Map<Stock, Long> holdShares = new HashMap<>();
+        Stock stock = null;
         List<Stock> stocks = new ArrayList<>();
         stock = new Stock("君正集团", "sh601216");
         stocks.add(stock);
@@ -52,17 +47,45 @@ public class StockUtils extends BaseTest {
         stock = new Stock("红旗连锁", "sz002697");
         stocks.add(stock);
         holdShares.put(stock, 300l);
-
-        for(Stock stockItem:stocks){
-            swMap.put(stockItem, trainStockTrade(stockItem, BigDecimal.valueOf(50000),"rateCount"));
+        boolean train = true;
+        int rateType1 = SmartStockStrategy.RATE_TYPE_AVERAGE;
+        int rateType2 = SmartStockStrategy.RATE_TYPE_NORMAL;
+        Date date = DateUtils.weekDay(new Date(), 1);
+        String deadline = DateUtils.formatDate(date, "yyMMdd");
+        if (train) {
+            for (Stock stockItem : stocks) {
+                List<StockTrade> stockTradeList = fetchStockTrade(stockItem.getCode(), null, deadline);
+                Pair<SmartStockStrategy.RateWeight, Pair<StockTrade[], BigDecimal>> wPair = SmartStockStrategy.RateWeight
+                        .trainStockTrade(stockItem, BigDecimal.valueOf(50000), rateType1, rateType2, stockTradeList,
+                                "rateCount");
+                swMap.put(stockItem, wPair.getV1());
+                log(stockItem, wPair);
+            }
         }
-        stockAccount.setFund(BigDecimal.valueOf(12000));
-        List<Pair<Stock, List<StockDecision>>> stockStrategys = applyStockStrategy(stocks, stockAccount,useStockStrategy(stock));
+        List<Pair<Stock, List<StockDecision>>> stockDecisionPairList = new ArrayList<>();
+        for (Stock stockItem : stocks) {
+            List<StockTrade> stockTradeList = fetchStockTrade(stockItem.getCode(), null, deadline);
+            SmartStockStrategy smartStockStrategy = useStockStrategy(stockItem, rateType1, rateType2);
+            if (!train) {
+                StockAccount stockAccount = new StockAccount(BigDecimal.valueOf(50000));
+                Pair<SmartStockStrategy.RateWeight, Pair<StockTrade[], BigDecimal>> wPair = StockTrade
+                        .mockStockTrade(stockAccount, stockItem, smartStockStrategy, stockTradeList);
+                log(stockItem, wPair);
+            }
+            StockAccount stockAccount = new StockAccount(BigDecimal.valueOf(12000), holdShares);
+            Long turnover = stockAccount.getHoldShares().get(stockItem);
+            List<StockDecision> stockDecisionList = smartStockStrategy.apply(stockTradeList, turnover,
+                    stockAccount.getFund());
+            Pair<Stock, List<StockDecision>> stockDecisionPair = new Pair<>();
+            stockDecisionPairList.add(stockDecisionPair);
+            stockDecisionPair.setV1(stockItem);
+            stockDecisionPair.setV2(stockDecisionList);
+        }
+        log("deadline:" + deadline);
         int hi = 0;
         StringBuilder text = new StringBuilder();
-        String[] head = { "股票名称", "股票代码"
-        , "\t买入1","买入数量1", "买入收益率1", "卖出1","卖出数量1", "卖出收益率1"
-        ,"买入2","买入数量2", "买入收益率2", "卖出2",  "卖出数量2", "卖出收益率2"};
+        String[] head = { "股票名称", "股票代码", "\t买入1", "买入数量1", "买入收益率1", "卖出1", "卖出数量1", "卖出收益率1", "买入2", "买入数量2",
+                "买入收益率2", "卖出2", "卖出数量2", "卖出收益率2" };
         for (String h : head) {
             if (hi++ == 0) {
                 text.append(h);
@@ -71,7 +94,7 @@ public class StockUtils extends BaseTest {
             }
         }
         text.append("\n");
-        for (Pair<Stock, List<StockDecision>> pair : stockStrategys) {
+        for (Pair<Stock, List<StockDecision>> pair : stockDecisionPairList) {
             Stock stockItem = pair.getV1();
             text.append(stockItem.getName()).append("\t").append(stockItem.getCode());
             List<StockDecision> v2 = pair.getV2();
@@ -89,177 +112,89 @@ public class StockUtils extends BaseTest {
         }
         log(text);
     }
+
     @Test
-    public void testMockStockTrade(){
+    public void testMockStockTrade() {
         StockAccount stockAccount = new StockAccount(BigDecimal.valueOf(50000));
-        Stock stock=new Stock("君正集团", "sh601216");
+        Stock stock = new Stock("君正集团", "sh601216");
         // Stock stock=new Stock("中国银河", "sh601881");
         // Stock stock=new Stock("百傲化学", "sh603360");
         // Stock stock=new Stock("世运电路", "sh603920");
         // Stock stock=new Stock("格力电器", "sz000651");
         // Stock stock = new Stock("华东医药", "sz000963");
         // Stock stock=new Stock("红旗连锁", "sz002697");
-        Pair<Stock, StockTrade[]> pair=mockStockTrade(stockAccount, stock, useStockStrategy(stock));
-        Map<Stock,StockTrade> stockMarket=new HashMap<>();
-        stockMarket.put(stock, pair.getV2()[1]);
-        BigDecimal marketValue= stockAccount.useMarketValue(stockMarket);
-        StockTrade[] sts=pair.getV2();
-        log(sts[0].getTime()+"-"+sts[1].getTime()+"总资产："+marketValue);
+        Date date = DateUtils.weekDay(new Date(), 1);
+        String endTime = DateUtils.formatDate(date, "yyMMdd");
+        List<StockTrade> stockTradeList;
+        stockTradeList = fetchStockTrade(stock.getCode(), null, endTime);
+        SmartStockStrategy stockStrategy = useStockStrategy(stock, SmartStockStrategy.RATE_TYPE_AVERAGE,
+                SmartStockStrategy.RATE_TYPE_NORMAL);
+        Pair<SmartStockStrategy.RateWeight, Pair<StockTrade[], BigDecimal>> wPair = StockTrade
+                .mockStockTrade(stockAccount, stock, stockStrategy, stockTradeList);
+        log(stock, wPair);
     }
+
     @Test
-    public void testTrainStockTrade(){
-        Stock stock=new Stock("君正集团", "sh601216");
+    public void testTrainStockTrade() {
+        Stock stock = new Stock("君正集团", "sh601216");
         // Stock stock=new Stock("中国银河", "sh601881");
         // Stock stock=new Stock("百傲化学", "sh603360");
         // Stock stock=new Stock("世运电路", "sh603920");
         // Stock stock=new Stock("格力电器", "sz000651");
         // Stock stock = new Stock("华东医药", "sz000963");
-        trainStockTrade(stock, BigDecimal.valueOf(50000));
+
+        Date date = DateUtils.weekDay(new Date(), 1);
+        String endTime = DateUtils.formatDate(date, "yyMMdd");
+        List<StockTrade> stockTradeList;
+        stockTradeList = fetchStockTrade(stock.getCode(), null, endTime);
+        Pair<SmartStockStrategy.RateWeight, Pair<StockTrade[], BigDecimal>> wPair = SmartStockStrategy.RateWeight
+                .trainStockTrade(stock, BigDecimal.valueOf(50000), stockTradeList);
+        log(stock, wPair);
     }
-    
-    public SmartStockStrategy.RateWeight trainStockTrade(Stock stock,BigDecimal fund,String...noTrain) {
-        SmartStockStrategy.RateWeight weightDest = new SmartStockStrategy.RateWeight();
-        weightDest.setRateCount(null);
-        weightDest.setCat(null);
-        weightDest.setwPurchase(null);
-        weightDest.setwSellOut(null);
-        weightDest.setbPurchase(null);
-        weightDest.setbSellOut(null);
-        weightDest.setLimitPurchase(null);
-        weightDest.setLimitSellOut(null);
-        SmartStockStrategy.RateWeight weight = new SmartStockStrategy.RateWeight(noTrain);
+    private Map<Stock, SmartStockStrategy.RateWeight> swMap = new HashMap<>();
+    private SmartStockStrategy useStockStrategy(Stock stock, int rateType1, int rateType2) {
+        SmartStockStrategy.RateWeight weight = new SmartStockStrategy.RateWeight();
         weight.setRateCount(3);
-        weight.setCat(2d);
-        weight.setwPurchase(BigDecimal.valueOf(1.5));
-        weight.setbPurchase(BigDecimal.valueOf(0.005));
-        weight.setwSellOut(BigDecimal.valueOf(1.5));
+        weight.setCat(3d);
+        weight.setwPurchase(BigDecimal.valueOf(0.11));
+        weight.setbPurchase(BigDecimal.valueOf(0.017));
+        weight.setwSellOut(BigDecimal.valueOf(2.36));
         weight.setbSellOut(BigDecimal.valueOf(0.005));
-        StockStrategy stockStrategy = new SmartStockStrategy(SmartStockStrategy.RATE_TYPE_AVERAGE,
-                SmartStockStrategy.RATE_TYPE_NORMAL, weight);
-        // stockStrategy=StockStrategy.RATEAVERAGE_STOCKSTRATEGY;
-        BigDecimal maxMarketValue = null;
-        Pair<Stock, StockTrade[]> pair=null;
-        for (;;) {
-            StockAccount stockAccount = new StockAccount(fund);
-            pair=mockStockTrade(stockAccount, stock, stockStrategy);
-            Map<Stock,StockTrade> stockMarket=new HashMap<>();
-            stockMarket.put(stock, pair.getV2()[1]);
-            BigDecimal marketValue= stockAccount.useMarketValue(stockMarket);
-            boolean better=false;
-            if (maxMarketValue == null || maxMarketValue.compareTo(marketValue) < 0) {
-                maxMarketValue = marketValue;
-                better=true;
-            }
-            if(!weight.train(weightDest,better)){
-                break;
-            }
-        }
-        StockTrade[] sts=pair.getV2();
-        log("stock:"+ValueUtils.toJSONString(stock)+ sts[0].getTime()+"-"+sts[1].getTime()+"总资产:" + maxMarketValue+", weight:" + ValueUtils.toJSONString(weightDest));
-        return weightDest;
-    }
-    private Map<Stock,SmartStockStrategy.RateWeight> swMap=new HashMap<>();
-    private StockStrategy useStockStrategy(Stock stock) {
-        if(swMap.containsKey(stock)){
-            StockStrategy stockStrategy = new SmartStockStrategy(SmartStockStrategy.RATE_TYPE_AVERAGE,
-                SmartStockStrategy.RATE_TYPE_NORMAL, swMap.get(stock));
-            return stockStrategy;
-        }else if(stock!=null){
-            return StockStrategy.RATEAVERAGE_STOCKSTRATEGY;
-        }
         Stock stockTemp = new Stock("格力电器", "sz000651");
-        if (stock.equals(stockTemp)) {
-            SmartStockStrategy.RateWeight weight = new SmartStockStrategy.RateWeight();
-            weight.setRateCount(3);
-            weight.setwPurchase(BigDecimal.valueOf(0.11));
-            weight.setbPurchase(BigDecimal.valueOf(0.017));
-            weight.setwSellOut(BigDecimal.valueOf(2.36));
-            weight.setbSellOut(BigDecimal.valueOf(0.005));
-            StockStrategy stockStrategy = new SmartStockStrategy(SmartStockStrategy.RATE_TYPE_AVERAGE,
-                    SmartStockStrategy.RATE_TYPE_NORMAL, weight);
-            return stockStrategy;
+        if (!swMap.containsKey(stockTemp)) {
+            swMap.put(stockTemp, weight);
         }
+        weight = new SmartStockStrategy.RateWeight();
+        weight.setRateCount(3);
+        weight.setCat(3d);
+        weight.setwPurchase(BigDecimal.valueOf(0.7));
+        weight.setbPurchase(BigDecimal.valueOf(0.010));
+        weight.setwSellOut(BigDecimal.valueOf(0.8));
+        weight.setbSellOut(BigDecimal.valueOf(0.010));
         stockTemp = new Stock("华东医药", "sz000963");
-        if (stock.equals(stockTemp)) {
-            SmartStockStrategy.RateWeight weight = new SmartStockStrategy.RateWeight();
-            weight.setRateCount(3);
-            weight.setwPurchase(BigDecimal.valueOf(0.7));
-            weight.setbPurchase(BigDecimal.valueOf(0.010));
-            weight.setwSellOut(BigDecimal.valueOf(0.8));
-            weight.setbSellOut(BigDecimal.valueOf(0.010));
-            StockStrategy stockStrategy = new SmartStockStrategy(SmartStockStrategy.RATE_TYPE_AVERAGE,
-                    SmartStockStrategy.RATE_TYPE_NORMAL, weight);
-            return stockStrategy;
+        if (!swMap.containsKey(stockTemp)) {
+            swMap.put(stockTemp, weight);
         }
-
-        return StockStrategy.DEFAULT;
-    }
-    public Pair<Stock, StockTrade[]> mockStockTrade(StockAccount stockAccount, Stock stock,
-            StockStrategy stockStrategy) {
-        Date date = DateUtils.weekDay(new Date(), 1);
-        String deadline = DateUtils.formatDate(date, "yyMMdd");
-        int rateCount = stockStrategy.getRateStrategy().useRateCount();
-        try {
-            List<StockTrade> stockTradeList = fetchStockTrade(stock.getCode(), null, deadline);
-            Collections.sort(stockTradeList);
-            List<StockDecision> sdList = null;
-            LinkedList<StockTrade> list = new LinkedList<>();
-            for (StockTrade stockTrade : stockTradeList) {
-                if (sdList != null) {
-                    for (StockDecision stockDecision : sdList) {
-                        stockDecision.apply(stock, stockTrade, stockAccount);
-                    }
-                    // log(ValueUtils.toJSONString2(stockAccount));
-                }
-                list.add(stockTrade);
-                if (list.size() == rateCount + 1) {
-                    Long turnover = stockAccount.getHoldShares().get(stock);
-                    sdList = stockStrategy.apply(list, turnover == null ? 0l : turnover, stockAccount.getFund());
-                    list.removeFirst();
-                }
-            }
-            Pair<Stock, StockTrade[]> pair=new Pair<>();
-            pair.setV1(stock);
-            pair.setV2( new StockTrade[] { stockTradeList.get(0), stockTradeList.get(stockTradeList.size() - 1)});
-            return pair;
-        } catch (ClientProtocolException e) {
-            e.printStackTrace();
-        } catch (IOException e) {
-            e.printStackTrace();
+        if (swMap.containsKey(stock)) {
+            return new SmartStockStrategy(rateType1, rateType2, swMap.get(stock));
         }
-        return null;
+        return SmartStockStrategy.RATEAVERAGE_STOCKSTRATEGY;
     }
-
-    private List<Pair<Stock, List<StockDecision>>> applyStockStrategy(List<Stock> stocks, StockAccount stockAccount,StockStrategy stockStrategy) {
-        Date date = DateUtils.weekDay(new Date(), 1);
-        String deadline = DateUtils.formatDate(date, "yyMMdd");
-        log("deadline:"+deadline);
-        List<Pair<Stock, List<StockDecision>>> stockDecisionPairList = new ArrayList<>();
-        for (Stock stock : stocks) {
-            Pair<Stock, List<StockDecision>> stockDecisionPair = new Pair<>();
-            stockDecisionPairList.add(stockDecisionPair);
-            stockDecisionPair.setV1(stock);
-            try {
-                List<StockTrade> stockTradeList = fetchStockTrade(stock.getCode(), null, deadline);
-                Long turnover = stockAccount.getHoldShares().get(stock);
-                List<StockDecision> stockDecisionList = useStockStrategy(stock).apply(stockTradeList, turnover,stockAccount.getFund());
-                stockDecisionPair.setV2(stockDecisionList);
-            } catch (ClientProtocolException e) {
-                e.printStackTrace();
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
-        }
-        return stockDecisionPairList;
+    private void log(Stock stock, Pair<SmartStockStrategy.RateWeight, Pair<StockTrade[], BigDecimal>> wPair) {
+        SmartStockStrategy.RateWeight weight = wPair.getV1();
+        Pair<StockTrade[], BigDecimal> stPair = wPair.getV2();
+        StockTrade[] sts = stPair.getV1();
+        log("stock:" + ValueUtils.toJSONString(stock) + sts[0].getTime() + "-" + sts[1].getTime() + "总资产:"
+                + stPair.getV2() + ", weight:" + ValueUtils.toJSONString(weight));
     }
-    private Map<String,String> stockCache=new HashMap<>();
+    private Map<String, String> stockCache = new HashMap<>();
     @Test
-    public void testStockMarket(){
-         // Stock stock=new Stock("君正集团", "sh601216");
+    public void testStockMarket() {
+        // Stock stock=new Stock("君正集团", "sh601216");
         // Stock stock=new Stock("中国银河", "sh601881");
         // Stock stock=new Stock("百傲化学", "sh603360");
         // Stock stock=new Stock("世运电路", "sh603920");
-        Stock stock=new Stock("格力电器", "sz000651");
+        Stock stock = new Stock("格力电器", "sz000651");
         // Stock stock = new Stock("华东医药", "sz000963");
         try {
             moneyFlow(stock.getCode());
@@ -270,35 +205,44 @@ public class StockUtils extends BaseTest {
             e.printStackTrace();
         }
     }
+
     private void moneyFlow(String stockCode) throws ClientProtocolException, IOException {
-        String data = HttpUtils.get("http://qt.gtimg.cn/q=ff_"+stockCode);
-        data=trimData(data);
+        String data = HttpUtils.get("http://qt.gtimg.cn/q=ff_" + stockCode);
+        data = trimData(data);
         log(data);
     }
+
     private void fetchStockMarket(String stockCode) throws ClientProtocolException, IOException {
-        String data = HttpUtils.get("http://qt.gtimg.cn/q="+stockCode);
-        data=trimData(data);
-        String[] values=data.split("~");
+        String data = HttpUtils.get("http://qt.gtimg.cn/q=" + stockCode);
+        data = trimData(data);
+        String[] values = data.split("~");
         log(values.length);
         log(values[3]);
         log(values[47]);
         log(values[48]);
         log(data);
     }
-    private String trimData(String data ){
-        int i=data.indexOf("\"");
-        if(i>=0){
-            data=data.substring(i+1, data.indexOf("\"",i+1));
+
+    private String trimData(String data) {
+        int i = data.indexOf("\"");
+        if (i >= 0) {
+            data = data.substring(i + 1, data.indexOf("\"", i + 1));
         }
         return data;
     }
-    private List<StockTrade> fetchStockTrade(String stockCode, String startTime, String endTime)
-            throws ClientProtocolException, IOException {
-        String data=null;
-        if(stockCache.containsKey(stockCode)){
-            data=stockCache.get(stockCode);
-        }else{
-            data = HttpUtils.get("http://data.gtimg.cn/flashdata/hushen/latest/weekly/" + stockCode + ".js");
+
+    private List<StockTrade> fetchStockTrade(String stockCode, String startTime, String endTime) {
+        String data = null;
+        if (stockCache.containsKey(stockCode)) {
+            data = stockCache.get(stockCode);
+        } else {
+            try {
+                data = HttpUtils.get("http://data.gtimg.cn/flashdata/hushen/latest/weekly/" + stockCode + ".js");
+            } catch (ClientProtocolException e) {
+                e.printStackTrace();
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
             stockCache.put(stockCode, data);
         }
         List<StockTrade> stockTradeList = new ArrayList<>();
