@@ -1,5 +1,10 @@
 package org.jack.common.domain;
 
+import java.math.BigDecimal;
+import java.util.List;
+
+import org.jack.common.core.Pair;
+
 public class Stock {
     /**
      * 股票名称
@@ -10,9 +15,28 @@ public class Stock {
      */
     private String code;
 
-    public Stock(String name,String code){
-        this.name=name;
-        this.code=code;
+    public static boolean filter(Stock stock, List<Pair<String, List<Pair<String, String>>>> stockMarketList) {
+        Pair<String, List<Pair<String, String>>> stockMarket0 = stockMarketList.get(0);
+        for (Pair<String, String> entry : stockMarket0.getV2()) {
+            String value = entry.getV2();
+            if ("股票名字".equals(entry.getV1())) {
+                stock.setName(value);
+                if (value.contains("*ST")) {
+                    return false;
+                }
+            }
+            if ("总市值".equals(entry.getV1())) {
+                if (BigDecimal.valueOf(Double.valueOf(value)).compareTo(BigDecimal.valueOf(500)) < 0) {
+                    return false;
+                }
+            }
+        }
+        return true;
+    }
+
+    public Stock(String name, String code) {
+        this.name = name;
+        this.code = code;
     }
 
     public String getName() {
@@ -55,5 +79,5 @@ public class Stock {
             return false;
         return true;
     }
-    
+
 }
