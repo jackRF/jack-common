@@ -163,8 +163,10 @@ public class SmartStockStrategy implements StockStrategy {
             weight.setCat(2d);
             weight.setwPurchase(BigDecimal.valueOf(1.5));
             weight.setbPurchase(BigDecimal.valueOf(0.005));
+            weight.setLimitPurchase(BigDecimal.valueOf(0.015));
             weight.setwSellOut(BigDecimal.valueOf(1.5));
             weight.setbSellOut(BigDecimal.valueOf(0.005));
+            weight.setLimitSellOut(BigDecimal.valueOf(0.015));
             StockStrategy stockStrategy = new SmartStockStrategy(rateType1, rateType2, weight);
             BigDecimal maxMarketValue = null;
             Pair<RateWeight, Pair<StockTrade[], BigDecimal>> wPair = null;
@@ -188,7 +190,39 @@ public class SmartStockStrategy implements StockStrategy {
             maxWPair.setV2(new Pair<>(wPair.getV2().getV1(), maxMarketValue));
             return maxWPair;
         }
-
+        @Override
+        protected Object useNewValue(String name, Object value) {
+            if (name.equals("rateCount")) {
+                int v = sway((int) value, 1, 3);
+                if (v >= 1 && v <= 5) {
+                    return v;
+                }
+            } else if (name.equals("cat")) {
+                double v = sway((double) value, 0.1, 2);
+                if (v >= 1 && v <= 3) {
+                    return v;
+                }
+            } else {
+                BigDecimal v = (BigDecimal) value;
+                if (name.startsWith("w")) {
+                    v = sway(v, BigDecimal.valueOf(0.01), BigDecimal.valueOf(1.5));
+                    if (v.compareTo(BigDecimal.valueOf(0.5)) >= 0 && v.compareTo(BigDecimal.valueOf(2.5)) <= 0) {
+                        return v;
+                    }
+                } else if (name.startsWith("b")) {
+                    v = sway(v, BigDecimal.valueOf(0.001), BigDecimal.valueOf(0.005));
+                    if (v.compareTo(BigDecimal.ZERO) >= 0 && v.compareTo(BigDecimal.valueOf(0.01)) <= 0) {
+                        return v;
+                    }
+                } else {
+                    v = sway(v, BigDecimal.valueOf(0.001), BigDecimal.valueOf(0.015));
+                    if (v.compareTo(BigDecimal.ZERO) >= 0 && v.compareTo(BigDecimal.valueOf(0.03)) <= 0) {
+                        return v;
+                    }
+                }
+            }
+            return null;
+        }
         public Double getCat() {
             return cat;
         }
@@ -251,40 +285,6 @@ public class SmartStockStrategy implements StockStrategy {
 
         public void setLimitSellOut(BigDecimal limitSellOut) {
             this.limitSellOut = limitSellOut;
-        }
-
-        @Override
-        protected Object useNewValue(String name, Object value) {
-            if (name.equals("rateCount")) {
-                int v = sway((int) value, 1, 3);
-                if (v >= 1 && v <= 5) {
-                    return v;
-                }
-            } else if (name.equals("cat")) {
-                double v = sway((double) value, 0.1, 2);
-                if (v >= 1 && v <= 3) {
-                    return v;
-                }
-            } else {
-                BigDecimal v = (BigDecimal) value;
-                if (name.startsWith("w")) {
-                    v = sway(v, BigDecimal.valueOf(0.01), BigDecimal.valueOf(1.5));
-                    if (v.compareTo(BigDecimal.valueOf(0.5)) >= 0 && v.compareTo(BigDecimal.valueOf(2.5)) <= 0) {
-                        return v;
-                    }
-                } else if (name.startsWith("b")) {
-                    v = sway(v, BigDecimal.valueOf(0.001), BigDecimal.valueOf(0.005));
-                    if (v.compareTo(BigDecimal.ZERO) >= 0 && v.compareTo(BigDecimal.valueOf(0.01)) <= 0) {
-                        return v;
-                    }
-                } else {
-                    v = sway(v, BigDecimal.valueOf(0.001), BigDecimal.valueOf(0.015));
-                    if (v.compareTo(BigDecimal.ZERO) >= 0 && v.compareTo(BigDecimal.valueOf(0.03)) <= 0) {
-                        return v;
-                    }
-                }
-            }
-            return null;
         }
 
         protected BigDecimal sway(BigDecimal v, BigDecimal b, BigDecimal center) {
