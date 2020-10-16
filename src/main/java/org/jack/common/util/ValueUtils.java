@@ -186,7 +186,18 @@ public class ValueUtils {
         pair.setV1(oldDiffMap);
         pair.setV2(newDiffMap);
         return pair;
-    }
+	}
+	public static <T> boolean contains(T dest,T...array){
+		if(array==null||array.length==0){
+			return false;
+		}
+		for(T item:array){
+			if(ObjectUtils.nullSafeEquals(item, dest)){
+				return true;
+			}
+		}
+		return false;
+	}
 	public static <T> T defaultValue(T t, T def) {
 		return t == null ? def : t;
 	}

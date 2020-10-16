@@ -73,15 +73,17 @@ public class SmartStockStrategy implements StockStrategy {
             @Override
             public BigDecimal usePurchaseRate2(BigDecimal max, BigDecimal min, StockTrade first, StockTrade last,
                     BigDecimal rateAverage) {
-                return usePurchaseRate(max, min, first, last, rateAverage)
-                        .add(useRate(rateType2, rateAverage, min, first, last));
+                BigDecimal rate2=useRate(rateType2, rateAverage, min, first, last);
+                // rate2=rate2.multiply(weight.getwPurchase()).add(weight.getbPurchase()).max(weight.limitPurchase);
+                return usePurchaseRate(max, min, first, last, rateAverage).add(rate2);
             }
 
             @Override
             public BigDecimal useSellOutRate2(BigDecimal max, BigDecimal min, StockTrade first, StockTrade last,
                     BigDecimal rateAverage) {
-                return useSellOutRate(max, min, first, last, rateAverage)
-                        .add(useRate(rateType2, rateAverage, max, first, last));
+                BigDecimal rate2=useRate(rateType2, rateAverage, max, first, last);
+                // rate2=rate2.multiply(weight.getwSellOut()).add(weight.getbSellOut()).max(weight.limitSellOut);
+                return useSellOutRate(max, min, first, last, rateAverage).add(rate2);
             }
 
             private BigDecimal useRate(int rateType, BigDecimal rateAverage, BigDecimal maxOrMin, StockTrade first,

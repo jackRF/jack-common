@@ -1,7 +1,11 @@
 package org.jack.common.util;
 
+import java.io.BufferedWriter;
 import java.io.File;
+import java.io.FileOutputStream;
+import java.io.FileWriter;
 import java.io.IOException;
+import java.io.StringWriter;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.util.ArrayList;
@@ -161,16 +165,108 @@ public class StockUtils extends BaseTest {
 
         // Stock stock = new Stock("贵州茅台", "sh600519");
         try {
-            List<Pair<String, List<Pair<String, String>>>> stockMarketList = fetchStockMarket(stock.getCode());
-            log(stockMarketList);
+            // List<Pair<String, List<Pair<String, String>>>> stockMarketList = fetchStockMarket(stock.getCode());
+            // log(stockMarketList);
         } catch (Exception e) {
         }
         List<Stock> stockList = new ArrayList<>();
-        // selectStock("sh6", 0, 2000, stockList);
-        // selectStock("sz0", 0, 3018, stockList);
+        selectStock("sh6", 0, 2000, stockList);
+        selectStock("sz0", 0, 3018, stockList);
         log(ValueUtils.toJSONString(stockList));
+        List<Pair<String,List<Pair<String,String[]>>>> classificationPairList=readClassification(new File("./src/main/resources/stock/股票分类.txt"));
+        Map<String,List<Stock>> classificationMap=classifyStock(stockList, classificationPairList);
+        writeClassifyStock(classificationMap, new File("./src/main/resources/stock/市盈率20市值200.txt"));
     }
-
+    private void writeClassifyStock(Map<String,List<Stock>> classificationMap,File file){
+        try {
+            BufferedWriter writer = new BufferedWriter(new FileWriter(file));
+            for(Map.Entry<String,List<Stock>> entry:classificationMap.entrySet()){
+                writer.write(entry.getKey()+"\n");
+                for(Stock stock:entry.getValue()){
+                    writer.write(stock.getName());
+                    writer.write("\t");
+                    writer.write(stock.getCode());
+                    writer.write("\n");
+                }
+                writer.write("\n");
+            }
+            
+            writer.flush();
+            writer.close();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+    private Map<String,List<Stock>> classifyStock(List<Stock> stockList,List<Pair<String,List<Pair<String,String[]>>>> classificationPairList){
+        Map<String,List<Stock>> classificationMap=new HashMap<>();
+        for(Stock stock:stockList){
+            String  classification=useClassification(stock,classificationPairList);
+            List<Stock> list=classificationMap.get(classification);
+            if(list==null){
+                list=new ArrayList<>();
+                classificationMap.put(classification, list);
+            }
+            list.add(stock);
+        }
+        return classificationMap;
+    }
+    private String useClassification(Stock stock,List<Pair<String,List<Pair<String,String[]>>>> classificationPairList){
+        String name=stock.getName();
+        for(Pair<String,List<Pair<String,String[]>>> classificationPair:classificationPairList){
+            String classification=classificationPair.getV1();
+            List<Pair<String,String[]>> conditionList=classificationPair.getV2();
+            for(Pair<String,String[]> condition:conditionList){
+                String key=condition.getV1();
+                String[] values=condition.getV2();
+                if("contains".equals(key)){
+                    for(String value:values){
+                        if(name.contains(value)){
+                            return classification;
+                        }
+                    }
+                }else if("special".equals(key)){
+                    if(ValueUtils.contains(name, values)){
+                        return classification;
+                    }
+                }else if("endsWith".equals(key)){
+                    for(String value:values){
+                        if(name.endsWith(value)){
+                            return classification;
+                        }
+                    }
+                }
+            }
+        }
+        return "未知";
+    }
+    private List<Pair<String,List<Pair<String,String[]>>>> readClassification(File file){
+        List<Pair<String,List<Pair<String,String[]>>>> classificationPairList=new ArrayList<>();
+        try {
+            IOUtils.processText(file, new Task<String>() {
+                private Pair<String,List<Pair<String,String[]>>> classificationPair;
+                @Override
+                public void toDo(String line) {
+                    if(!StringUtils.hasText(line)){
+                        return;
+                    }
+                    line=line.trim();
+                    if(!line.contains(":")){
+                        Pair<String,List<Pair<String,String[]>>> classificationPair=new Pair<>();
+                        classificationPair.setV1(line);
+                        classificationPair.setV2(new ArrayList<>());
+                        classificationPairList.add(classificationPair);
+                        this.classificationPair=classificationPair;
+                    }else{
+                        String[] condition=line.split(":");
+                        classificationPair.getV2().add(new Pair<>(condition[0],condition[1].split("~")));
+                    }
+                }
+            });
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        return classificationPairList;
+    }
     private void selectStock(String shOrSz, int start, int end, List<Stock> stockList) {
         for (int i = start; i < end; i++) {
             String stockCode = shOrSz + ValueUtils.leftPad(i + "", "0", 5);

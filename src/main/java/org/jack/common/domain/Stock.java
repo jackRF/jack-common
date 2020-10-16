@@ -1,9 +1,12 @@
 package org.jack.common.domain;
 
 import java.math.BigDecimal;
+import java.util.Arrays;
 import java.util.List;
 
 import org.jack.common.core.Pair;
+import org.jack.common.util.ValueUtils;
+import org.springframework.util.CollectionUtils;
 
 public class Stock {
     /**
@@ -26,14 +29,18 @@ public class Stock {
                 }
             }
             if ("总市值".equals(entry.getV1())) {
-                if (BigDecimal.valueOf(Double.valueOf(value)).compareTo(BigDecimal.valueOf(500)) < 0) {
+                if (Double.valueOf(value)<200) {
+                    return false;
+                }
+            }
+            if ("市盈率".equals(entry.getV1())) {
+                if (Double.valueOf(value)>20) {
                     return false;
                 }
             }
         }
         return true;
     }
-
     public Stock(String name, String code) {
         this.name = name;
         this.code = code;
@@ -79,5 +86,4 @@ public class Stock {
             return false;
         return true;
     }
-
 }
