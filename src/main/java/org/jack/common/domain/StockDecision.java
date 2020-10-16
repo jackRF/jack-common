@@ -55,6 +55,17 @@ public class StockDecision {
         stockAccount.setFund(fund);
         stockAccount.getHoldShares().put(stock, holdTurnover);
     }
+    public StockDecision copyApply(StockTrade stockTradeLast){
+        BigDecimal  openPrice=stockTradeLast.getOpenPrice();
+        StockDecision stockDecision=new StockDecision();
+        stockDecision.setPurchasePrice(purchasePrice.min(openPrice));
+        stockDecision.setSellOutPrice(sellOutPrice.max(openPrice));
+        stockDecision.setRelativePurchaseRate(relativePurchaseRate);
+        stockDecision.setRelativeSellOutRate(relativeSellOutRate);
+        stockDecision.setPurchaseTurnover(purchaseTurnover);
+        stockDecision.setSellOutTurnover(sellOutTurnover);
+        return stockDecision;
+    }
     public static StockDecision of(Double relativePurchaseRate,Double relativeSellOutRate,BigDecimal basePrice){
         StockDecision stockDecision = new StockDecision();
         stockDecision.setPurchasePrice(BigDecimal.valueOf(1).subtract(BigDecimal.valueOf(relativePurchaseRate)).multiply(basePrice));
@@ -71,6 +82,7 @@ public class StockDecision {
         stockDecision.setRelativeSellOutRate(relativeSellOutRate.doubleValue());
         return stockDecision;
     }
+    
     public BigDecimal getPurchasePrice() {
         return purchasePrice;
     }
