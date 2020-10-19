@@ -13,6 +13,7 @@ import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 import org.apache.http.client.ClientProtocolException;
@@ -72,9 +73,9 @@ public class StockUtils extends BaseTest {
         }
         List<Pair<Stock, List<StockDecision>>> stockDecisionPairList = new ArrayList<>();
         for (Stock stockItem : stocks) {
-            Pair<List<StockTrade>,StockTrade> stockTradePair = fetchStockTrade(stockItem.getCode(), null, deadline);
-            List<StockTrade> stockTradeList=stockTradePair.getV1();
-            StockTrade newLast=stockTradePair.getV2();
+            Pair<List<StockTrade>, StockTrade> stockTradePair = fetchStockTrade(stockItem.getCode(), null, deadline);
+            List<StockTrade> stockTradeList = stockTradePair.getV1();
+            StockTrade newLast = stockTradePair.getV2();
             SmartStockStrategy smartStockStrategy = useStockStrategy(stockItem, rateType1, rateType2);
             if (!train) {
                 StockAccount stockAccount = new StockAccount(BigDecimal.valueOf(50000));
@@ -86,8 +87,10 @@ public class StockUtils extends BaseTest {
             Long turnover = stockAccount.getHoldShares().get(stockItem);
             List<StockDecision> stockDecisionList = smartStockStrategy.apply(stockTradeList, turnover,
                     stockAccount.getFund());
-            if(newLast!=null){
-                stockDecisionList=stockDecisionList.stream().map(sd->{return sd.copyApply(newLast);}).collect(Collectors.toList());
+            if (newLast != null) {
+                stockDecisionList = stockDecisionList.stream().map(sd -> {
+                    return sd.copyApply(newLast);
+                }).collect(Collectors.toList());
             }
             Pair<Stock, List<StockDecision>> stockDecisionPair = new Pair<>();
             stockDecisionPairList.add(stockDecisionPair);
@@ -121,14 +124,15 @@ public class StockUtils extends BaseTest {
             }
             text.append("\n");
         }
-        File file=new File("./src/main/resources/stock/交易策略/"+deadline+".txt");
+        File file = new File("./src/main/resources/stock/交易策略/" + deadline + ".txt");
         writeFile(text, file);
     }
-    private void writeFile(Object message,File file){
+
+    private void writeFile(Object message, File file) {
         BufferedWriter writer;
         try {
             writer = new BufferedWriter(new FileWriter(file));
-            writer.write(message+"\n");
+            writer.write(message + "\n");
             writer.flush();
             writer.close();
         } catch (IOException e) {
@@ -142,7 +146,7 @@ public class StockUtils extends BaseTest {
         // Stock stock = new Stock("君正集团", "sh601216");
         // Stock stock=new Stock("中国银河", "sh601881");
         // Stock stock=new Stock("百傲化学", "sh603360");
-        Stock stock=new Stock("世运电路", "sh603920");
+        Stock stock = new Stock("世运电路", "sh603920");
         // Stock stock=new Stock("格力电器", "sz000651");
         // Stock stock = new Stock("华东医药", "sz000963");
         // Stock stock=new Stock("红旗连锁", "sz002697");
@@ -167,34 +171,104 @@ public class StockUtils extends BaseTest {
 
     @Test
     public void testStockMarket() {
-        // Stock stock = new Stock("君正集团", "sh601216");
-        // Stock stock=new Stock("中国银河", "sh601881");
-        // Stock stock=new Stock("百傲化学", "sh603360");
-        Stock stock=new Stock("世运电路", "sh603920");
-        // Stock stock = new Stock("格力电器", "sz000651");
-        // Stock stock = new Stock("华东医药", "sz000963");
-
-        // Stock stock = new Stock("贵州茅台", "sh600519");
-        try {
-            // List<Pair<String, List<Pair<String, String>>>> stockMarketList = fetchStockMarket(stock.getCode());
-            // log(stockMarketList);
-        } catch (Exception e) {
-        }
         List<Stock> stockList = new ArrayList<>();
-        selectStock("sh6", 0, 2000, stockList);
-        selectStock("sz0", 0, 3018, stockList);
-        log(ValueUtils.toJSONString(stockList));
-        List<Pair<String,List<Pair<String,String[]>>>> classificationPairList=readClassification(new File("./src/main/resources/stock/股票分类.txt"));
-        Map<String,List<Stock>> classificationMap=classifyStock(stockList, classificationPairList);
-        String selectDir="./src/main/resources/stock/选股/";
-        writeClassifyStock(classificationMap, new File(selectDir,"市盈率20市值200.txt"));
+        stockList.add(new Stock("君正集团", "sh601216"));
+        stockList.add(new Stock("中国银河", "sh601881"));
+        stockList.add(new Stock("百傲化学", "sh603360"));
+        stockList.add(new Stock("世运电路", "sh603920"));
+        stockList.add(new Stock("格力电器", "sz000651"));
+        stockList.add(new Stock("华东医药", "sz000963"));
+        stockList.add(new Stock("红旗连锁", "sz002697"));
+        // stockList.add(new Stock("贵州茅台", "sh600519"));
+        Map<String, Set<String>> useStockMarket = new HashMap<>();
+        Set<String> use=Set.of("股票名字", "股票代码","当前价格","涨跌%","换手率","市盈率","市净率","流通市值","总市值");
+        useStockMarket.put("最新行情", use);
+        Map<String, Map<String, List<String>>> diffMap = new HashMap<>();
+        Map<String, Pair<String, List<Pair<String, List<String>>>>> classifyPairMap = new HashMap<>();
+        List<Pair<String, List<Pair<String, List<String>>>>> diffList = new ArrayList<>();
+        for (Stock stock : stockList) {
+            try {
+                List<Pair<String, List<Pair<String, String>>>> stockMarketList = fetchStockMarket(stock.getCode());
+                processDiffStock(useStockMarket, diffList, diffMap, classifyPairMap, stockMarketList);
+                // log(stockMarketList);
+            } catch (Exception e) {
+            }
+        }
+        logDiff(diffList);
+        // selectStock("sh6", 0, 2000, stockList);
+        // selectStock("sz0", 0, 3018, stockList);
+        // log(ValueUtils.toJSONString(stockList));
+        // List<Pair<String,List<Pair<String,String[]>>>>
+        // classificationPairList=readClassification(new
+        // File("./src/main/resources/stock/股票分类.txt"));
+        // Map<String,List<Stock>> classificationMap=classifyStock(stockList,
+        // classificationPairList);
+        // String selectDir="./src/main/resources/stock/选股/";
+        // writeClassifyStock(classificationMap, new File(selectDir,"市盈率20市值200.txt"));
     }
-    private void writeClassifyStock(Map<String,List<Stock>> classificationMap,File file){
+    private void logDiff(List<Pair<String, List<Pair<String, List<String>>>>> diffList){
+        StringBuilder sb=new StringBuilder();
+        for(Pair<String, List<Pair<String, List<String>>>> pair:diffList){
+            sb.append(pair.getV1()).append("\n");
+            for(Pair<String, List<String>> entry:pair.getV2()){
+                sb.append(entry.getV1()).append(":");
+                int i=0;
+                for(String stock:entry.getV2()){
+                    if(i++==0){
+                        sb.append(stock);
+                    }else{
+                        sb.append("\t").append(stock);
+                    }
+                }
+                sb.append("\n");
+            }
+            sb.append("\n");
+        }
+        log(sb);
+    }
+    private void processDiffStock(Map<String, Set<String>> useStockMarket,
+            List<Pair<String, List<Pair<String, List<String>>>>> diffList,
+            Map<String, Map<String, List<String>>> diffMap,
+            Map<String, Pair<String, List<Pair<String, List<String>>>>> classifyPairMap,
+            List<Pair<String, List<Pair<String, String>>>> stockMarketList) {
+        for (Pair<String, List<Pair<String, String>>> pair : stockMarketList) {
+            String classify = pair.getV1();
+            if (!useStockMarket.isEmpty() && !useStockMarket.containsKey(classify)) {
+                continue;
+            }
+            Pair<String, List<Pair<String, List<String>>>> classifyPair = null;
+            Map<String, List<String>> classifyMap = null;
+            if (diffMap.containsKey(classify)) {
+                classifyMap = diffMap.get(classify);
+                classifyPair = classifyPairMap.get(classify);
+            } else {
+                classifyMap = new HashMap<String, List<String>>();
+                diffMap.put(classify, classifyMap);
+                classifyPair = new Pair<>(classify, new ArrayList<>());
+                classifyPairMap.put(classify, classifyPair);
+                diffList.add(classifyPair);
+            }
+            Set<String> keys = useStockMarket.get(classify);
+            for (Pair<String, String> kv : pair.getV2()) {
+                if (CollectionUtils.isEmpty(keys) || keys.contains(kv.getV1())) {
+                    List<String> sstocks = classifyMap.get(kv.getV1());
+                    if (sstocks == null) {
+                        sstocks = new ArrayList<>();
+                        classifyMap.put(kv.getV1(), sstocks);
+                        classifyPair.getV2().add(new Pair<>(kv.getV1(), sstocks));
+                    }
+                    sstocks.add(kv.getV2());
+                }
+            }
+        }
+    }
+
+    private void writeClassifyStock(Map<String, List<Stock>> classificationMap, File file) {
         try {
             BufferedWriter writer = new BufferedWriter(new FileWriter(file));
-            for(Map.Entry<String,List<Stock>> entry:classificationMap.entrySet()){
-                writer.write(entry.getKey()+"\n");
-                for(Stock stock:entry.getValue()){
+            for (Map.Entry<String, List<Stock>> entry : classificationMap.entrySet()) {
+                writer.write(entry.getKey() + "\n");
+                for (Stock stock : entry.getValue()) {
                     writer.write(stock.getName());
                     writer.write("\t");
                     writer.write(stock.getCode());
@@ -202,47 +276,51 @@ public class StockUtils extends BaseTest {
                 }
                 writer.write("\n");
             }
-            
+
             writer.flush();
             writer.close();
         } catch (IOException e) {
             e.printStackTrace();
         }
     }
-    private Map<String,List<Stock>> classifyStock(List<Stock> stockList,List<Pair<String,List<Pair<String,String[]>>>> classificationPairList){
-        Map<String,List<Stock>> classificationMap=new HashMap<>();
-        for(Stock stock:stockList){
-            String  classification=useClassification(stock,classificationPairList);
-            List<Stock> list=classificationMap.get(classification);
-            if(list==null){
-                list=new ArrayList<>();
+
+    private Map<String, List<Stock>> classifyStock(List<Stock> stockList,
+            List<Pair<String, List<Pair<String, String[]>>>> classificationPairList) {
+        Map<String, List<Stock>> classificationMap = new HashMap<>();
+        for (Stock stock : stockList) {
+            String classification = useClassification(stock, classificationPairList);
+            List<Stock> list = classificationMap.get(classification);
+            if (list == null) {
+                list = new ArrayList<>();
                 classificationMap.put(classification, list);
             }
             list.add(stock);
         }
         return classificationMap;
     }
-    private String useClassification(Stock stock,List<Pair<String,List<Pair<String,String[]>>>> classificationPairList){
-        String name=stock.getName();
-        for(Pair<String,List<Pair<String,String[]>>> classificationPair:classificationPairList){
-            String classification=classificationPair.getV1();
-            List<Pair<String,String[]>> conditionList=classificationPair.getV2();
-            for(Pair<String,String[]> condition:conditionList){
-                String key=condition.getV1();
-                String[] values=condition.getV2();
-                if("contains".equals(key)){
-                    for(String value:values){
-                        if(name.contains(value)){
+
+    private String useClassification(Stock stock,
+            List<Pair<String, List<Pair<String, String[]>>>> classificationPairList) {
+        String name = stock.getName();
+        for (Pair<String, List<Pair<String, String[]>>> classificationPair : classificationPairList) {
+            String classification = classificationPair.getV1();
+            List<Pair<String, String[]>> conditionList = classificationPair.getV2();
+            for (Pair<String, String[]> condition : conditionList) {
+                String key = condition.getV1();
+                String[] values = condition.getV2();
+                if ("contains".equals(key)) {
+                    for (String value : values) {
+                        if (name.contains(value)) {
                             return classification;
                         }
                     }
-                }else if("special".equals(key)){
-                    if(ValueUtils.contains(name, values)){
+                } else if ("special".equals(key)) {
+                    if (ValueUtils.contains(name, values)) {
                         return classification;
                     }
-                }else if("endsWith".equals(key)){
-                    for(String value:values){
-                        if(name.endsWith(value)){
+                } else if ("endsWith".equals(key)) {
+                    for (String value : values) {
+                        if (name.endsWith(value)) {
                             return classification;
                         }
                     }
@@ -251,26 +329,28 @@ public class StockUtils extends BaseTest {
         }
         return "未知";
     }
-    private List<Pair<String,List<Pair<String,String[]>>>> readClassification(File file){
-        List<Pair<String,List<Pair<String,String[]>>>> classificationPairList=new ArrayList<>();
+
+    private List<Pair<String, List<Pair<String, String[]>>>> readClassification(File file) {
+        List<Pair<String, List<Pair<String, String[]>>>> classificationPairList = new ArrayList<>();
         try {
             IOUtils.processText(file, new Task<String>() {
-                private Pair<String,List<Pair<String,String[]>>> classificationPair;
+                private Pair<String, List<Pair<String, String[]>>> classificationPair;
+
                 @Override
                 public void toDo(String line) {
-                    if(!StringUtils.hasText(line)){
+                    if (!StringUtils.hasText(line)) {
                         return;
                     }
-                    line=line.trim();
-                    if(!line.contains(":")){
-                        Pair<String,List<Pair<String,String[]>>> classificationPair=new Pair<>();
+                    line = line.trim();
+                    if (!line.contains(":")) {
+                        Pair<String, List<Pair<String, String[]>>> classificationPair = new Pair<>();
                         classificationPair.setV1(line);
                         classificationPair.setV2(new ArrayList<>());
                         classificationPairList.add(classificationPair);
-                        this.classificationPair=classificationPair;
-                    }else{
-                        String[] condition=line.split(":");
-                        classificationPair.getV2().add(new Pair<>(condition[0],condition[1].split("~")));
+                        this.classificationPair = classificationPair;
+                    } else {
+                        String[] condition = line.split(":");
+                        classificationPair.getV2().add(new Pair<>(condition[0], condition[1].split("~")));
                     }
                 }
             });
@@ -279,6 +359,7 @@ public class StockUtils extends BaseTest {
         }
         return classificationPairList;
     }
+
     private void selectStock(String shOrSz, int start, int end, List<Stock> stockList) {
         for (int i = start; i < end; i++) {
             String stockCode = shOrSz + ValueUtils.leftPad(i + "", "0", 5);
@@ -341,13 +422,15 @@ public class StockUtils extends BaseTest {
         }
         log(info);
     }
-    private String format(Stock stock, Pair<SmartStockStrategy.RateWeight, Pair<StockTrade[], BigDecimal>> wPair){
+
+    private String format(Stock stock, Pair<SmartStockStrategy.RateWeight, Pair<StockTrade[], BigDecimal>> wPair) {
         SmartStockStrategy.RateWeight weight = wPair.getV1();
         Pair<StockTrade[], BigDecimal> stPair = wPair.getV2();
         StockTrade[] sts = stPair.getV1();
         return "stock:" + ValueUtils.toJSONString(stock) + sts[0].getTime() + "-" + sts[1].getTime() + "总资产:"
-        + stPair.getV2() + ", weight:" + ValueUtils.toJSONString(weight);
+                + stPair.getV2() + ", weight:" + ValueUtils.toJSONString(weight);
     }
+
     private void log(Stock stock, Pair<SmartStockStrategy.RateWeight, Pair<StockTrade[], BigDecimal>> wPair) {
         log(format(stock, wPair));
     }
@@ -414,7 +497,7 @@ public class StockUtils extends BaseTest {
 
     private Map<String, String> stockCache = new HashMap<>();
 
-    private Pair<List<StockTrade>,StockTrade> fetchStockTrade(String stockCode, String startTime, String endTime) {
+    private Pair<List<StockTrade>, StockTrade> fetchStockTrade(String stockCode, String startTime, String endTime) {
         String data = null;
         if (stockCache.containsKey(stockCode)) {
             data = stockCache.get(stockCode);
@@ -428,7 +511,7 @@ public class StockUtils extends BaseTest {
             }
             stockCache.put(stockCode, data);
         }
-        StockTrade stockTradeLast=null;
+        StockTrade stockTradeLast = null;
         List<StockTrade> stockTradeList = new ArrayList<>();
         String[] lines = data.split("\n");
         for (int i = 2; i < lines.length - 1; i++) {
@@ -437,11 +520,11 @@ public class StockUtils extends BaseTest {
                     && (!StringUtils.hasText(endTime) || endTime.compareTo(stockTrade.getTime()) > 0)) {
                 stockTradeList.add(stockTrade);
             }
-            if(StringUtils.hasText(endTime)&&endTime.compareTo(stockTrade.getTime())<=0){
-                stockTradeLast=stockTrade;
+            if (StringUtils.hasText(endTime) && endTime.compareTo(stockTrade.getTime()) <= 0) {
+                stockTradeLast = stockTrade;
             }
         }
-        return new Pair<>(stockTradeList,stockTradeLast);
+        return new Pair<>(stockTradeList, stockTradeLast);
     }
 
     private StockTrade parseLine(String line) {
