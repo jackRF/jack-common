@@ -2,15 +2,14 @@ package org.jack.common.util;
 
 import java.io.BufferedWriter;
 import java.io.File;
-import java.io.FileOutputStream;
 import java.io.FileWriter;
 import java.io.IOException;
-import java.io.StringWriter;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -146,10 +145,11 @@ public class StockUtils extends BaseTest {
         // Stock stock = new Stock("君正集团", "sh601216");
         // Stock stock=new Stock("中国银河", "sh601881");
         // Stock stock=new Stock("百傲化学", "sh603360");
-        Stock stock = new Stock("世运电路", "sh603920");
+        // Stock stock = new Stock("世运电路", "sh603920");
         // Stock stock=new Stock("格力电器", "sz000651");
         // Stock stock = new Stock("华东医药", "sz000963");
         // Stock stock=new Stock("红旗连锁", "sz002697");
+        Stock stock=new Stock("中天科技", "sh600522");
         Date date = DateUtils.weekDay(new Date(), 1);
         String endTime = DateUtils.formatDate(date, "yyMMdd");
         List<StockTrade> stockTradeList;
@@ -157,9 +157,9 @@ public class StockUtils extends BaseTest {
         Pair<SmartStockStrategy.RateWeight, Pair<StockTrade[], BigDecimal>> wPair = null;
         int rateType1 = SmartStockStrategy.RATE_TYPE_AVERAGE;
         int rateType2 = SmartStockStrategy.RATE_TYPE_NORMAL;
-        boolean train = false;
+        boolean train = true;
         if (train) {
-            wPair = SmartStockStrategy.RateWeight.trainStockTrade(stock, BigDecimal.valueOf(50000), rateType1,
+            wPair = SmartStockStrategy.RateWeight.trainStockTrade(stock, stockAccount.getFund(), rateType1,
                     rateType2, stockTradeList, "rateCount");
             swMap.put(stock, wPair.getV1());
         } else {
@@ -181,7 +181,7 @@ public class StockUtils extends BaseTest {
         stockList.add(new Stock("红旗连锁", "sz002697"));
         // stockList.add(new Stock("贵州茅台", "sh600519"));
         Map<String, Set<String>> useStockMarket = new HashMap<>();
-        Set<String> use=Set.of("股票名字", "股票代码","当前价格","涨跌%","换手率","市盈率","市净率","流通市值","总市值");
+        Set<String> use=Set.of("股票名字", "股票代码","当前价格","最高","最低","涨跌%","换手率","市盈率","市净率","流通市值","总市值");
         useStockMarket.put("最新行情", use);
         Map<String, Map<String, List<String>>> diffMap = new HashMap<>();
         Map<String, Pair<String, List<Pair<String, List<String>>>>> classifyPairMap = new HashMap<>();
@@ -249,8 +249,9 @@ public class StockUtils extends BaseTest {
                 diffList.add(classifyPair);
             }
             Set<String> keys = useStockMarket.get(classify);
+            Set<String> used=new HashSet<>();
             for (Pair<String, String> kv : pair.getV2()) {
-                if (CollectionUtils.isEmpty(keys) || keys.contains(kv.getV1())) {
+                if ((CollectionUtils.isEmpty(keys) || keys.contains(kv.getV1()))&&used.add(kv.getV1())) {
                     List<String> sstocks = classifyMap.get(kv.getV1());
                     if (sstocks == null) {
                         sstocks = new ArrayList<>();
