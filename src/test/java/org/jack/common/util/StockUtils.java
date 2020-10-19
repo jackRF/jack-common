@@ -59,6 +59,7 @@ public class StockUtils extends BaseTest {
         int rateType2 = SmartStockStrategy.RATE_TYPE_NORMAL;
         Date date = DateUtils.weekDay(new Date(), 1);
         String deadline = DateUtils.formatDate(date, "yyMMdd");
+        StringBuilder text = new StringBuilder();
         if (train) {
             for (Stock stockItem : stocks) {
                 List<StockTrade> stockTradeList = fetchStockTrade(stockItem.getCode(), null, deadline).getV1();
@@ -66,7 +67,7 @@ public class StockUtils extends BaseTest {
                         .trainStockTrade(stockItem, BigDecimal.valueOf(50000), rateType1, rateType2, stockTradeList,
                                 "rateCount");
                 swMap.put(stockItem, wPair.getV1());
-                log(stockItem, wPair);
+                text.append(format(stockItem, wPair)).append("\n");
             }
         }
         List<Pair<Stock, List<StockDecision>>> stockDecisionPairList = new ArrayList<>();
@@ -79,7 +80,7 @@ public class StockUtils extends BaseTest {
                 StockAccount stockAccount = new StockAccount(BigDecimal.valueOf(50000));
                 Pair<SmartStockStrategy.RateWeight, Pair<StockTrade[], BigDecimal>> wPair = StockTrade
                         .mockStockTrade(stockAccount, stockItem, smartStockStrategy, stockTradeList);
-                log(stockItem, wPair);
+                text.append(format(stockItem, wPair)).append("\n");
             }
             StockAccount stockAccount = new StockAccount(BigDecimal.valueOf(12000), holdShares);
             Long turnover = stockAccount.getHoldShares().get(stockItem);
@@ -93,9 +94,7 @@ public class StockUtils extends BaseTest {
             stockDecisionPair.setV1(stockItem);
             stockDecisionPair.setV2(stockDecisionList);
         }
-        log("deadline:" + deadline);
         int hi = 0;
-        StringBuilder text = new StringBuilder();
         String[] head = { "股票名称", "股票代码", "\t买入1", "买入数量1", "买入收益率1", "卖出1", "卖出数量1", "卖出收益率1", "买入2", "买入数量2",
                 "买入收益率2", "卖出2", "卖出数量2", "卖出收益率2" };
         for (String h : head) {
@@ -122,7 +121,19 @@ public class StockUtils extends BaseTest {
             }
             text.append("\n");
         }
-        log(text);
+        File file=new File("./src/main/resources/stock/交易策略/"+deadline+".txt");
+        writeFile(text, file);
+    }
+    private void writeFile(Object message,File file){
+        BufferedWriter writer;
+        try {
+            writer = new BufferedWriter(new FileWriter(file));
+            writer.write(message+"\n");
+            writer.flush();
+            writer.close();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
     }
 
     @Test
@@ -175,7 +186,8 @@ public class StockUtils extends BaseTest {
         log(ValueUtils.toJSONString(stockList));
         List<Pair<String,List<Pair<String,String[]>>>> classificationPairList=readClassification(new File("./src/main/resources/stock/股票分类.txt"));
         Map<String,List<Stock>> classificationMap=classifyStock(stockList, classificationPairList);
-        writeClassifyStock(classificationMap, new File("./src/main/resources/stock/市盈率20市值200.txt"));
+        String selectDir="./src/main/resources/stock/选股/";
+        writeClassifyStock(classificationMap, new File(selectDir,"市盈率20市值200.txt"));
     }
     private void writeClassifyStock(Map<String,List<Stock>> classificationMap,File file){
         try {
@@ -329,13 +341,15 @@ public class StockUtils extends BaseTest {
         }
         log(info);
     }
-
-    private void log(Stock stock, Pair<SmartStockStrategy.RateWeight, Pair<StockTrade[], BigDecimal>> wPair) {
+    private String format(Stock stock, Pair<SmartStockStrategy.RateWeight, Pair<StockTrade[], BigDecimal>> wPair){
         SmartStockStrategy.RateWeight weight = wPair.getV1();
         Pair<StockTrade[], BigDecimal> stPair = wPair.getV2();
         StockTrade[] sts = stPair.getV1();
-        log("stock:" + ValueUtils.toJSONString(stock) + sts[0].getTime() + "-" + sts[1].getTime() + "总资产:"
-                + stPair.getV2() + ", weight:" + ValueUtils.toJSONString(weight));
+        return "stock:" + ValueUtils.toJSONString(stock) + sts[0].getTime() + "-" + sts[1].getTime() + "总资产:"
+        + stPair.getV2() + ", weight:" + ValueUtils.toJSONString(weight);
+    }
+    private void log(Stock stock, Pair<SmartStockStrategy.RateWeight, Pair<StockTrade[], BigDecimal>> wPair) {
+        log(format(stock, wPair));
     }
 
     private List<Pair<String, List<Pair<String, String>>>> fetchStockMarket(String stockCode)
@@ -417,7 +431,7 @@ public class StockUtils extends BaseTest {
         StockTrade stockTradeLast=null;
         List<StockTrade> stockTradeList = new ArrayList<>();
         String[] lines = data.split("\n");
-        for (int i = 2; i < lines.length - 2; i++) {
+        for (int i = 2; i < lines.length - 1; i++) {
             StockTrade stockTrade = parseLine(lines[i]);
             if ((!StringUtils.hasText(startTime) || startTime.compareTo(stockTrade.getTime()) <= 0)
                     && (!StringUtils.hasText(endTime) || endTime.compareTo(stockTrade.getTime()) > 0)) {

@@ -1,0 +1,16 @@
+stock:{"name":"君正集团","code":"sh601216"}181109-201016总资产:110396.96654647200, weight:{"cat":2.900000000000001,"rateCount":3,"wPurchase":0.70,"bPurchase":0.005,"limitPurchase":0.015,"wSellOut":2.49,"bSellOut":0.010,"limitSellOut":0.015}
+stock:{"name":"中国银河","code":"sh601881"}181109-201016总资产:101301.60781864000, weight:{"cat":1.1999999999999993,"rateCount":3,"wPurchase":0.60,"bPurchase":0.005,"limitPurchase":0.015,"wSellOut":0.70,"bSellOut":0.005,"limitSellOut":0.015}
+stock:{"name":"百傲化学","code":"sh603360"}181109-201016总资产:74993.34311372000, weight:{"cat":2.1,"rateCount":3,"wPurchase":0.86,"bPurchase":0.005,"limitPurchase":0.015,"wSellOut":2.25,"bSellOut":0.006,"limitSellOut":0.015}
+stock:{"name":"世运电路","code":"sh603920"}181109-201016总资产:93402.00178591800, weight:{"cat":1.7999999999999998,"rateCount":3,"wPurchase":0.62,"bPurchase":0.005,"limitPurchase":0.015,"wSellOut":1.5,"bSellOut":0.001,"limitSellOut":0.015}
+stock:{"name":"格力电器","code":"sz000651"}181102-201016总资产:80366.56331783600, weight:{"cat":1.3999999999999995,"rateCount":3,"wPurchase":0.52,"bPurchase":0.006,"limitPurchase":0.020,"wSellOut":2.49,"bSellOut":0.010,"limitSellOut":0.015}
+stock:{"name":"华东医药","code":"sz000963"}181109-201016总资产:60956.39273269600, weight:{"cat":1.1999999999999993,"rateCount":3,"wPurchase":1.22,"bPurchase":0.005,"limitPurchase":0.015,"wSellOut":1.10,"bSellOut":0.006,"limitSellOut":0.015}
+stock:{"name":"红旗连锁","code":"sz002697"}181109-201016总资产:85787.12689300000, weight:{"cat":1.1999999999999993,"rateCount":3,"wPurchase":0.50,"bPurchase":0.003,"limitPurchase":0.030,"wSellOut":1.5,"bSellOut":0.005,"limitSellOut":0.015}
+股票名称	股票代码		买入1	买入数量1	买入收益率1	卖出1	卖出数量1	卖出收益率1	买入2	买入数量2	买入收益率2	卖出2	卖出数量2	卖出收益率2
+君正集团	sh601216		7.36	500			3.58%		8.56	100			11.96%		7.20	300			5.63%		8.72	100			14.01%
+中国银河	sh601881		12.83	700			1.50%		13.23	200			1.50%		12.67	100			2.74%		13.39	0			2.74%
+百傲化学	sh603360		18.00	300			1.50%		18.59	100			1.68%		17.74	100			2.94%		18.86	0			3.12%
+世运电路	sh603920		23.67	200			2.91%		25.83	0			5.94%		23.03	100			5.52%		26.47	0			8.55%
+格力电器	sz000651		56.39	100			2.26%		62.88	200			8.97%		52.56	0			8.89%		66.71	100			15.60%
+华东医药	sz000963		25.14	300			2.64%		26.49	300			2.53%		24.16	100			6.46%		27.47	100			6.35%
+红旗连锁	sz002697		8.37	1100			3.00%		8.82	200			2.11%		8.09	200			6.23%		9.10	0			5.34%
+
