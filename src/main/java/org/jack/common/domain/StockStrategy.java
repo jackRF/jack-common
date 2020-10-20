@@ -102,5 +102,8 @@ public interface StockStrategy {
             BigDecimal firstOpenPrice=last.getOpenPrice();
             return maxOrMin.subtract(firstOpenPrice).divide(firstOpenPrice, 4,RoundingMode.HALF_UP).abs();
         }
+        default BigDecimal useMaxOrMinRateAverage(BigDecimal max,BigDecimal min,StockTrade last){
+            return useMaxOrMinRate(max,last).abs().add(useMaxOrMinRate(min,last).abs()).multiply(BigDecimal.valueOf(0.5));
+        }
     }
 }

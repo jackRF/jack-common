@@ -15,6 +15,7 @@ public class SmartStockStrategy implements StockStrategy {
     public static int RATE_TYPE_AVERAGE = 1;
     public static int RATE_TYPE_MAXORMIN = 2;
     public static int RATE_TYPE_NORMAL = 3;
+    public static int RATE_TYPE_MAXORMIN_AVERAGE = 4;
     public static final SmartStockStrategy DEFAULT;
     public static final SmartStockStrategy RATEAVERAGE_STOCKSTRATEGY;
     static {
@@ -22,8 +23,10 @@ public class SmartStockStrategy implements StockStrategy {
         weight.setRateCount(3);
         weight.setCat(3d);
         weight.setwPurchase(BigDecimal.valueOf(0.8));
+        weight.setbPurchase(BigDecimal.ZERO);
         weight.setLimitPurchase(BigDecimal.valueOf(0.015));
         weight.setwSellOut(BigDecimal.valueOf(0.8));
+        weight.setbSellOut(BigDecimal.ZERO);
         weight.setLimitSellOut(BigDecimal.valueOf(0.015));
         DEFAULT = new SmartStockStrategy(SmartStockStrategy.RATE_TYPE_MAXORMIN, SmartStockStrategy.RATE_TYPE_AVERAGE,
                 weight);
@@ -31,8 +34,10 @@ public class SmartStockStrategy implements StockStrategy {
         weight.setCat(3d);
         weight.setwPurchase(BigDecimal.valueOf(1.0));
         weight.setbPurchase(BigDecimal.valueOf(0.005));
+        weight.setLimitPurchase(BigDecimal.ZERO);
         weight.setwSellOut(BigDecimal.valueOf(1.0));
         weight.setbSellOut(BigDecimal.valueOf(0.005));
+        weight.setLimitSellOut(BigDecimal.ZERO);
         RATEAVERAGE_STOCKSTRATEGY = new SmartStockStrategy(SmartStockStrategy.RATE_TYPE_AVERAGE,
                 SmartStockStrategy.RATE_TYPE_NORMAL, weight);
     }
@@ -59,21 +64,21 @@ public class SmartStockStrategy implements StockStrategy {
             @Override
             public BigDecimal usePurchaseRate(BigDecimal max, BigDecimal min, StockTrade first, StockTrade last,
                     BigDecimal rateAverage) {
-                BigDecimal rate = useRate(rateType, rateAverage, min, first, last);
+                BigDecimal rate = useRate(rateType, rateAverage, max,min,false, first, last);
                 return rate.multiply(weight.getwPurchase()).add(weight.getbPurchase()).max(weight.limitPurchase);
             }
 
             @Override
             public BigDecimal useSellOutRate(BigDecimal max, BigDecimal min, StockTrade first, StockTrade last,
                     BigDecimal rateAverage) {
-                BigDecimal rate = useRate(rateType, rateAverage, max, first, last);
+                BigDecimal rate = useRate(rateType, rateAverage, max,min,true, first, last);
                 return rate.multiply(weight.getwSellOut()).add(weight.getbSellOut()).max(weight.limitSellOut);
             }
 
             @Override
             public BigDecimal usePurchaseRate2(BigDecimal max, BigDecimal min, StockTrade first, StockTrade last,
                     BigDecimal rateAverage) {
-                BigDecimal rate2=useRate(rateType2, rateAverage, min, first, last);
+                BigDecimal rate2=useRate(rateType2, rateAverage, max,min,false, first, last);
                 // rate2=rate2.multiply(weight.getwPurchase()).add(weight.getbPurchase()).max(weight.limitPurchase);
                 return usePurchaseRate(max, min, first, last, rateAverage).add(rate2);
             }
@@ -81,18 +86,20 @@ public class SmartStockStrategy implements StockStrategy {
             @Override
             public BigDecimal useSellOutRate2(BigDecimal max, BigDecimal min, StockTrade first, StockTrade last,
                     BigDecimal rateAverage) {
-                BigDecimal rate2=useRate(rateType2, rateAverage, max, first, last);
+                BigDecimal rate2=useRate(rateType2, rateAverage, max,min,true, first, last);
                 // rate2=rate2.multiply(weight.getwSellOut()).add(weight.getbSellOut()).max(weight.limitSellOut);
                 return useSellOutRate(max, min, first, last, rateAverage).add(rate2);
             }
 
-            private BigDecimal useRate(int rateType, BigDecimal rateAverage, BigDecimal maxOrMin, StockTrade first,
+            private BigDecimal useRate(int rateType, BigDecimal rateAverage, BigDecimal max,BigDecimal min,boolean sellOut, StockTrade first,
                     StockTrade last) {
                 BigDecimal rate = BigDecimal.ZERO;
                 if (rateType == RATE_TYPE_AVERAGE) {
                     rate = rateAverage;
                 } else if (rateType == RATE_TYPE_MAXORMIN) {
-                    rate = RateStrategy.super.useMaxOrMinRate(maxOrMin, last);
+                    rate = RateStrategy.super.useMaxOrMinRate(sellOut?max:min, last);
+                } else if (rateType == RATE_TYPE_MAXORMIN_AVERAGE) {
+                    rate = RateStrategy.super.useMaxOrMinRateAverage(max,min,last);
                 } else {
                     rate = RateStrategy.super.useRate(first, last);
                 }
@@ -131,19 +138,30 @@ public class SmartStockStrategy implements StockStrategy {
     }
 
     public static class RateWeight extends Trainable {
-        private Double cat = 3d;
-        private Integer rateCount = 3;
-        private BigDecimal wPurchase = BigDecimal.ONE;
-        private BigDecimal bPurchase = BigDecimal.ZERO;
-        private BigDecimal limitPurchase = BigDecimal.ZERO;
-        private BigDecimal wSellOut = BigDecimal.ONE;
-        private BigDecimal bSellOut = BigDecimal.ZERO;
-        private BigDecimal limitSellOut = BigDecimal.ZERO;
+        private Double cat;
+        private Integer rateCount;
+        private BigDecimal wPurchase;
+        private BigDecimal bPurchase;
+        private BigDecimal limitPurchase;
+        private BigDecimal wSellOut;
+        private BigDecimal bSellOut;
+        private BigDecimal limitSellOut;
 
         public RateWeight(String... noTrain) {
             super(noTrain);
         }
-
+        public static RateWeight of(double w,double b,double limit,String... noTrain){
+            SmartStockStrategy.RateWeight weight = new SmartStockStrategy.RateWeight(noTrain);
+            weight.setRateCount(3);
+            weight.setCat(2d);
+            weight.setwPurchase(BigDecimal.valueOf(w));
+            weight.setbPurchase(BigDecimal.valueOf(b));
+            weight.setLimitPurchase(BigDecimal.valueOf(limit));
+            weight.setwSellOut(BigDecimal.valueOf(w));
+            weight.setbSellOut(BigDecimal.valueOf(b));
+            weight.setLimitSellOut(BigDecimal.valueOf(limit));
+            return weight;
+        }
         public static Pair<SmartStockStrategy.RateWeight, Pair<StockTrade[], BigDecimal>> trainStockTrade(Stock stock,
                 BigDecimal fund, List<StockTrade> stockTradeList, String... noTrain) {
             return trainStockTrade(stock, fund, SmartStockStrategy.RATE_TYPE_AVERAGE,
@@ -152,23 +170,7 @@ public class SmartStockStrategy implements StockStrategy {
         public static Pair<SmartStockStrategy.RateWeight, Pair<StockTrade[], BigDecimal>> trainStockTrade(Stock stock,
                 BigDecimal fund, int rateType1, int rateType2, List<StockTrade> stockTradeList, String... noTrain) {
             SmartStockStrategy.RateWeight weightDest = new SmartStockStrategy.RateWeight();
-            weightDest.setRateCount(null);
-            weightDest.setCat(null);
-            weightDest.setwPurchase(null);
-            weightDest.setwSellOut(null);
-            weightDest.setbPurchase(null);
-            weightDest.setbSellOut(null);
-            weightDest.setLimitPurchase(null);
-            weightDest.setLimitSellOut(null);
-            SmartStockStrategy.RateWeight weight = new SmartStockStrategy.RateWeight(noTrain);
-            weight.setRateCount(3);
-            weight.setCat(2d);
-            weight.setwPurchase(BigDecimal.valueOf(1.5));
-            weight.setbPurchase(BigDecimal.valueOf(0.005));
-            weight.setLimitPurchase(BigDecimal.valueOf(0.015));
-            weight.setwSellOut(BigDecimal.valueOf(1.5));
-            weight.setbSellOut(BigDecimal.valueOf(0.005));
-            weight.setLimitSellOut(BigDecimal.valueOf(0.015));
+            SmartStockStrategy.RateWeight weight=RateWeight.of(1.5,0.005,0.015,noTrain);
             StockStrategy stockStrategy = new SmartStockStrategy(rateType1, rateType2, weight);
             BigDecimal maxMarketValue = null;
             Pair<RateWeight, Pair<StockTrade[], BigDecimal>> wPair = null;

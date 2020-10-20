@@ -41,13 +41,13 @@ public class StockUtils extends BaseTest {
         holdShares.put(stock, 200l);
         stock = new Stock("百傲化学", "sh603360");
         stocks.add(stock);
-        holdShares.put(stock, 100l);
+        holdShares.put(stock, 0l);
         stock = new Stock("世运电路", "sh603920");
         stocks.add(stock);
-        holdShares.put(stock, 0l);
+        holdShares.put(stock, 200l);
         stock = new Stock("格力电器", "sz000651");
         stocks.add(stock);
-        holdShares.put(stock, 300l);
+        holdShares.put(stock, 0l);
         stock = new Stock("华东医药", "sz000963");
         stocks.add(stock);
         holdShares.put(stock, 400l);
@@ -82,7 +82,7 @@ public class StockUtils extends BaseTest {
                         .mockStockTrade(stockAccount, stockItem, smartStockStrategy, stockTradeList);
                 text.append(format(stockItem, wPair)).append("\n");
             }
-            StockAccount stockAccount = new StockAccount(BigDecimal.valueOf(12000), holdShares);
+            StockAccount stockAccount = new StockAccount(BigDecimal.valueOf(27381.41), holdShares);
             Long turnover = stockAccount.getHoldShares().get(stockItem);
             List<StockDecision> stockDecisionList = smartStockStrategy.apply(stockTradeList, turnover,
                     stockAccount.getFund());
@@ -126,49 +126,6 @@ public class StockUtils extends BaseTest {
         File file = new File("./src/main/resources/stock/交易策略/" + deadline + ".txt");
         writeFile(text, file);
     }
-
-    private void writeFile(Object message, File file) {
-        BufferedWriter writer;
-        try {
-            writer = new BufferedWriter(new FileWriter(file));
-            writer.write(message + "\n");
-            writer.flush();
-            writer.close();
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-    }
-
-    @Test
-    public void testStockTrade() {
-        StockAccount stockAccount = new StockAccount(BigDecimal.valueOf(50000));
-        // Stock stock = new Stock("君正集团", "sh601216");
-        // Stock stock=new Stock("中国银河", "sh601881");
-        // Stock stock=new Stock("百傲化学", "sh603360");
-        // Stock stock = new Stock("世运电路", "sh603920");
-        // Stock stock=new Stock("格力电器", "sz000651");
-        // Stock stock = new Stock("华东医药", "sz000963");
-        // Stock stock=new Stock("红旗连锁", "sz002697");
-        Stock stock=new Stock("中天科技", "sh600522");
-        Date date = DateUtils.weekDay(new Date(), 1);
-        String endTime = DateUtils.formatDate(date, "yyMMdd");
-        List<StockTrade> stockTradeList;
-        stockTradeList = fetchStockTrade(stock.getCode(), null, endTime).getV1();
-        Pair<SmartStockStrategy.RateWeight, Pair<StockTrade[], BigDecimal>> wPair = null;
-        int rateType1 = SmartStockStrategy.RATE_TYPE_AVERAGE;
-        int rateType2 = SmartStockStrategy.RATE_TYPE_NORMAL;
-        boolean train = true;
-        if (train) {
-            wPair = SmartStockStrategy.RateWeight.trainStockTrade(stock, stockAccount.getFund(), rateType1,
-                    rateType2, stockTradeList, "rateCount");
-            swMap.put(stock, wPair.getV1());
-        } else {
-            SmartStockStrategy stockStrategy = useStockStrategy(stock, rateType1, rateType2);
-            wPair = StockTrade.mockStockTrade(stockAccount, stock, stockStrategy, stockTradeList);
-        }
-        log(stock, wPair);
-    }
-
     @Test
     public void testStockMarket() {
         List<Stock> stockList = new ArrayList<>();
@@ -205,6 +162,46 @@ public class StockUtils extends BaseTest {
         // classificationPairList);
         // String selectDir="./src/main/resources/stock/选股/";
         // writeClassifyStock(classificationMap, new File(selectDir,"市盈率20市值200.txt"));
+    }
+    @Test
+    public void testStockTrade() {
+        StockAccount stockAccount = new StockAccount(BigDecimal.valueOf(50000));
+        // Stock stock = new Stock("君正集团", "sh601216");
+        Stock stock=new Stock("中国银河", "sh601881");
+        // Stock stock=new Stock("百傲化学", "sh603360");
+        // Stock stock = new Stock("世运电路", "sh603920");
+        // Stock stock=new Stock("格力电器", "sz000651");
+        // Stock stock = new Stock("华东医药", "sz000963");
+        // Stock stock=new Stock("红旗连锁", "sz002697");
+        // Stock stock=new Stock("中天科技", "sh600522");
+        Date date = DateUtils.weekDay(new Date(), 1);
+        String endTime = DateUtils.formatDate(date, "yyMMdd");
+        List<StockTrade> stockTradeList;
+        stockTradeList = fetchStockTrade(stock.getCode(), null, endTime).getV1();
+        Pair<SmartStockStrategy.RateWeight, Pair<StockTrade[], BigDecimal>> wPair = null;
+        int rateType1 = SmartStockStrategy.RATE_TYPE_AVERAGE;
+        int rateType2 = SmartStockStrategy.RATE_TYPE_NORMAL;
+        boolean train = true;
+        if (train) {
+            wPair = SmartStockStrategy.RateWeight.trainStockTrade(stock, stockAccount.getFund(), rateType1,
+                    rateType2, stockTradeList, "rateCount");
+            swMap.put(stock, wPair.getV1());
+        } else {
+            SmartStockStrategy stockStrategy = useStockStrategy(stock, rateType1, rateType2);
+            wPair = StockTrade.mockStockTrade(stockAccount, stock, stockStrategy, stockTradeList);
+        }
+        log(stock, wPair);
+    }
+    private void writeFile(Object message, File file) {
+        BufferedWriter writer;
+        try {
+            writer = new BufferedWriter(new FileWriter(file));
+            writer.write(message + "\n");
+            writer.flush();
+            writer.close();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
     }
     private void logDiff(List<Pair<String, List<Pair<String, List<String>>>>> diffList){
         StringBuilder sb=new StringBuilder();
