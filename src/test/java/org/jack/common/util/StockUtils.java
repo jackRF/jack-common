@@ -28,41 +28,23 @@ import org.springframework.util.CollectionUtils;
 import org.springframework.util.StringUtils;
 
 public class StockUtils extends BaseTest {
+    private static File stockDir=new File("./src/main/resources/stock");
     @Test
     public void testStock() {
-        Map<Stock, Long> holdShares = new HashMap<>();
-        Stock stock = null;
         List<Stock> stocks = new ArrayList<>();
-        stock = new Stock("君正集团", "sh601216");
-        stocks.add(stock);
-        holdShares.put(stock, 400l);
-        stock = new Stock("中国银河", "sh601881");
-        stocks.add(stock);
-        holdShares.put(stock, 200l);
-        stock = new Stock("百傲化学", "sh603360");
-        stocks.add(stock);
-        holdShares.put(stock, 0l);
-        stock = new Stock("世运电路", "sh603920");
-        stocks.add(stock);
-        holdShares.put(stock, 200l);
-        stock = new Stock("格力电器", "sz000651");
-        stocks.add(stock);
-        holdShares.put(stock, 0l);
-        stock = new Stock("华东医药", "sz000963");
-        stocks.add(stock);
-        holdShares.put(stock, 400l);
-        stock = new Stock("红旗连锁", "sz002697");
-        stocks.add(stock);
-        holdShares.put(stock, 200l);
+        Map<Stock, Long> holdShares = new HashMap<>();
+        parseholdStockShares(new File(stockDir,"/持仓.txt"), holdShares, stocks);
         boolean train = true;
         int rateType1 = SmartStockStrategy.RATE_TYPE_AVERAGE;
         int rateType2 = SmartStockStrategy.RATE_TYPE_NORMAL;
         Date date = DateUtils.weekDay(new Date(), 1);
+        String startTime=null;
+        startTime=DateUtils.formatDate(DateUtils.addMonth(date, -12), "yyMMdd");
         String deadline = DateUtils.formatDate(date, "yyMMdd");
         StringBuilder text = new StringBuilder();
         if (train) {
             for (Stock stockItem : stocks) {
-                List<StockTrade> stockTradeList = fetchStockTrade(stockItem.getCode(), null, deadline).getV1();
+                List<StockTrade> stockTradeList = fetchStockTrade(stockItem.getCode(), startTime, deadline).getV1();
                 Pair<SmartStockStrategy.RateWeight, Pair<StockTrade[], BigDecimal>> wPair = SmartStockStrategy.RateWeight
                         .trainStockTrade(stockItem, BigDecimal.valueOf(50000), rateType1, rateType2, stockTradeList,
                                 "rateCount");
@@ -72,7 +54,7 @@ public class StockUtils extends BaseTest {
         }
         List<Pair<Stock, List<StockDecision>>> stockDecisionPairList = new ArrayList<>();
         for (Stock stockItem : stocks) {
-            Pair<List<StockTrade>, StockTrade> stockTradePair = fetchStockTrade(stockItem.getCode(), null, deadline);
+            Pair<List<StockTrade>, StockTrade> stockTradePair = fetchStockTrade(stockItem.getCode(), startTime, deadline);
             List<StockTrade> stockTradeList = stockTradePair.getV1();
             StockTrade newLast = stockTradePair.getV2();
             SmartStockStrategy smartStockStrategy = useStockStrategy(stockItem, rateType1, rateType2);
@@ -82,7 +64,7 @@ public class StockUtils extends BaseTest {
                         .mockStockTrade(stockAccount, stockItem, smartStockStrategy, stockTradeList);
                 text.append(format(stockItem, wPair)).append("\n");
             }
-            StockAccount stockAccount = new StockAccount(BigDecimal.valueOf(27381.41), holdShares);
+            StockAccount stockAccount = new StockAccount(BigDecimal.valueOf(20582.34), holdShares);
             Long turnover = stockAccount.getHoldShares().get(stockItem);
             List<StockDecision> stockDecisionList = smartStockStrategy.apply(stockTradeList, turnover,
                     stockAccount.getFund());
@@ -123,7 +105,7 @@ public class StockUtils extends BaseTest {
             }
             text.append("\n");
         }
-        File file = new File("./src/main/resources/stock/交易策略/" + deadline + ".txt");
+        File file = new File(stockDir,"/交易策略/" +(StringUtils.hasText(startTime)?startTime+"-"+deadline:deadline)+".txt");
         writeFile(text, file);
     }
     @Test
@@ -138,7 +120,7 @@ public class StockUtils extends BaseTest {
         stockList.add(new Stock("红旗连锁", "sz002697"));
         // stockList.add(new Stock("贵州茅台", "sh600519"));
         Map<String, Set<String>> useStockMarket = new HashMap<>();
-        Set<String> use=Set.of("股票名字", "股票代码","当前价格","最高","最低","涨跌%","换手率","市盈率","市净率","流通市值","总市值");
+        Set<String> use = Set.of("股票名字", "股票代码", "当前价格", "最高", "最低", "涨跌%", "换手率", "市盈率", "市净率", "流通市值", "总市值");
         useStockMarket.put("最新行情", use);
         Map<String, Map<String, List<String>>> diffMap = new HashMap<>();
         Map<String, Pair<String, List<Pair<String, List<String>>>>> classifyPairMap = new HashMap<>();
@@ -166,25 +148,33 @@ public class StockUtils extends BaseTest {
     @Test
     public void testStockTrade() {
         StockAccount stockAccount = new StockAccount(BigDecimal.valueOf(50000));
+        Stock stock = new Stock("比亚迪", "sz002594");
+        // Stock stock = new Stock("顺丰控股", "sz002352");
+        // Stock stock = new Stock("贵州茅台", "sh600519");
+        // Stock stock = new Stock("恒瑞医药", "sh600276");
+        // Stock stock = new Stock("三七互娱", "sz002555");
+        // Stock stock=new Stock("中天科技", "sh600522");
         // Stock stock = new Stock("君正集团", "sh601216");
-        Stock stock=new Stock("中国银河", "sh601881");
+        // Stock stock = new Stock("中国银河", "sh601881");
         // Stock stock=new Stock("百傲化学", "sh603360");
         // Stock stock = new Stock("世运电路", "sh603920");
         // Stock stock=new Stock("格力电器", "sz000651");
         // Stock stock = new Stock("华东医药", "sz000963");
         // Stock stock=new Stock("红旗连锁", "sz002697");
-        // Stock stock=new Stock("中天科技", "sh600522");
+        
         Date date = DateUtils.weekDay(new Date(), 1);
+        String startTime=null;
+        startTime=DateUtils.formatDate(DateUtils.addMonth(date, -12), "yyMMdd");
         String endTime = DateUtils.formatDate(date, "yyMMdd");
         List<StockTrade> stockTradeList;
-        stockTradeList = fetchStockTrade(stock.getCode(), null, endTime).getV1();
+        stockTradeList = fetchStockTrade(stock.getCode(), startTime, endTime).getV1();
         Pair<SmartStockStrategy.RateWeight, Pair<StockTrade[], BigDecimal>> wPair = null;
         int rateType1 = SmartStockStrategy.RATE_TYPE_AVERAGE;
         int rateType2 = SmartStockStrategy.RATE_TYPE_NORMAL;
         boolean train = true;
         if (train) {
-            wPair = SmartStockStrategy.RateWeight.trainStockTrade(stock, stockAccount.getFund(), rateType1,
-                    rateType2, stockTradeList, "rateCount");
+            wPair = SmartStockStrategy.RateWeight.trainStockTrade(stock, stockAccount.getFund(), rateType1, rateType2,
+                    stockTradeList, "rateCount");
             swMap.put(stock, wPair.getV1());
         } else {
             SmartStockStrategy stockStrategy = useStockStrategy(stock, rateType1, rateType2);
@@ -192,6 +182,7 @@ public class StockUtils extends BaseTest {
         }
         log(stock, wPair);
     }
+
     private void writeFile(Object message, File file) {
         BufferedWriter writer;
         try {
@@ -203,19 +194,16 @@ public class StockUtils extends BaseTest {
             e.printStackTrace();
         }
     }
-    private void logDiff(List<Pair<String, List<Pair<String, List<String>>>>> diffList){
-        StringBuilder sb=new StringBuilder();
-        for(Pair<String, List<Pair<String, List<String>>>> pair:diffList){
+
+    private void logDiff(List<Pair<String, List<Pair<String, List<String>>>>> diffList) {
+        StringBuilder sb = new StringBuilder();
+        for (Pair<String, List<Pair<String, List<String>>>> pair : diffList) {
             sb.append(pair.getV1()).append("\n");
-            for(Pair<String, List<String>> entry:pair.getV2()){
-                sb.append(entry.getV1()).append(":");
-                int i=0;
-                for(String stock:entry.getV2()){
-                    if(i++==0){
-                        sb.append(stock);
-                    }else{
-                        sb.append("\t").append(stock);
-                    }
+            for (Pair<String, List<String>> entry : pair.getV2()) {
+                sb.append(ValueUtils.rightPad(entry.getV1()+":", " ",
+                        entry.getV1().length() + 13 - entry.getV1().getBytes().length));
+                for (String stock : entry.getV2()) {
+                    sb.append("\t").append(stock);
                 }
                 sb.append("\n");
             }
@@ -223,6 +211,7 @@ public class StockUtils extends BaseTest {
         }
         log(sb);
     }
+
     private void processDiffStock(Map<String, Set<String>> useStockMarket,
             List<Pair<String, List<Pair<String, List<String>>>>> diffList,
             Map<String, Map<String, List<String>>> diffMap,
@@ -246,9 +235,9 @@ public class StockUtils extends BaseTest {
                 diffList.add(classifyPair);
             }
             Set<String> keys = useStockMarket.get(classify);
-            Set<String> used=new HashSet<>();
+            Set<String> used = new HashSet<>();
             for (Pair<String, String> kv : pair.getV2()) {
-                if ((CollectionUtils.isEmpty(keys) || keys.contains(kv.getV1()))&&used.add(kv.getV1())) {
+                if ((CollectionUtils.isEmpty(keys) || keys.contains(kv.getV1())) && used.add(kv.getV1())) {
                     List<String> sstocks = classifyMap.get(kv.getV1());
                     if (sstocks == null) {
                         sstocks = new ArrayList<>();
@@ -536,5 +525,28 @@ public class StockUtils extends BaseTest {
         stockTrade.setMinPrice(new BigDecimal(values[4]));
         stockTrade.setTurnover(Long.valueOf(values[5]));
         return stockTrade;
+    }
+    private static void parseholdStockShares(File file,Map<Stock, Long> holdShares,List<Stock> stocks){
+        String text="";
+        try {
+            text = IOUtils.readText(file);
+        } catch (IOException e) {
+            // TODO Auto-generated catch block
+            e.printStackTrace();
+        }
+        String[] lines=text.split("\n");
+        for(String line:lines){
+            if(!StringUtils.hasText(line)){
+                continue;
+            }
+            String[] values=line.split("\\s+");
+            Stock stock=new Stock(values[0],values[1]);
+            stocks.add(stock);
+            Long turnover=0l;
+            if(values.length>=3){
+                turnover=Long.valueOf(values[2]);
+            }
+            holdShares.put(stock, turnover);
+        }
     }
 }

@@ -83,6 +83,13 @@ public class DateUtils {
 		c.add(Calendar.DATE, -day_of_week + firstDayOfWeek);
 		return c.getTime();
 	}
+	public static Date addMonth(Date date, int month) {
+		Calendar c = Calendar.getInstance();
+		c.setLenient(false);
+		c.setTime(date);
+		c.add(Calendar.MONTH, month);
+		return c.getTime();
+	}
 	public static Date addDay(Date date, int day) {
 		Calendar c = Calendar.getInstance();
 		c.setLenient(false);
