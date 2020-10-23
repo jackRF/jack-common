@@ -111,14 +111,8 @@ public class StockUtils extends BaseTest {
     @Test
     public void testStockMarket() {
         List<Stock> stockList = new ArrayList<>();
-        stockList.add(new Stock("君正集团", "sh601216"));
-        stockList.add(new Stock("中国银河", "sh601881"));
-        stockList.add(new Stock("百傲化学", "sh603360"));
-        stockList.add(new Stock("世运电路", "sh603920"));
-        stockList.add(new Stock("格力电器", "sz000651"));
-        stockList.add(new Stock("华东医药", "sz000963"));
-        stockList.add(new Stock("红旗连锁", "sz002697"));
-        // stockList.add(new Stock("贵州茅台", "sh600519"));
+        Map<Stock, Long> holdShares = new HashMap<>();
+        parseholdStockShares(new File(stockDir,"/持仓.txt"), holdShares, stockList);
         Map<String, Set<String>> useStockMarket = new HashMap<>();
         Set<String> use = Set.of("股票名字", "股票代码", "当前价格", "最高", "最低", "涨跌%", "换手率", "市盈率", "市净率", "流通市值", "总市值");
         useStockMarket.put("最新行情", use);
