@@ -1,0 +1,24 @@
+stock:{"name":"君正集团","code":"sh601216"}181116-201023总资产:89311.17901934400, weight:{"cat":2.900000000000001,"rateCount":3,"wPurchase":1.5,"bPurchase":0.005,"limitPurchase":0.015,"wSellOut":2.49,"bSellOut":0.010,"limitSellOut":0.015}
+stock:{"name":"中国银河","code":"sh601881"}181116-201023总资产:100695.23718955200, weight:{"cat":1.1999999999999993,"rateCount":3,"wPurchase":0.68,"bPurchase":0.005,"limitPurchase":0.030,"wSellOut":1.02,"bSellOut":0.005,"limitSellOut":0.015}
+stock:{"name":"百傲化学","code":"sh603360"}181116-201023总资产:89861.53444468000, weight:{"cat":1.1999999999999993,"rateCount":3,"wPurchase":0.50,"bPurchase":0.003,"limitPurchase":0.024,"wSellOut":2.49,"bSellOut":0.008,"limitSellOut":0.015}
+stock:{"name":"世运电路","code":"sh603920"}181116-201023总资产:88449.44295446400, weight:{"cat":2.1,"rateCount":3,"wPurchase":0.72,"bPurchase":0.005,"limitPurchase":0.015,"wSellOut":1.85,"bSellOut":0.005,"limitSellOut":0.015}
+stock:{"name":"格力电器","code":"sz000651"}181109-201023总资产:70006.82044550400, weight:{"cat":2.7000000000000006,"rateCount":3,"wPurchase":0.50,"bPurchase":0.005,"limitPurchase":0.016,"wSellOut":2.37,"bSellOut":0.006,"limitSellOut":0.015}
+stock:{"name":"华东医药","code":"sz000963"}181116-201023总资产:72303.62987844800, weight:{"cat":1.1999999999999993,"rateCount":3,"wPurchase":1.26,"bPurchase":0.005,"limitPurchase":0.015,"wSellOut":1.32,"bSellOut":0.006,"limitSellOut":0.015}
+stock:{"name":"红旗连锁","code":"sz002697"}181116-201023总资产:78618.49386053200, weight:{"cat":1.7999999999999998,"rateCount":3,"wPurchase":0.52,"bPurchase":0.008,"limitPurchase":0.026,"wSellOut":1.67,"bSellOut":0.005,"limitSellOut":0.015}
+stock:{"name":"比亚迪","code":"sz002594"}181116-201023总资产:136296.53477697200, weight:{"cat":1.1999999999999993,"rateCount":3,"wPurchase":0.50,"bPurchase":0.003,"limitPurchase":0.030,"wSellOut":1.93,"bSellOut":0.005,"limitSellOut":0.015}
+stock:{"name":"顺丰控股","code":"sz002352"}181116-201023总资产:142862.08341344000, weight:{"cat":1.1999999999999993,"rateCount":3,"wPurchase":0.80,"bPurchase":0.006,"limitPurchase":0.026,"wSellOut":1.93,"bSellOut":0.008,"limitSellOut":0.015}
+stock:{"name":"恒瑞医药","code":"sh600276"}181116-201023总资产:77915.05287068800, weight:{"cat":1.7999999999999998,"rateCount":3,"wPurchase":0.60,"bPurchase":0.006,"limitPurchase":0.024,"wSellOut":1.71,"bSellOut":0.006,"limitSellOut":0.015}
+stock:{"name":"三七互娱","code":"sz002555"}181116-201023总资产:159959.10599961000, weight:{"cat":1.1999999999999993,"rateCount":3,"wPurchase":0.50,"bPurchase":0.006,"limitPurchase":0.030,"wSellOut":2.05,"bSellOut":0.006,"limitSellOut":0.015}
+股票名称	股票代码		买入1	买入数量1	买入收益率1	卖出1	卖出数量1	卖出收益率1	买入2	买入数量2	买入收益率2	卖出2	卖出数量2	卖出收益率2
+君正集团	sh601216		7.42	200			4.04%		8.28	100			6.88%		6.87	100			11.24%		8.83	100			14.08%
+中国银河	sh601881		12.28	300			3.00%		12.97	200			2.35%		12.26	100			3.16%		12.99	0			2.51%
+百傲化学	sh603360		18.83	200			2.40%		20.53	0			6.35%		17.53	0			9.15%		21.83	0			13.10%
+世运电路	sh603920		22.83	100			3.22%		25.37	100			7.49%		21.87	0			7.29%		26.33	100			11.56%
+格力电器	sz000651		57.13	0			2.03%		62.90	0			7.85%		51.64	0			11.45%		68.40	0			17.27%
+华东医药	sz000963		25.56	100			3.46%		27.47	100			3.70%		23.65	0			10.67%		29.37	0			10.91%
+红旗连锁	sz002697		7.91	300			2.60%		8.50	1100		4.44%		7.54	200			7.18%		8.87	500			9.02%
+比亚迪	    sz002594		134.03	0			3.34%		155.64	0			12.23%		107.27	0			22.64%		182.40	0			31.53%
+顺丰控股	sz002352		80.93	0			4.77%		94.22	0			10.86%		76.96	0			9.44%		98.19	0			15.53%
+恒瑞医药	sh600276		86.03	0			2.40%		93.18	0			5.70%		84.39	0			4.26%		94.82	0			7.56%
+三七互娱	sz002555		28.17	100			6.48%		37.58	400			24.71%		20.91	0			30.57%		44.84	100			48.80%
+

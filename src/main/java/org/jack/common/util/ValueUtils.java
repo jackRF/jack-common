@@ -116,6 +116,8 @@ public class ValueUtils {
 					sb.append('_');
 				}
 				startUpperCase=true;
+			}else if(c=='_'){
+				startUpperCase=true;
 			}else{
 				if(startUpperCase){
 					startUpperCase=false;

@@ -39,7 +39,7 @@ public class StockUtils extends BaseTest {
         int rateType2 = SmartStockStrategy.RATE_TYPE_NORMAL;
         Date date = DateUtils.weekDay(new Date(), 1);
         String startTime=null;
-        startTime=DateUtils.formatDate(DateUtils.addMonth(date, -12), "yyMMdd");
+        // startTime=DateUtils.formatDate(DateUtils.addMonth(date, -12), "yyMMdd");
         String deadline = DateUtils.formatDate(date, "yyMMdd");
         StringBuilder text = new StringBuilder();
         if (train) {
@@ -64,7 +64,7 @@ public class StockUtils extends BaseTest {
                         .mockStockTrade(stockAccount, stockItem, smartStockStrategy, stockTradeList);
                 text.append(format(stockItem, wPair)).append("\n");
             }
-            StockAccount stockAccount = new StockAccount(BigDecimal.valueOf(20582.34), holdShares);
+            StockAccount stockAccount = new StockAccount(BigDecimal.valueOf(5228.78), holdShares);
             Long turnover = stockAccount.getHoldShares().get(stockItem);
             List<StockDecision> stockDecisionList = smartStockStrategy.apply(stockTradeList, turnover,
                     stockAccount.getFund());

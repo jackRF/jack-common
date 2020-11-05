@@ -16,9 +16,21 @@
 	<slf4j.api>1.7.26</slf4j.api>
 	<drools.version>7.34.0.Final</drools.version>
 	<poi.version>4.1.2</poi.version>
+	<mybatis.version>3.1.0</mybatis.version>
   </properties>
 	
   <dependencies>
+	<dependency>
+		<groupId>com.baomidou</groupId>
+		<artifactId>mybatis-plus-core</artifactId>
+		<version>${mybatis.version}</version>
+		<exclusions>
+			<exclusion>
+				<groupId>com.github.jsqlparser</groupId>
+				<artifactId>jsqlparser</artifactId>
+			</exclusion>
+		</exclusions>
+	</dependency>
 	<dependency>
 		<groupId>com.fasterxml.jackson.datatype</groupId>
 		<artifactId>jackson-datatype-jsr310</artifactId>
