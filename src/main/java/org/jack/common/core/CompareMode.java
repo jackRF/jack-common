@@ -128,14 +128,14 @@ public enum CompareMode {
         throw new AbstractMethodError();
     }
     public static interface DataStrategy<D> {
-        String apply(List<D> dataList);
+        <T, W extends AbstractWrapper<T, String, W>> void apply(List<D> dataList,W w);
     }
     public static <D, T, W extends AbstractWrapper<T, String, W>> void compile(W w, LogicNode node,
             DataStrategy<D> dataStrategy) {
           final int nodeType=node.getNodeType();
           final Object data=node.getData();
         if (nodeType == LogicNode.NODE_TYPE_DATA) {
-            w.exists(dataStrategy.apply((List<D>) data));
+            dataStrategy.apply((List<D>) data,w);
         } else if (nodeType == LogicNode.NODE_TYPE_NOT) {
             QueryWrapper<String> not = new QueryWrapper<>();
             compile(not, (LogicNode) data, dataStrategy);

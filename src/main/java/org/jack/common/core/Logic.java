@@ -240,9 +240,9 @@ public class Logic {
                     return Result.fail("语法错误！");
                 }
                 root = node;
-                orList.add(root);
             } else {
                 if (node.nodeType == LogicNode.NODE_TYPE_OR) {
+                    orList.add(root);
                     root = null;
                     if (!lastIsData) {
                         return Result.fail("语法错误！");
@@ -261,9 +261,10 @@ public class Logic {
         if (!lastIsData) {
             return Result.fail("语法错误！");
         }
-        if (orList.size() == 1) {
+        if (orList.isEmpty()) {
             return Result.success(root);
         } else {
+            orList.add(root);
             return Result.success(LogicNode.or(orList));
         }
     }
