@@ -87,7 +87,7 @@ public class Logic {
                 return sb.toString();
             } else if (nodeType == NODE_TYPE_NOT) {
                 LogicNode noted = (LogicNode) data;
-                return "!" +toText(noted);
+                return "!" + toText(noted);
             } else {
                 List<LogicNode> list = (List<LogicNode>) data;
                 sb.append("(");
@@ -111,9 +111,9 @@ public class Logic {
 
         @Override
         public String toString() {
-            String text=toText(this);
-            if(text.startsWith("(")&&text.endsWith(")")){
-                text.substring(1, text.length()-1);
+            String text = toText(this);
+            if (text.startsWith("(") && text.endsWith(")")) {
+                text.substring(1, text.length() - 1);
             }
             return text;
         }
@@ -241,18 +241,16 @@ public class Logic {
                 }
                 root = node;
             } else {
-                if (node.nodeType == LogicNode.NODE_TYPE_OR) {
+                if (currIsData) {
+                    ((List<LogicNode>) root.data).add(node);
+                } else if (node.nodeType == LogicNode.NODE_TYPE_AND) {
+                    ((List<LogicNode>) node.data).add(root);
+                    root = node;
+                } else {
                     orList.add(root);
                     root = null;
                     if (!lastIsData) {
                         return Result.fail("语法错误！");
-                    }
-                } else {
-                    if (node.nodeType == LogicNode.NODE_TYPE_AND) {
-                        ((List<LogicNode>) node.data).add(root);
-                        root = node;
-                    } else {
-                        ((List<LogicNode>) root.data).add(node);
                     }
                 }
             }
