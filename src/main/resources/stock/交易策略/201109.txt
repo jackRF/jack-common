@@ -1,23 +1,23 @@
-stock:{"name":"君正集团","code":"sh601216"}181207-201106总资产:71125.31400, weight:{"cat":4.000000000000001,"rateCount":3,"wPurchase":1.1,"bPurchase":0.005,"limitPurchase":0.02,"wSellOut":1.8,"bSellOut":0.010,"limitSellOut":0.02}
+stock:{"name":"君正集团","code":"sh601216"}181207-201106总资产:67905.83, weight:{"cat":3.0,"rateCount":3,"wPurchase":1.1,"bPurchase":0.005,"limitPurchase":0.02,"wSellOut":1.8,"bSellOut":0.010,"limitSellOut":0.02}
 stock:{"name":"中国银河","code":"sh601881"}181207-201106总资产:50000.00, weight:{"cat":3.0,"rateCount":3,"wPurchase":1.5,"bPurchase":0.005,"limitPurchase":0.02,"wSellOut":1.5,"bSellOut":0.005,"limitSellOut":0.02}
-stock:{"name":"百傲化学","code":"sh603360"}181207-201106总资产:57696.07200, weight:{"cat":4.000000000000001,"rateCount":3,"wPurchase":1.4,"bPurchase":0.005,"limitPurchase":0.02,"wSellOut":2.0,"bSellOut":0.010,"limitSellOut":0.02}
-stock:{"name":"世运电路","code":"sh603920"}181207-201106总资产:86104.17200, weight:{"cat":4.000000000000001,"rateCount":3,"wPurchase":1.0,"bPurchase":0.005,"limitPurchase":0.02,"wSellOut":2.0,"bSellOut":0.010,"limitSellOut":0.02}
+stock:{"name":"百傲化学","code":"sh603360"}181207-201106总资产:58539.52, weight:{"cat":3.0,"rateCount":3,"wPurchase":1.4,"bPurchase":0.005,"limitPurchase":0.02,"wSellOut":2.0,"bSellOut":0.010,"limitSellOut":0.02}
+stock:{"name":"世运电路","code":"sh603920"}181207-201106总资产:86440.13, weight:{"cat":3.0,"rateCount":3,"wPurchase":1.0,"bPurchase":0.005,"limitPurchase":0.02,"wSellOut":2.0,"bSellOut":0.010,"limitSellOut":0.02}
 stock:{"name":"格力电器","code":"sz000651"}181130-201106总资产:50000.00, weight:{"cat":3.0,"rateCount":3,"wPurchase":1.5,"bPurchase":0.005,"limitPurchase":0.02,"wSellOut":1.5,"bSellOut":0.005,"limitSellOut":0.02}
-stock:{"name":"华东医药","code":"sz000963"}181207-201106总资产:73929.31800, weight:{"cat":1.9999999999999991,"rateCount":3,"wPurchase":1.1,"bPurchase":0.007,"limitPurchase":0.02,"wSellOut":1.2,"bSellOut":0.009,"limitSellOut":0.02}
-stock:{"name":"红旗连锁","code":"sz002697"}181207-201106总资产:65361.32000, weight:{"cat":3.0,"rateCount":3,"wPurchase":1.0,"bPurchase":0.004,"limitPurchase":0.025,"wSellOut":2.0,"bSellOut":0.010,"limitSellOut":0.02}
-stock:{"name":"比亚迪","code":"sz002594"}181207-201106总资产:93983.82400, weight:{"cat":2.4999999999999996,"rateCount":3,"wPurchase":1.3,"bPurchase":0.005,"limitPurchase":0.02,"wSellOut":2.0,"bSellOut":0.010,"limitSellOut":0.02}
-stock:{"name":"顺丰控股","code":"sz002352"}181207-201106总资产:78689.63000, weight:{"cat":2.2999999999999994,"rateCount":3,"wPurchase":2.0,"bPurchase":0.005,"limitPurchase":0.02,"wSellOut":2.0,"bSellOut":0.010,"limitSellOut":0.02}
+stock:{"name":"华东医药","code":"sz000963"}181207-201106总资产:68671.25, weight:{"cat":3.0,"rateCount":3,"wPurchase":1.0,"bPurchase":0.003,"limitPurchase":0.02,"wSellOut":1.2,"bSellOut":0.009,"limitSellOut":0.02}
+stock:{"name":"红旗连锁","code":"sz002697"}181207-201106总资产:65361.32, weight:{"cat":3.0,"rateCount":3,"wPurchase":1.0,"bPurchase":0.004,"limitPurchase":0.025,"wSellOut":2.0,"bSellOut":0.010,"limitSellOut":0.02}
+stock:{"name":"比亚迪","code":"sz002594"}181207-201106总资产:90579.60, weight:{"cat":3.0,"rateCount":3,"wPurchase":1.3,"bPurchase":0.005,"limitPurchase":0.02,"wSellOut":2.0,"bSellOut":0.005,"limitSellOut":0.02}
+stock:{"name":"顺丰控股","code":"sz002352"}181207-201106总资产:77661.63, weight:{"cat":3.0,"rateCount":3,"wPurchase":2.0,"bPurchase":0.005,"limitPurchase":0.02,"wSellOut":2.0,"bSellOut":0.010,"limitSellOut":0.02}
 stock:{"name":"恒瑞医药","code":"sh600276"}181207-201106总资产:50000.00, weight:{"cat":3.0,"rateCount":3,"wPurchase":1.5,"bPurchase":0.005,"limitPurchase":0.02,"wSellOut":1.5,"bSellOut":0.005,"limitSellOut":0.02}
 stock:{"name":"三七互娱","code":"sz002555"}181207-201106总资产:50000.00, weight:{"cat":3.0,"rateCount":3,"wPurchase":1.5,"bPurchase":0.005,"limitPurchase":0.02,"wSellOut":1.5,"bSellOut":0.005,"limitSellOut":0.02}
 股票名称	股票代码		买入1	买入数量1	买入收益率1	卖出1	卖出数量1	卖出收益率1	买入2	买入数量2	买入收益率2	卖出2	卖出数量2	卖出收益率2
-君正集团	sh601216		5.43	200			9.66%		6.97	100			15.99%		4.15	200			31.00%		8.25	100			37.33%
+君正集团	sh601216		5.43	300			9.66%		6.97	100			15.99%		4.15	200			31.00%		8.25	100			37.33%
 中国银河	sh601881		11.37	100			8.20%		13.39	100			8.20%		10.75	100			13.18%		14.01	100			13.18%
-百傲化学	sh603360		17.54	0			10.27%		22.47	0			14.96%		16.18	0			17.22%		23.83	0			21.91%
+百傲化学	sh603360		17.54	0			10.27%		22.47	0			14.96%		16.18	100			17.22%		23.83	0			21.91%
 世运电路	sh603920		25.86	0			7.65%		32.28	100			15.30%		21.70	0			22.50%		36.44	100			30.15%
 格力电器	sz000651		61.11	0			7.94%		71.65	0			7.94%		51.13	0			22.98%		81.63	0			22.98%
-华东医药	sz000963		29.56	0			10.17%		36.61	100			11.23%		20.54	100			37.58%		45.63	0			38.64%
+华东医药	sz000963		29.98	0			8.91%		36.61	100			11.23%		20.96	0			36.32%		45.63	0			38.64%
 红旗连锁	sz002697		6.88	200			5.82%		8.16	700			11.84%		5.75	200			21.23%		9.29	400			27.25%
-比亚迪	    sz002594		154.06	0			19.10%		246.85	0			29.62%		60.73	0			68.11%		340.18	0			78.63%
+比亚迪	sz002594		154.06	0			19.10%		245.90	0			29.12%		60.73	0			68.11%		339.23	0			78.13%
 顺丰控股	sz002352		78.20	0			6.34%		89.20	0			6.84%		72.34	0			13.35%		95.05	0			13.85%
 恒瑞医药	sh600276		85.71	0			3.57%		92.07	0			3.57%		81.69	0			8.09%		96.09	0			8.09%
 三七互娱	sz002555		25.30	0			11.02%		31.56	200			11.02%		19.58	0			31.12%		37.28	100			31.12%

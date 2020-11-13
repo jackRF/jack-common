@@ -47,7 +47,7 @@ public class StockUtils extends BaseTest {
                 List<StockTrade> stockTradeList = fetchStockTrade(stockItem.getCode(), startTime, deadline).getV1();
                 Pair<SmartStockStrategy.RateWeight, Pair<StockTrade[], BigDecimal>> wPair = SmartStockStrategy.RateWeight
                         .trainStockTrade(stockItem, BigDecimal.valueOf(50000), rateType1, rateType2, stockTradeList,
-                                "rateCount");
+                                "rateCount","cat");
                 swMap.put(stockItem, wPair.getV1());
                 text.append(format(stockItem, wPair)).append("\n");
             }
