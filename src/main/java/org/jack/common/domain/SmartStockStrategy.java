@@ -64,21 +64,21 @@ public class SmartStockStrategy implements StockStrategy {
             @Override
             public BigDecimal usePurchaseRate(BigDecimal max, BigDecimal min, StockTrade first, StockTrade last,
                     BigDecimal rateAverage) {
-                BigDecimal rate = useRate(rateType, rateAverage, max,min,false, first, last);
+                BigDecimal rate = useRate(rateType, rateAverage, max, min, false, first, last);
                 return rate.multiply(weight.getwPurchase()).add(weight.getbPurchase()).max(weight.limitPurchase);
             }
 
             @Override
             public BigDecimal useSellOutRate(BigDecimal max, BigDecimal min, StockTrade first, StockTrade last,
                     BigDecimal rateAverage) {
-                BigDecimal rate = useRate(rateType, rateAverage, max,min,true, first, last);
+                BigDecimal rate = useRate(rateType, rateAverage, max, min, true, first, last);
                 return rate.multiply(weight.getwSellOut()).add(weight.getbSellOut()).max(weight.limitSellOut);
             }
 
             @Override
             public BigDecimal usePurchaseRate2(BigDecimal max, BigDecimal min, StockTrade first, StockTrade last,
                     BigDecimal rateAverage) {
-                BigDecimal rate2=useRate(rateType2, rateAverage, max,min,false, first, last);
+                BigDecimal rate2 = useRate(rateType2, rateAverage, max, min, false, first, last);
                 // rate2=rate2.multiply(weight.getwPurchase()).add(weight.getbPurchase()).max(weight.limitPurchase);
                 return usePurchaseRate(max, min, first, last, rateAverage).add(rate2);
             }
@@ -86,20 +86,20 @@ public class SmartStockStrategy implements StockStrategy {
             @Override
             public BigDecimal useSellOutRate2(BigDecimal max, BigDecimal min, StockTrade first, StockTrade last,
                     BigDecimal rateAverage) {
-                BigDecimal rate2=useRate(rateType2, rateAverage, max,min,true, first, last);
+                BigDecimal rate2 = useRate(rateType2, rateAverage, max, min, true, first, last);
                 // rate2=rate2.multiply(weight.getwSellOut()).add(weight.getbSellOut()).max(weight.limitSellOut);
                 return useSellOutRate(max, min, first, last, rateAverage).add(rate2);
             }
 
-            private BigDecimal useRate(int rateType, BigDecimal rateAverage, BigDecimal max,BigDecimal min,boolean sellOut, StockTrade first,
-                    StockTrade last) {
+            private BigDecimal useRate(int rateType, BigDecimal rateAverage, BigDecimal max, BigDecimal min,
+                    boolean sellOut, StockTrade first, StockTrade last) {
                 BigDecimal rate = BigDecimal.ZERO;
                 if (rateType == RATE_TYPE_AVERAGE) {
                     rate = rateAverage;
                 } else if (rateType == RATE_TYPE_MAXORMIN) {
-                    rate = RateStrategy.super.useMaxOrMinRate(sellOut?max:min, last);
+                    rate = RateStrategy.super.useMaxOrMinRate(sellOut ? max : min, last);
                 } else if (rateType == RATE_TYPE_MAXORMIN_AVERAGE) {
-                    rate = RateStrategy.super.useMaxOrMinRateAverage(max,min,last);
+                    rate = RateStrategy.super.useMaxOrMinRateAverage(max, min, last);
                 } else {
                     rate = RateStrategy.super.useRate(first, last);
                 }
@@ -150,10 +150,11 @@ public class SmartStockStrategy implements StockStrategy {
         public RateWeight(String... noTrain) {
             super(noTrain);
         }
-        public static RateWeight of(double w,double b,double limit,String... noTrain){
+
+        public static RateWeight of(double w, double b, double limit, String... noTrain) {
             SmartStockStrategy.RateWeight weight = new SmartStockStrategy.RateWeight(noTrain);
             weight.setRateCount(3);
-            weight.setCat(2d);
+            weight.setCat(3d);
             weight.setwPurchase(BigDecimal.valueOf(w));
             weight.setbPurchase(BigDecimal.valueOf(b));
             weight.setLimitPurchase(BigDecimal.valueOf(limit));
@@ -162,15 +163,17 @@ public class SmartStockStrategy implements StockStrategy {
             weight.setLimitSellOut(BigDecimal.valueOf(limit));
             return weight;
         }
+
         public static Pair<SmartStockStrategy.RateWeight, Pair<StockTrade[], BigDecimal>> trainStockTrade(Stock stock,
                 BigDecimal fund, List<StockTrade> stockTradeList, String... noTrain) {
             return trainStockTrade(stock, fund, SmartStockStrategy.RATE_TYPE_AVERAGE,
-                    SmartStockStrategy.RATE_TYPE_NORMAL,stockTradeList , noTrain);
+                    SmartStockStrategy.RATE_TYPE_NORMAL, stockTradeList, noTrain);
         }
+
         public static Pair<SmartStockStrategy.RateWeight, Pair<StockTrade[], BigDecimal>> trainStockTrade(Stock stock,
                 BigDecimal fund, int rateType1, int rateType2, List<StockTrade> stockTradeList, String... noTrain) {
             SmartStockStrategy.RateWeight weightDest = new SmartStockStrategy.RateWeight();
-            SmartStockStrategy.RateWeight weight=RateWeight.of(1.5,0.005,0.015,noTrain);
+            SmartStockStrategy.RateWeight weight = RateWeight.of(1.5, 0.005, 0.02, noTrain);
             StockStrategy stockStrategy = new SmartStockStrategy(rateType1, rateType2, weight);
             BigDecimal maxMarketValue = null;
             Pair<RateWeight, Pair<StockTrade[], BigDecimal>> wPair = null;
@@ -194,39 +197,25 @@ public class SmartStockStrategy implements StockStrategy {
             maxWPair.setV2(new Pair<>(wPair.getV2().getV1(), maxMarketValue));
             return maxWPair;
         }
+
         @Override
         protected Object useNewValue(String name, Object value) {
             if (name.equals("rateCount")) {
-                int v = sway((int) value, 1, 3);
-                if (v >= 1 && v <= 5) {
-                    return v;
-                }
+                return sway((int) value,1,2, 3);
             } else if (name.equals("cat")) {
-                double v = sway((double) value, 0.1, 2);
-                if (v >= 1 && v <= 3) {
-                    return v;
-                }
+                return sway((double) value, 0.1,1.01, 3);
             } else {
                 BigDecimal v = (BigDecimal) value;
                 if (name.startsWith("w")) {
-                    v = sway(v, BigDecimal.valueOf(0.01), BigDecimal.valueOf(1.5));
-                    if (v.compareTo(BigDecimal.valueOf(0.5)) >= 0 && v.compareTo(BigDecimal.valueOf(2.5)) <= 0) {
-                        return v;
-                    }
+                    return sway(v, BigDecimal.valueOf(0.1),BigDecimal.valueOf(0.51), BigDecimal.valueOf(1.5));
                 } else if (name.startsWith("b")) {
-                    v = sway(v, BigDecimal.valueOf(0.001), BigDecimal.valueOf(0.005));
-                    if (v.compareTo(BigDecimal.ZERO) >= 0 && v.compareTo(BigDecimal.valueOf(0.01)) <= 0) {
-                        return v;
-                    }
+                    return sway(v, BigDecimal.valueOf(0.001),BigDecimal.valueOf(0.0051), BigDecimal.valueOf(0.005));
                 } else {
-                    v = sway(v, BigDecimal.valueOf(0.001), BigDecimal.valueOf(0.015));
-                    if (v.compareTo(BigDecimal.ZERO) >= 0 && v.compareTo(BigDecimal.valueOf(0.03)) <= 0) {
-                        return v;
-                    }
+                    return sway(v, BigDecimal.valueOf(0.001),BigDecimal.valueOf(0.0051), BigDecimal.valueOf(0.02));
                 }
             }
-            return null;
         }
+
         public Double getCat() {
             return cat;
         }
@@ -291,31 +280,34 @@ public class SmartStockStrategy implements StockStrategy {
             this.limitSellOut = limitSellOut;
         }
 
-        protected BigDecimal sway(BigDecimal v, BigDecimal b, BigDecimal center) {
-            if (v.compareTo(center) > 0) {
-                v = center.subtract(v.subtract(center)).subtract(b);
-            } else {
-                v = center.subtract(v.subtract(center)).add(b);
+        protected BigDecimal sway(BigDecimal v, BigDecimal f, BigDecimal maxf, BigDecimal m) {
+            BigDecimal diff = (m.subtract(v));
+            BigDecimal nv=m.add(diff);
+            if(diff.compareTo(BigDecimal.ZERO)<=0){
+                nv=nv.subtract(f);
             }
-            return v;
+           if(nv.compareTo(m.subtract(maxf))>=0&&nv.compareTo(m.add(maxf))<=0){
+                return nv;
+           }
+            return null;
         }
 
-        protected int sway(int v, int b, int center) {
-            if (v > center) {
-                v = center - (v - center) - b;
-            } else {
-                v = center - (v - center) + b;
+        protected Integer sway(int v, int f, int maxf, int m) {
+            int diff = (m - v);
+            Integer nv=m+diff+(diff>0?0:-f);
+            if (nv >= (m - maxf) && nv <= (m + maxf)) {
+                return nv;
             }
-            return v;
+            return null;
         }
 
-        protected double sway(double v, double b, double center) {
-            if (v > center) {
-                v = center - (v - center) - b;
-            } else {
-                v = center - (v - center) + b;
+        protected Double sway(double v, double f, double maxf, double m) {
+            double diff = (m - v);
+            Double nv=m+diff+(diff>0?0:-f);
+            if (nv >= (m - maxf) && nv <= (m + maxf)) {
+                return nv;
             }
-            return v;
+            return null;
         }
 
         @Override
@@ -338,14 +330,22 @@ public class SmartStockStrategy implements StockStrategy {
         }
 
         private int order(String name) {
-            if (name.startsWith("w")) {
-                return 1;
+            int w=0; 
+            if(name.endsWith("Purchase")){
+                w=-20;
+            }else if(name.endsWith("SellOut")){
+                w=-10;
+            }else{
+                return -1000;
             }
-            if (name.startsWith("2")) {
-                return 2;
+            if (name.startsWith("w")) {
+                return w+1;
+            }
+            if (name.startsWith("b")) {
+                return w+2;
             }
             if (name.startsWith("limit")) {
-                return 3;
+                return w+3;
             }
             if (name.equals("cat")) {
                 return 4;

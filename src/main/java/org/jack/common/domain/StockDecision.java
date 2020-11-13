@@ -76,8 +76,8 @@ public class StockDecision {
     }
     public static StockDecision of(BigDecimal relativePurchaseRate,BigDecimal relativeSellOutRate,BigDecimal basePrice){
         StockDecision stockDecision = new StockDecision();
-        stockDecision.setPurchasePrice(BigDecimal.valueOf(1).subtract(relativePurchaseRate).multiply(basePrice));
-        stockDecision.setSellOutPrice(BigDecimal.valueOf(1).add(relativeSellOutRate).multiply(basePrice));
+        stockDecision.setPurchasePrice(BigDecimal.valueOf(1).subtract(relativePurchaseRate).multiply(basePrice).setScale(2,RoundingMode.HALF_UP));
+        stockDecision.setSellOutPrice(BigDecimal.valueOf(1).add(relativeSellOutRate).multiply(basePrice).setScale(2,RoundingMode.HALF_UP));
         stockDecision.setRelativePurchaseRate(relativePurchaseRate.doubleValue());
         stockDecision.setRelativeSellOutRate(relativeSellOutRate.doubleValue());
         return stockDecision;

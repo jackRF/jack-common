@@ -8,14 +8,22 @@ import org.springframework.util.ObjectUtils;
 
 public abstract class Trainable {
     protected String[] noTrain;
+    private PropertyDescriptor[] pds;
     public Trainable(String...noTrain){
         this.noTrain=noTrain;
+        BeanWrapperImpl wapper=new BeanWrapperImpl(this);
+        pds=wapper.getPropertyDescriptors();
+        sort(pds);
+        for(PropertyDescriptor pd:pds){
+            Method method=pd.getReadMethod();
+            if(method==null||Object.class.equals(method.getDeclaringClass())){
+                continue;
+            }
+        }
     }
     public <T extends Trainable> boolean train(T trainable,boolean better){
         BeanWrapperImpl wapper=new BeanWrapperImpl(this);
         BeanWrapperImpl wapperDest=new BeanWrapperImpl(trainable);
-        PropertyDescriptor[] pds=wapper.getPropertyDescriptors();
-        sort(pds);
         for(PropertyDescriptor pd:pds){
             Method method=pd.getReadMethod();
             if(method==null||Object.class.equals(method.getDeclaringClass())){
@@ -33,8 +41,12 @@ public abstract class Trainable {
                     wapperDest.setPropertyValue(name,value);
                 }
                 Object nValue=useNewValue(name,value);
-                wapper.setPropertyValue(name,nValue==null?wapperDest.getPropertyValue(name):nValue);
-                return true;
+                if(nValue!=null){
+                    wapper.setPropertyValue(name,nValue);
+                    return true;
+                }else{
+                    wapper.setPropertyValue(name,wapperDest.getPropertyValue(name));
+                }
             }
         }
         return false;
