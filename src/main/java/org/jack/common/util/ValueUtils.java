@@ -10,6 +10,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.regex.Pattern;
 
 import com.alibaba.fastjson.JSON;
 import com.fasterxml.jackson.annotation.JsonInclude.Include;
@@ -81,6 +82,44 @@ public class ValueUtils {
 			use=pad+use;
 		}
 		return use;
+	}
+	/**
+	 * 验证手机号
+	 * @param mobile
+	 * @return
+	 */
+	public static boolean validateMobile(String mobile){
+		return validateRegex(mobile,"^1\\d{10}$");
+	}
+	/**
+	 * 是否数字
+	 * @param text
+	 * @return
+	 */
+	public static boolean validateDigit(String text){
+		return validateRegex(text,"^\\d+$");
+	}
+	/**
+	 * 验证Number类型
+	 */
+	public static boolean validateNumber(String text){
+		return validateRegex(text,"^([1-9]\\d*|0)(\\.\\d+)?$");
+	}
+	
+	/**
+	 * 验证邮箱
+	 */
+	public static boolean validateEmail(String email){
+		return validateRegex(email,"^\\w+@\\w+(\\.\\w+)*$");
+	}
+	/**
+	 * 正则表达式验证
+	 */
+	public static boolean validateRegex(String text,String regex){
+		if(text==null||text.isEmpty()){
+			return false;
+		}
+		return Pattern.matches(regex, text);
 	}
 	/**
      * 属性转列名
