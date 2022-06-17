@@ -14,7 +14,7 @@
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     <ganymed.ssh2>262</ganymed.ssh2>
 	<slf4j.api>1.7.26</slf4j.api>
-	<drools.version>7.34.0.Final</drools.version>
+	<drools.version>7.60.0.Final</drools.version>
 	<poi.version>4.1.2</poi.version>
 	<mybatis.version>3.1.0</mybatis.version>
   </properties>
